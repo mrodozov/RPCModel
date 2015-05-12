@@ -1,0 +1,1 @@
+./ThresholdScan.app localResources/listOfRunFolders.list rootFiles/ localResources/FebChipMap_RollChip_only localResources/Roll_LBname_Map localResources/run_threshold_value results/ localResources/ChipsIDS_only localResources/disabledFebChipsDump.txt localResources/InputRollList.txt localResources/febTresholdsDump_unique_chip_voltageOnly.txt 0 exp\([0]*pow\(x,[1]\)\) 100 100000

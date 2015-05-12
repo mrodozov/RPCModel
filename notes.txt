@@ -1,0 +1,7 @@
+/** Author: Mircho Rodozov mrodozov@cern.ch
+ * Date 08.01.2013
+ * Info added at SVN revision 76
+ * 
+*/
+
+1. First priority - remove the dependence between ExtendedRoll and NoiseAnalyzer - ExtendedRoll should not be aware of NoiseAnalyzer (loosly coupled)

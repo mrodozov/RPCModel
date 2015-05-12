@@ -1,0 +1,15 @@
+1. create setters for DataObject
+2. Write more subroutines for dealing with root files
+3. Write such a method and container for a roll , where single roll have a mechanism to store in itself rate and other info for morethan one run. good
+solution is to create RollInterface type pointer which is allocated dynamically as array of objects with the same type as the object holder itself  ,
+by method to which we pass the dimensions of the array (COOL , - each of those elements could also allocate their own containers ) 
+4. Write DataObject container to depend not on dynamically allocated strings but a 
+map <string,string*> where the argument numberOfElements passed to the constructor determines the dimension of the strip pointer
+like 
+string * currentString = new string[numberOfElements-1] ; 
+because the first element in the file will be used as the key. This way , the dwo dimensional maps could be very easily handled - 
+we are not using for each element search in the map , but we could use the method find of the map ....  
+5. Write an method to plot Ecap vs Phi -> Done
+6. Write an method to plot Barrel-Ecap - online parts , using the text files (database.txt) and the info about dead masked  -> Done
+7. -> the idea is to get rid of all the macros sed to plot whatever :)  -> Done
+8. Try to ask somebody how to fetch the lumi data from the db in order to upload this rate vs lumi on the web -> No way so far 

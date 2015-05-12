@@ -1,0 +1,120 @@
+INC = $(shell root-config --cflags) 
+LIB = $(shell root-config --glibs)
+LIBSJSON = -ljson_linux_jsoncpp
+#INCJSON = -I/home/michele/prg/jsoncpp-src-0.5.0/include/json
+
+all:
+	g++ core/Roll.cpp Extensions/Run.cpp Extensions/Acquisition.cpp core/Strip.cpp core/DataObject.cpp ExtendedRoll.cpp ExtendedStrip.cpp ParserFunction.cpp ROOT/plots.cc Wrappers/WrapperFunctions.cpp main.cpp $(INC) $(FLAGS) -o RemoveNoisyStrips $(LIB) $(LIBSJSON)
+
+fill:
+	g++ core/Roll.cpp Extensions/Run.cpp Extensions/Acquisition.cpp core/Strip.cpp core/DataObject.cpp ExtendedRoll.cpp ExtendedStrip.cpp ParserFunction.cpp ROOT/plots.cc  Wrappers/WrapperFunctions.cpp fillContainer.cpp $(INC) $(FLAGS) -o Fill $(LIB) $(LIBSJSON)
+
+Fill:  Roll.o Run.o Strip.o DataObject.o ExtendedRoll.o ExtendedStrip.o ParserFunction.o plots.o WrapperFunctions.o fillContainer.o Acquisition.o
+	g++ -o Fill fillContainer.o Roll.o Run.o Strip.o DataObject.o ExtendedRoll.o ExtendedStrip.o ParserFunction.o plots.o WrapperFunctions.o Acquisition.o $(LIB) $(LIBSJSON) $(FLAGS)
+
+Read: Roll.o Run.o Strip.o DataObject.o ExtendedRoll.o ExtendedStrip.o ParserFunction.o plots.o WrapperFunctions.o fillContainer.o Acquisition.o readContainer.o
+	g++ -o Read readContainer.o Roll.o Run.o Strip.o DataObject.o ExtendedRoll.o ExtendedStrip.o ParserFunction.o plots.o WrapperFunctions.o Acquisition.o $(LIB) $(LIBSJSON) $(FLAGS)
+
+ReadFromDO: Roll.o Run.o Strip.o DataObject.o ExtendedRoll.o ExtendedStrip.o ParserFunction.o plots.o WrapperFunctions.o fillContainer.o Acquisition.o readContainerFromDO.o
+	g++ -o ReadDO readContainerFromDO.o Roll.o Run.o Strip.o DataObject.o ExtendedRoll.o ExtendedStrip.o ParserFunction.o plots.o WrapperFunctions.o Acquisition.o $(LIB) $(LIBSJSON) $(FLAGS)
+
+lumi: Roll.o Run.o Strip.o DataObject.o ExtendedRoll.o ExtendedStrip.o ParserFunction.o plots.o WrapperFunctions.o producePlot.o Acquisition.o NoiseAnalyzer.o
+	g++ -o lumi producePlot.o Roll.o Run.o Strip.o DataObject.o ExtendedRoll.o ExtendedStrip.o ParserFunction.o plots.o WrapperFunctions.o  Acquisition.o NoiseAnalyzer.o $(LIB) $(LIBSJSON) $(FLAGS)
+
+import: Roll.o Run.o Strip.o DataObject.o ExtendedRoll.o ExtendedStrip.o ParserFunction.o plots.o WrapperFunctions.o importFromTextResources.o Acquisition.o NoiseAnalyzer.o
+	g++ -o import importFromTextResources.o Roll.o Run.o Strip.o DataObject.o ExtendedRoll.o ExtendedStrip.o ParserFunction.o plots.o WrapperFunctions.o  NoiseAnalyzer.o Acquisition.o $(LIB) $(LIBSJSON) $(FLAGS)
+
+pplot: Roll.o Run.o Strip.o DataObject.o ExtendedRoll.o ExtendedStrip.o ParserFunction.o plots.o WrapperFunctions.o producePlot.o Acquisition.o NoiseAnalyzer.o
+	g++ -o plot producePlot.o Roll.o Run.o Strip.o DataObject.o ExtendedRoll.o ExtendedStrip.o ParserFunction.o plots.o WrapperFunctions.o  Acquisition.o NoiseAnalyzer.o $(LIB) $(LIBSJSON) $(FLAGS)
+
+asim: Roll.o Run.o Strip.o DataObject.o ExtendedRoll.o ExtendedStrip.o ParserFunction.o plots.o WrapperFunctions.o studyAsimmetry.o Acquisition.o NoiseAnalyzer.o
+	g++ -o asym studyAsimmetry.o Roll.o Run.o Strip.o DataObject.o ExtendedRoll.o ExtendedStrip.o ParserFunction.o plots.o WrapperFunctions.o  Acquisition.o NoiseAnalyzer.o $(LIB) $(LIBSJSON) $(FLAGS)
+
+
+
+pphiz: plotOnPhiVaryZ.o Roll.o Run.o Strip.o DataObject.o ExtendedRoll.o ExtendedStrip.o ParserFunction.o plots.o WrapperFunctions.o Acquisition.o NoiseAnalyzer.o
+	g++ -o pphiz plotOnPhiVaryZ.o Roll.o Run.o Strip.o DataObject.o ExtendedRoll.o ExtendedStrip.o ParserFunction.o plots.o WrapperFunctions.o  Acquisition.o NoiseAnalyzer.o $(LIB) $(LIBSJSON) $(FLAGS)
+
+noise: mainNoise.o NoiseAnalyzer.o Roll.o Run.o Strip.o DataObject.o ExtendedRoll.o ExtendedStrip.o ParserFunction.o plots.o WrapperFunctions.o Acquisition.o
+	g++ -o noise mainNoise.o NoiseAnalyzer.o Roll.o Run.o Strip.o DataObject.o ExtendedRoll.o ExtendedStrip.o ParserFunction.o plots.o WrapperFunctions.o  Acquisition.o $(LIB) $(LIBSJSON) $(FLAGS)
+
+pphi: plotOnPhi.o Roll.o Run.o Strip.o DataObject.o ExtendedRoll.o ExtendedStrip.o ParserFunction.o plots.o WrapperFunctions.o Acquisition.o NoiseAnalyzer.o
+	g++ -o pphi plotOnPhi.o Roll.o Run.o Strip.o DataObject.o ExtendedRoll.o ExtendedStrip.o ParserFunction.o plots.o WrapperFunctions.o  Acquisition.o NoiseAnalyzer.o $(LIB) $(LIBSJSON) $(FLAGS)
+
+crawler: Crawler.o mainCrawler.o DataObject.o  
+	g++ -o crawl Crawler.o mainCrawler.o DataObject.o  $(LIB)
+
+runp: printRunProperties.o DataObject.o Run.o ExtendedRoll.o ExtendedStrip.o Strip.o Roll.o Acquisition.o
+	g++ -o runp printRunProperties.o DataObject.o Run.o ExtendedRoll.o ExtendedStrip.o Strip.o Roll.o Acquisition.o $(LIB) $(LIBSJSON)
+
+printRunProperties.o: printRunProperties.cpp
+	g++ -c printRunProperties.cpp $(INC)
+
+mainNoise.o: mainNoise.cpp
+	g++ -c mainNoise.cpp $(INC)
+
+studyAsimmetry.o: studyAsimmetry.cpp
+	g++ -c studyAsimmetry.cpp $(INC)
+
+NoiseAnalyzer.o: Extensions/NoiseAnalyzer.cpp Extensions/NoiseAnalyzer.h
+	g++ -c Extensions/NoiseAnalyzer.cpp $(INC) $(FLAGS) -I./core
+
+Crawler.o: Extensions/Crawler.cpp
+	g++ -c Extensions/Crawler.cpp $(INC)
+
+mainCrawler.o: mainCrawler.cpp
+	g++ -c mainCrawler.cpp $(INC) $(FLAGS)
+
+producePlot.o: producePlot.cpp
+	g++ -c producePlot.cpp $(INC) $(FLAGS)
+
+plotOnPhi.o: plotOnPhi.cpp
+	g++ -c plotOnPhi.cpp $(INC) $(FLAGS)
+
+plotOnPhiVaryZ.o: plotOnPhiVaryZ.cpp
+	g++ -c plotOnPhiVaryZ.cpp $(INC) $(FLAGS)
+
+importFromTextResources.o: importFromTextResources.cpp
+	g++ -c importFromTextResources.cpp $(INC) $(FLAGS)
+
+readContainerFromDO.o: readContainerFromDO.cpp
+	g++ -c readContainerFromDO.cpp $(INC) $(FLAGS)
+
+readContainer.o: readContainer.cpp
+	g++ -c readContainer.cpp $(INC) $(FLAGS)
+
+fillContainer.o: fillContainer.cpp
+	g++ -c fillContainer.cpp  $(INC) $(FLAGS)
+
+Roll.o: core/Roll.cpp
+	g++ -c core/Roll.cpp $(INC) $(FLAGS)
+
+Run.o: Extensions/Run.cpp
+	g++ -c Extensions/Run.cpp $(INC) $(FLAGS)
+
+Acquisition.o: Extensions/Acquisition.cpp
+	g++ -c Extensions/Acquisition.cpp $(INC) $(FLAGS) 
+
+Strip.o: core/Strip.cpp
+	g++ -c core/Strip.cpp $(INC) $(FLAGS)
+
+DataObject.o: core/DataObject.cpp
+	g++ -c core/DataObject.cpp $(INC) $(FLAGS)
+
+ExtendedRoll.o: ExtendedRoll.cpp
+	g++ -c ExtendedRoll.cpp $(INC) $(FLAGS)
+
+ExtendedStrip.o: ExtendedStrip.cpp
+	g++ -c ExtendedStrip.cpp $(INC) $(FLAGS)
+
+ParserFunction.o: ParserFunction.cpp
+	g++ -c ParserFunction.cpp $(INC) $(FLAGS)
+
+plots.o: ROOT/plots.cc
+	g++ -c ROOT/plots.cc $(INC) $(FLAGS)
+
+WrapperFunctions.o: Wrappers/WrapperFunctions.cpp
+	g++ -c Wrappers/WrapperFunctions.cpp $(INC) $(FLAGS)
+
+clean:
+	rm *.o
