@@ -2,7 +2,6 @@
 from ConStrParser import extract
 #import xmlrpclib
 
-
 #added by mrodozov@cern.ch for possible use 
 
 import re, json ,smtplib,email,sys,getopt
@@ -498,6 +497,7 @@ else:
     sys.exit(-1)
 
 ########## Finally done!
+
 if runOptions[0] != 55:  # Just get runnumbers from RR
   if runOptions[0] == 1:
     summary(runOK,runNot,runErr,runOptions[2])

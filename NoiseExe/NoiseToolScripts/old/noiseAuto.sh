@@ -21,6 +21,7 @@ cd /rpctdata/CAF/
 #cd ~
 
 ############# Check ssh tunnels
+# add tunnel for git
 
 python checkTunnels.py
 
