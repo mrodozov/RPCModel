@@ -22,10 +22,7 @@ void LBNoiseF(int _argc, char * _argv[]){
   
   bool strips = false;    // set "true" to fill in histos at the level of single strips 
   
-  LBName lbnames;
-  
-
-
+  LBName lbnames;  
  
   if (_argc == 1) {
  
