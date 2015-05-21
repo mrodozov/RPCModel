@@ -14,7 +14,7 @@ def checkTunnel(tunnelString):
             if err is None:
                 tunnelRestarted = True
         except ValueError:
-            print 'restarting failed'
+            print 'restart failed'
             #send email with exception
             
     if err is not None:
