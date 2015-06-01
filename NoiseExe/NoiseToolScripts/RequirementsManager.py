@@ -5,17 +5,23 @@ import os,subprocess,os.path,json,copy
 #class ProcessDescriptor:
 
 class SSHTunnelDescriptor:
-    def __init__(self,tName=None,options=None,localHost=None,localPort=None,remoteHost=None,remotePort=None):
+    def __init__(self,tName=None,options=None,localHost=None,localPort=None,remoteHost=None,remotePort=None,debug=False):
         self.localHost = localHost
         self.localPort = localPort
         self.remoteHost = remoteHost
         self.remotePort = remotePort
         self.tunnelName = tName
         self.options = options
+        self.debug = debug
     def tunnelString(self):
-        t =  'ssh ' + str(self.options) + ' ' + str(self.localPort) + ':' + str(self.remoteHost) + ':' + str(self.remoteHost) + ' ' + str(self.localHost)
-        print t
+        t =  str(self.localPort) + ':' + str(self.remoteHost) + ':' + str(self.remoteHost) + ' ' + str(self.localHost)
+        if self.debug:
+            print t
+
         return t
+    def __del__(self):
+        if self.debug:
+            print 'SSHDescriptorDestructor called for tunnel', self.tunnelName
 
 class EnvHandler:
 
@@ -58,26 +64,39 @@ class EnvHandler:
         self.initConfigs(fileWithTunnels)
         self.checkListOfTunnels()
 
-        print fileWithEnvVars
+        if self.debug:
+            print 'tunnels file', fileWithTunnels
+            print 'env vars file', fileWithEnvVars
+            print 'debug in  EnvHandler __init__' #not set yet
 
-        if debug:
-            print 'some debug' #not set yet
-
-    def checkTunnel(self,sshTunnel):
-        tstring = 'ssh ' + sshTunnel.options + ' ' + sshTunnel.localPort + ':' + sshTunnel.remoteHost + ':' + sshTunnel.remoteHost + ' ' + sshTunnel.localHost
-        print tstring
+    def checkTunnel(self, sshTunnel):
+        tstring = sshTunnel.tunnelString()
+        p = subprocess.Popen("ps -ef | grep ssh | grep '"+tstring+"' | grep -v grep", shell = True, stdout = subprocess.PIPE)
+        out, err = p.communicate()
+        retval = False
+        if not out:
+            retval = False
+            if self.debug:
+                print 'output for', sshTunnel.tunnelName, 'is', out
+        else:
+            retval = True
+        return retval
 
     def checkListOfTunnels(self):
         for tunnel in self.listOfTunnels:
             tunnelCheck = self.checkTunnel(tunnel)
             if not tunnelCheck:
-                self.start(tunnel)
+                #self.start(tunnel) # do not execute when in dev mode, it would start ssh tunnels
+                if self.debug:
+                    print 'starting tunnel', tunnel.tunnelName
+
     
-    def start(self,tunnel):
+    def start(self, tunnel):
+
 
         return True
 
-    def initConfigs(self,listConfigs):
+    def initConfigs(self, listConfigs):
         #file better be JSON with similar object attributes
         if not os.path.isfile(listConfigs):
             raise Exception("tunnels config file not found or empty")
@@ -88,35 +107,22 @@ class EnvHandler:
             for tunnelConfig in f:
                 dic = json.loads(tunnelConfig)
                 dictOfTunnel.append(dic)
-                sshDescriptor = SSHTunnelDescriptor()
-                sshDescriptor.lHost = dic['lhost']
-                sshDescriptor.rHost = dic['rhost']
-                sshDescriptor.rPort = dic['rport']
-                sshDescriptor.lPort = dic['lport']
-                sshDescriptor.name = dic['name']
-                sshDescriptor.optionsList = dic['options']
-                ''' #not valid ? why
+
+                #not valid ? why # because you are dumb f**k and check your last commit to see that there was no lHost rHost members, moron
                 sshDescriptor = SSHTunnelDescriptor(
                 dic['name'],
                 dic['options'],
                 dic['lhost'],
                 dic['lport'],
                 dic['rhost'],
-                dic['rport']
+                dic['rport'],
+                self.debug
                 )
-                '''
+
                 self.listOfTunnels.append(sshDescriptor)
-            '''
-            #for i in dictOfTunnel:
-            #   print i
-            #print len(self.__listOfTunnels)
-            #for sshDescriptor in self.listOfTunnels():
-            #    print sshDescriptor.name
-            '''
 
         except Exception, e:
             return e.message
-
 
     def initEnvVars(self,listVars):
         #file could be json with name:value attributes
