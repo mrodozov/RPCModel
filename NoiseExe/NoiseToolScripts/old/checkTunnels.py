@@ -10,7 +10,7 @@ def checkTunnel(tunnelString):
         print 'restarting tunnel ',tunnelString
         try:
             tunopen = subprocess.Popen("ssh -f -N -L "+tunnelString,shell = True,close_fds=True)
-            out,err = tunopen.communicate()
+            out, err = tunopen.communicate()
             if err is None:
                 tunnelRestarted = True
         except ValueError:

@@ -13,8 +13,9 @@ class SSHTunnelDescriptor:
         self.tunnelName = tName
         self.options = options
         self.debug = debug
+        self.isRunning = False
     def tunnelString(self):
-        t =  str(self.localPort) + ':' + str(self.remoteHost) + ':' + str(self.remoteHost) + ' ' + str(self.localHost)
+        t =  str(self.localPort) + ':' + str(self.remoteHost) + ':' + str(self.remotePort) + ' ' + str(self.localHost)
         if self.debug:
             print t
 
@@ -69,34 +70,62 @@ class EnvHandler:
             print 'env vars file', fileWithEnvVars
             print 'debug in  EnvHandler __init__' #not set yet
 
+    def start(self, tunnel):
+        '''
+        starts new ssh tunnel
+        :param tunnel: SSHDescriptor object
+        :return: return success true or false
+        '''
+        tunnelStr = tunnel.tunnelString()
+        hasStarted = False
+        try:
+            tunopen = subprocess.Popen("ssh -f -N -L "+tunnelStr,shell = True,close_fds=True)
+            out, err = tunopen.communicate()
+            if err is None:
+                hasStarted = True
+                tunnel.isRunning = True
+        except ValueError:
+            print 'tunnel', tunnel.tunnelName, 'failed to start !'
+
+        return hasStarted
+
     def checkTunnel(self, sshTunnel):
+        '''
+        checks whether a tunnel is started or not. only checks, doesnt start it
+        :param sshTunnel: SSHDescriptor
+        :return: return true if the process exists, false if doesn't
+        '''
+
         tstring = sshTunnel.tunnelString()
         p = subprocess.Popen("ps -ef | grep ssh | grep '"+tstring+"' | grep -v grep", shell = True, stdout = subprocess.PIPE)
         out, err = p.communicate()
-        retval = False
+        isRunning = False
         if not out:
-            retval = False
+            isRunning = False
             if self.debug:
                 print 'output for', sshTunnel.tunnelName, 'is', out
         else:
-            retval = True
-        return retval
+            isRunning = True
+
+        return isRunning
 
     def checkListOfTunnels(self):
+        '''
+        loops on the list of tunnels, described in the config, tries if the tunnels exists as processes and restart them if not
+        :return: doesnt return anything
+        '''
         for tunnel in self.listOfTunnels:
             tunnelCheck = self.checkTunnel(tunnel)
             if not tunnelCheck:
-                #self.start(tunnel) # do not execute when in dev mode, it would start ssh tunnels
+                self.start(tunnel) # do not execute when in dev mode, it would start ssh tunnels
                 if self.debug:
                     print 'starting tunnel', tunnel.tunnelName
 
-    
-    def start(self, tunnel):
-
-
-        return True
-
     def initConfigs(self, listConfigs):
+        '''
+        :param listConfigs: file with ssh tunnel descriptions
+        :return: return message in case of exception
+        '''
         #file better be JSON with similar object attributes
         if not os.path.isfile(listConfigs):
             raise Exception("tunnels config file not found or empty")
