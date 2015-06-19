@@ -24,10 +24,17 @@ class SSHTunnelDescriptor:
         if self.debug:
             print 'SSHDescriptorDestructor called for tunnel', self.tunnelName
 
+class ProcessDescriptor: #TODO - SSHTUnnelDescriptor could inherit from process, since
+    def __init__(self,name=None,pname=None,powner=None):
+        self.name = name
+        self.powner = powner
+        self.pname = pname
+
 class EnvHandler:
 
     listOfTunnels = []
     listOfProcesses = []
+    listOfEnvVars = []
     debug = False
 
     '''
@@ -58,12 +65,17 @@ class EnvHandler:
         if self.debug:
             print 'dunno , print ?'
 
-    def __init__(self,fileWithTunnels,fileWithEnvVars,debug=False):
+    def __init__(self,fileWithTunnels,fileWithProcesses,fileWithEnvVars,debug=False):
         self.listOfTunnels = []
         self.listOfProcesses = []
+        self.listOfEnvVars = []
         self.debug = debug
         self.initConfigs(fileWithTunnels)
         self.checkListOfTunnels()
+        self.initProcesses(fileWithProcesses)
+        self.checkListOfProcesses()
+        self.initEnvVars(fileWithEnvVars)
+
 
         if self.debug:
             print 'tunnels file', fileWithTunnels
@@ -112,14 +124,21 @@ class EnvHandler:
     def checkListOfTunnels(self):
         '''
         loops on the list of tunnels, described in the config, tries if the tunnels exists as processes and restart them if not
-        :return: doesnt return anything
+        :return: doesnt return anything #TODO - make it return dictionary of
         '''
+        statusDict = {} #dictionary with name:status for each tunnel
         for tunnel in self.listOfTunnels:
             tunnelCheck = self.checkTunnel(tunnel)
             if not tunnelCheck:
                 self.start(tunnel) # do not execute when in dev mode, it would start ssh tunnels
                 if self.debug:
                     print 'starting tunnel', tunnel.tunnelName
+            else:
+                if self.debug:
+                    print 'tunnel ', tunnel.tunnelName , ' is running'
+            statusDict[tunnel.tunnelName] = tunnelCheck
+
+        return statusDict
 
     def initConfigs(self, listConfigs):
         '''
@@ -136,7 +155,6 @@ class EnvHandler:
             for tunnelConfig in f:
                 dic = json.loads(tunnelConfig)
                 dictOfTunnel.append(dic)
-
                 #not valid ? why # because you are dumb f**k and check your last commit to see that there was no lHost rHost members, moron
                 sshDescriptor = SSHTunnelDescriptor(
                 dic['name'],
@@ -153,14 +171,68 @@ class EnvHandler:
         except Exception, e:
             return e.message
 
-    def initEnvVars(self,listVars):
-        #file could be json with name:value attributes
-        if not os.path.isfile(listVars) or os.path.getsize(listVars) == 0:
-            return 'vars config file not found or empty'
+    def initProcesses(self,listOfProcesses):
+        if not os.path.isfile(listOfProcesses):
+            raise Exception("processes config file not found of empty")
         try:
-            f = open(listVars,'r')
-            #check structure of file and then if all variables are set. if not set, reset
-
+            with open (listOfProcesses) as data_file:
+                lines = data_file.read().splitlines()
+                for line in lines:
+                    jdata = json.loads(line)
+                    newProcess = ProcessDescriptor (
+                        jdata['name'],
+                        jdata['pname'],
+                        jdata['powner']
+                    )
+                    self.listOfProcesses.append(newProcess)
         except Exception, e:
             return e.message
+
+    def checkProcess(self,process):
+        '''
+        :param process: process object
+        :return: return process run status True or False
+        '''
+        retval = False
+        processString = process.pname
+
+        p = subprocess.Popen("ps -ef | grep '"+processString+"' | grep -v grep", shell = True, stdout = subprocess.PIPE)
+        out, err = p.communicate()
+        if out:
+            retval = True
+        if self.debug:
+            print 'debug for process', process.pname
+        return retval
+
+    def checkListOfProcesses(self):
+        statusDict = {}
+        for process in self.listOfProcesses:
+            status = self.checkProcess(process)
+            statusDict[process.name] = status
+            if self.debug:
+                print 'process ', process.name, ' status is', status
+        return statusDict
+
+    def initEnvVars(self,listVars):
+
+        if not os.path.isfile(listVars) or os.path.getsize(listVars) == 0:
+            return 'vars config file not found or empty'
+        with open(listVars) as data_file:
+            data = json.load(data_file)
+            for k,v in data.items():
+                pair = {}
+                pair[k] = v
+                self.listOfEnvVars.append(pair)
+
+
+    def setListOfEnvVars(self):
+        varDict = {}
+        return varDict
+        #for key, value in self.listOfEnvVars:
+
+
+
+
+
+
 

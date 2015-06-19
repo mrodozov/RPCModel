@@ -28,4 +28,5 @@
   
 - Report manager
   Takes care of collecting error or success outputs, update the logs and send email
-  notifications. Maybe method to create short reports from the log files 
+  notifications. Maybe method to create short reports from the log files
+

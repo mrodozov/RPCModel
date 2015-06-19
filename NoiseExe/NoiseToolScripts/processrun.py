@@ -2,12 +2,21 @@
 # creates the objects required, hook them up and follows a logic
 #
 
+import json
 from RequirementsManager import EnvHandler
 
+eHandler = EnvHandler('resources/ListOfTunnels.json','resources/process.json' ,'resources/variables.json', False)
 
-eHandler = EnvHandler('resources/ListOfTunnels.json', 'resources/variables.json', True)
 tunnels = eHandler.listOfTunnels
-#eHandler.checkListOfTunnels()
-for i in tunnels:
-    print i.tunnelName, i.localPort
+processes = eHandler.listOfProcesses
+evars = eHandler.listOfEnvVars
 
+eHandler.checkListOfTunnels()
+eHandler.checkListOfProcesses()
+
+for p in processes:
+    print p.name
+
+for ev in evars:
+    for k, v in ev.items():
+        print k,v
