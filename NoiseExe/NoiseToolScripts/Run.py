@@ -1,2 +1,8 @@
-#run data storage and processing, using the other services to complete 
-#
+__author__ = 'rodozov'
+
+class Run(object):
+    '''
+    Class run is
+    '''
+    def __init__(self):
+        pass

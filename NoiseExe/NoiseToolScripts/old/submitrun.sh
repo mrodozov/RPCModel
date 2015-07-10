@@ -24,9 +24,6 @@ if [[ $wrong_syntax -ne 0 ]]
     exit -1
 fi
 
-
-
-
 export runexist=`cat index.html | grep run$1 | wc -l`
 
 echo $runexist

@@ -1,8 +1,6 @@
 __author__ = 'rodozov'
 
-import os,subprocess,os.path,json,copy
-
-#class ProcessDescriptor:
+import os,subprocess,os.path,json
 
 class SSHTunnelDescriptor:
     def __init__(self,tName=None,options=None,localHost=None,localPort=None,remoteHost=None,remotePort=None,debug=False):
@@ -14,12 +12,14 @@ class SSHTunnelDescriptor:
         self.options = options
         self.debug = debug
         self.isRunning = False
+
     def tunnelString(self):
         t =  str(self.localPort) + ':' + str(self.remoteHost) + ':' + str(self.remotePort) + ' ' + str(self.localHost)
         if self.debug:
             print t
 
         return t
+
     def __del__(self):
         if self.debug:
             print 'SSHDescriptorDestructor called for tunnel', self.tunnelName
@@ -37,29 +37,10 @@ class EnvHandler:
     listOfEnvVars = []
     debug = False
 
-    '''
-    class SSHTunnelDescriptor:
-        def __init__(self,tName=None,options=None,localHost=None,localPort=None,remoteHost=None,remotePort=None):
-            self.__localHost = localHost
-            self.__localPort = localPort
-            self.__remoteHost = remoteHost
-            self.__remotePort = remotePort
-            self.__tunnelName = tName
-            self.__options = options
-        def lHost(self):
-            return self.__localHost
-        def lPort(self):
-            return self.__localPort
-        def name(self):
-            n = self.__tunnelName
-            return n
-        def rHost(self):
-            return self.__remoteHost
-        def rPort(self):
-            return self.__remotePort
-        def optionsList(self):
-            return self.__options
-    '''
+    #TODO - make the external classes internal
+    #TODO - check connection event handler, uses detached asynch call that fire events on connection fail. use this
+    #http://stackoverflow.com/questions/3764291/checking-network-connection
+    #http://stackoverflow.com/questions/4689984/implementing-a-callback-in-python-passing-a-callable-reference-to-the-current
 
     def __del__(self):
         if self.debug:
@@ -213,6 +194,11 @@ class EnvHandler:
                 print 'process ', process.name, ' status is', status
         return statusDict
 
+    '''
+    List of methods to be finished
+    when there is any point of doing this with python
+    '''
+
     def initEnvVars(self,listVars):
 
         if not os.path.isfile(listVars) or os.path.getsize(listVars) == 0:
@@ -224,15 +210,15 @@ class EnvHandler:
                 pair[k] = v
                 self.listOfEnvVars.append(pair)
 
-
     def setListOfEnvVars(self):
         varDict = {}
+        for k,v in self.listOfEnvVars.items():
+            os.environ[k] = v
+            #check if the var has to be set, set it if it has to, and the assign the
+            varDict[k] = os.environ[k]
         return varDict
-        #for key, value in self.listOfEnvVars:
 
-
-
-
-
-
-
+    def executeListOfShellCommands(self):
+        dictOfExitStatuses = {} # command name - exit status dictionary
+        #lol
+        return dictOfExitStatuses

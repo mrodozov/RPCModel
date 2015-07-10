@@ -15,6 +15,9 @@ using namespace std;
 
 int main( int argc ,char *argv[] ){
   
+  string inputFile = argv[1];
+  IsCorruptedFile(inputFile);
+  
   //string chamberSuffix = argv[1], fileInput = argv[2], area = argv [3];
   //getCorrectedChambersRateDistribution(chamberSuffix,fileInput,area);
   

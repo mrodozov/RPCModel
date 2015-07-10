@@ -8,7 +8,6 @@ import subprocess
 
 URL = "http://localhost:22223/runregistry/"
 
-
 def getNextRange(runType, lastRun, runDuration):
 
     runInfo = []
