@@ -5151,11 +5151,13 @@ bool IsCorruptedFile(string theFile){
   
   TFile * myFile = new TFile(theFile.c_str(),"READ","in");
   if(myFile->IsZombie()){
-    exit_code = true;
-    
+    exit_code = EXIT_FAILURE;
+    cout << " File is corrupted " << endl;
   }
-  
-  cout << exit_code << endl;
+  else if (!myFile->IsOpen()){
+    exit_code = 2;
+    cout << "File does not exist" << endl;
+  }
   return exit_code;
   
 }
@@ -5389,6 +5391,76 @@ void printTowerRE4(const string & towerRooFile){
   
   rfile->Close("R");
   rfile->Delete();
+}
+
+void DeadMaskedInactivePlot(const string & inputFile){
+  
+  
+  DataObject runlist(inputFile);
+  int numberOfRuns = runlist.getLenght();
+  TH1F * historyPlotDead = new TH1F("d","Masked",numberOfRuns,0,numberOfRuns);
+  TH1F * historyPlotMasked = new TH1F("m","Dead",numberOfRuns,0,numberOfRuns);
+  TH1F * historyPlotInactive = new TH1F("i","Inactive",numberOfRuns,0,numberOfRuns);
+  TCanvas * canvas = new TCanvas("c","c",1200,700);
+  
+  int bincounter = 0;
+  
+  int totalNumberOfStrips = 132352;
+  
+  for (int line = 0 ; line < runlist.getLenght() ; line++){
+    
+    int runnum = runlist.getElementAsInt(line+1,1);
+    cout << runnum << endl;
+    string runasstring = "run"+runlist.getElement(line+1,1);
+    string fileWithDead = runasstring+"/AllDead.txt";
+    string fileWithMasked = runasstring+"/AllMasked.txt";
+    DataObject * deadStripsObject = new DataObject(fileWithDead);
+    DataObject * maskedStripsObject = new DataObject(fileWithMasked);
+    
+    int mskd = deadStripsObject->getLenght();
+    int dead = maskedStripsObject->getLenght();
+    int allinactive = mskd+dead;
+    
+    double inactivefraction = double(allinactive*100)  / double(totalNumberOfStrips);
+    double deadfraction = double(dead*100)  / double(totalNumberOfStrips);
+    double maskedfraction = double(mskd*100)  / double(totalNumberOfStrips);
+    
+    historyPlotMasked->SetBinContent(bincounter+1,maskedfraction);
+    historyPlotDead->SetBinContent(bincounter+1,deadfraction);
+    historyPlotInactive->SetBinContent(bincounter+1,inactivefraction);
+    historyPlotInactive->GetXaxis()->SetBinLabel(bincounter+1,runasstring.c_str());
+    
+    bincounter++;
+    delete deadStripsObject;
+    delete maskedStripsObject;
+  }
+  
+  TLegend * leg;
+  leg = new TLegend(0.673275,0.679851,0.921439,0.84349);
+  leg->SetFillColor(0);
+  leg->SetTextSize(0.04);
+  leg->SetBorderSize(0);
+  leg->AddEntry(historyPlotMasked,"Masked");
+  leg->AddEntry(historyPlotDead,"Inactive");
+  leg->AddEntry(historyPlotInactive,"Total");
+  
+  historyPlotInactive->GetXaxis()->SetTitle("Run number");
+  historyPlotInactive->GetYaxis()->SetTitle("Inactive channels in %");
+  historyPlotInactive->GetYaxis()->SetRangeUser(0,5);
+  
+  historyPlotInactive->SetLineColor(kRed);
+  historyPlotDead->SetLineColor(kBlue);
+  historyPlotMasked->SetLineColor(kGreen); 
+  
+  canvas->cd();
+  historyPlotInactive->Draw();
+  historyPlotMasked->Draw("same");
+  historyPlotDead->Draw("same");
+  leg->Draw();
+  
+  canvas->SaveAs("dmi.root");
+  
+  
 }
 
 // endof QueryObject methods

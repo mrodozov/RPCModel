@@ -124,7 +124,7 @@ cd ..
 echo done!
 
 echo "Prepare the temporary index file ... "
-cat index.html | sort -u -d > myTESTS/new_index.html
+cat index.html | sort -u -d > myTESTS/new_index.html #nope
 
 ### Recompile !
 ##echo "Preparing general history plots for the main page ..."

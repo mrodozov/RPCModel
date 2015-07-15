@@ -13,8 +13,8 @@ void LBNoiseF(int _argc, char * _argv[]){
   float rateThr = 30000.;  // 30 kHz threshold for dangerous noisy strips
   //  float rateThr = 3000.;  // 3 kHz threshold for noisy strips
   bool debug;
-  if (_argc > 2){
-  int debg = atoi(_argv[2]);
+  if (_argc > 5){
+  int debg = atoi(_argv[5]);
   debug  = debg;
   
   }
@@ -22,8 +22,9 @@ void LBNoiseF(int _argc, char * _argv[]){
   
   bool strips = false;    // set "true" to fill in histos at the level of single strips 
   
-  LBName lbnames;  
- 
+  LBName lbnames(_argv[2],_argv[3]);
+  std::string resultsDirectory = _argv[4];
+  
   if (_argc == 1) {
  
     std::cout <<"  "<<std::endl;
@@ -149,14 +150,6 @@ void LBNoiseF(int _argc, char * _argv[]){
  ofstream myfile5;
  ofstream myfile6;
  ofstream myfile7;
-
- myfile1.open(filetxt1.c_str());
- myfile2.open(filetxt2.c_str());
- myfile3.open(filetxt3.c_str());
- myfile4.open(filetxt4.c_str());
- myfile5.open(filetxt5.c_str());
- myfile6.open(filetxt6.c_str());
- myfile7.open(filetxt7.c_str());
  
  TTree* tree;
  
@@ -165,10 +158,18 @@ void LBNoiseF(int _argc, char * _argv[]){
    cout << " File is with complete structure, continue " << endl;
  }
 
-else {
-  cout << " file is missing the tree, abort" << endl;
-  exit(-1);
-}
+  else {
+    cout << " file is missing the tree, abort" << endl;
+    exit(-1);
+  }
+ 
+ myfile1.open((resultsDirectory+"/"+filetxt1).c_str());
+ myfile2.open((resultsDirectory+"/"+filetxt2).c_str());
+ myfile3.open((resultsDirectory+"/"+filetxt3).c_str());
+ myfile4.open((resultsDirectory+"/"+filetxt4).c_str());
+ myfile5.open((resultsDirectory+"/"+filetxt5).c_str());
+ myfile6.open((resultsDirectory+"/"+filetxt6).c_str());
+ myfile7.open((resultsDirectory+"/"+filetxt7).c_str());
  
  // = dynamic_cast<TTree *>(hfile->Get("tree"));
  
@@ -184,8 +185,7 @@ else {
    cs.push_back(c);
  }
  
- 
- TFile ana(fileout.c_str(),"RECREATE","Noise Results");
+ TFile ana((resultsDirectory+"/"+fileout).c_str(),"RECREATE","Noise Results");
  std::vector<TH1F> hstrips;
  std::vector<TH1F> hstripsNM;
  std::vector<TH1F> hiss;

@@ -16,7 +16,11 @@ using namespace std;
 int main( int argc ,char *argv[] ){
   
   string inputFile = argv[1];
-  IsCorruptedFile(inputFile);
+  //int exit_code = IsCorruptedFile(inputFile);
+  //exit(exit_code);
+  DeadMaskedInactivePlot(inputFile);
+  
+  return 0;
   
   //string chamberSuffix = argv[1], fileInput = argv[2], area = argv [3];
   //getCorrectedChambersRateDistribution(chamberSuffix,fileInput,area);
@@ -62,7 +66,9 @@ int main( int argc ,char *argv[] ){
   //cout << "Translating rolls with dead and masked strips only for efficiency studies ..." << endl;                                                                                                           
   //string efficiency_input = argv[10],efficiency_output = argv[11];                                                                                                                                           
   //WriteResultsUsingIOtextFilesAndDataSources(efficiency_input,efficiency_output,Mskd,Dead,RawIDObj);
-
-  return 0;
+  
+  //exit(exit_code);
+  
+  
   
 }

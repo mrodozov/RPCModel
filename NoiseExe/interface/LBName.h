@@ -10,6 +10,7 @@
 class LBName{
  public:
   LBName();
+  LBName(const std::string & lbtochamber,const std::string & areanoise);
   virtual ~LBName(){};
   std::string chamber(const std::string& link);
   double areastrip(const std::string& cha);

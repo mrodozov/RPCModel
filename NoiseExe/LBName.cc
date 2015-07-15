@@ -1,7 +1,9 @@
 #include "interface/LBName.h"
 
-LBName::LBName(){
-  std::fstream fname("resources/lb-chamber-withRE4.txt");
+using namespace std;
+
+LBName::LBName(const string & lbtochamber,const std::string & areanoise){
+  std::fstream fname(lbtochamber.c_str());
   int l=0;
   char buffer[128];
   std::string cha,link;
@@ -19,7 +21,7 @@ LBName::LBName(){
 	// find the same chamber in area_noise.txt and get its surface,
 	// strip surface and number of strips
  
-	std::fstream fn("resources/area_noise_withRE4.txt");  
+	std::fstream fn(areanoise.c_str());  
 	int ll=0;
 	char buff[128];
 	std::string chamb;
@@ -60,6 +62,7 @@ LBName::LBName(){
 
   while (!fname.eof());
 }
+
 
 std::string LBName::chamber(const std::string& link){
   std::string cha;

@@ -177,6 +177,9 @@ void getCorrectedChambersRateDistribution(const string & chamberSuffix,const str
 void addZeroSuffixForlbMap(const string & filename); // 
 
 void printTowerRE4(const string & towerRooFile);
+
+void DeadMaskedInactivePlot(const string & runfolder);
+
 //
 
 #endif
