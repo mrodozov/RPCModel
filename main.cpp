@@ -15,12 +15,14 @@ using namespace std;
 
 int main( int argc ,char *argv[] ){
   
+  /*
   string inputFile = argv[1];
   //int exit_code = IsCorruptedFile(inputFile);
   //exit(exit_code);
   DeadMaskedInactivePlot(inputFile);
   
   return 0;
+  */
   
   //string chamberSuffix = argv[1], fileInput = argv[2], area = argv [3];
   //getCorrectedChambersRateDistribution(chamberSuffix,fileInput,area);
@@ -46,8 +48,8 @@ int main( int argc ,char *argv[] ){
   NewOldLBsHistos(newLBsList,oldLBsList,areaFile,resourceDir,runNum,resultPic,textOutput);
   */
   
-  /*
-  string root_file=argv[1],out_put_rolls_db_file=argv[2],out_put_strips_db_file=argv[3],error_file=argv[12],Roll_list=argv[13];                                                                                
+  
+  string root_file=argv[1],out_put_rolls_db_file=argv[2],out_put_strips_db_file=argv[3],error_file=argv[10],Roll_list=argv[11];                                                                                
   DataObject Mskd;                                                                                                                                                                                             
   DataObject Dead;                                                                                                                                                                                             
   DataObject ToMask;                                                                                                                                                                                           
@@ -60,14 +62,15 @@ int main( int argc ,char *argv[] ){
   ToUnmask.getDataFromFile(argv[7],2);                                                                                                                                                                         
   Areas.getDataFromFile(argv[8],2);                                                                                                                                                                            
   RawIDObj.getDataFromFile(argv[9],2);                                                                                                                                                                         
-  cout << "Translating roll and strip files for DB please wait ..." << endl;                                                                                                                                   
+  cout << "Translating roll and strip files for DB please wait ..." << endl;
+  
   WriteRollsAndStripsFilesForDB_usingRootFile(root_file,out_put_rolls_db_file,out_put_strips_db_file,error_file,Mskd,Dead,ToMask,ToUnmask,Areas,RawIDObj,Roll_list);                                          
-  */
+  
   //cout << "Translating rolls with dead and masked strips only for efficiency studies ..." << endl;                                                                                                           
   //string efficiency_input = argv[10],efficiency_output = argv[11];                                                                                                                                           
   //WriteResultsUsingIOtextFilesAndDataSources(efficiency_input,efficiency_output,Mskd,Dead,RawIDObj);
   
-  //exit(exit_code);
+ //exit(exit_code);
   
   
   

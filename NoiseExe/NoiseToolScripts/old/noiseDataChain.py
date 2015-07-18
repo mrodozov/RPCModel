@@ -428,7 +428,7 @@ elif runOptions[0] == 1:
       else:
         runOK.append(run)
   
-  
+
 else:
   try:
     fin = open("./run_list_to_db.txt","r")

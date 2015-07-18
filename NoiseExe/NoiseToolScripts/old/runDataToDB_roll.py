@@ -26,7 +26,7 @@ except Exception, e:
   is_sqlalchemy = False
 
 
-class DBService(object):
+class DBServiceRolls(object):
   def __init__(self, dbType='sqlite:///', host=None, port=None, user='', password= '', schema='', dbName='runData.db'):
     self.__dbType = dbType
     self.__schema = schema
@@ -289,7 +289,7 @@ if __name__ == '__main__':
   argParser = ArgumentParser()
   settings = argParser.parse(sys.argv[1:])
   
-  dbService = DBService(dbType=settings['dbType'], host=settings['hostname'], port=settings['port'], user=settings['username'], password=settings['password'], schema=settings['schema'], dbName=settings['dbName'])
+  dbService = DBServiceRolls(dbType=settings['dbType'], host=settings['hostname'], port=settings['port'], user=settings['username'], password=settings['password'], schema=settings['schema'], dbName=settings['dbName'])
 
 #  dbService.createDB()
   fileReader = FileReader()

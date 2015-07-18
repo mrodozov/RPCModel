@@ -410,16 +410,13 @@ void WriteRollInactiveStripsRatios( string Output, DataObject& Masked, DataObjec
       delete aRoll;
   }
   
-  
-  
-  
   ResultsOFS.close();
   RollNamesIFstream.close();
   
 }
 
-
 void WriteRollsAndStripsFilesForDB_usingRootFile(string rootFile, string OutputRolls,string OutputStrips,string ErrorFile, DataObject& Masked, DataObject& Dead, DataObject& ToMask, DataObject& ToUnmask, DataObject& Areas, DataObject& RawIDFile,string rollNames) {
+    int exit_code = 0;
     ofstream StripsOFS;
     ofstream RollsOFS,ErrorOFS;
     StripsOFS.open(OutputStrips.c_str());

@@ -34,7 +34,7 @@ void LBNoiseF(int _argc, char * _argv[]){
     std::cout <<"  "<<std::endl;
     //return 0;
   }
-
+  
   cout << " file check passed " << endl;
  
   std::string filein;
