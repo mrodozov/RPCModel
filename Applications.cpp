@@ -15,6 +15,7 @@
 #include <assert.h>
 #include <math.h>
 #include <map>
+#include <boost/concept_check.hpp>
 #include "core/DataObject.h"
 #include "core/ExtendedStrip.h"
 #include "core/ExtendedRoll.h"
@@ -80,6 +81,7 @@ TH2F * getHVvsRatePlotForOneRollForRunList(string & rollName,const string & reso
         }
         delete aroll;
     }
+    
     delete bufferRunNumber,buffHV,refPress,refTemp;
     return histo;
 }
@@ -470,7 +472,6 @@ void WriteRollsAndStripsFilesForDB_usingRootFile(string rootFile, string OutputR
             aRoll->WriteResultForDB(RollsOFS);
             aRoll->WriteDetailedResultsForDB(StripsOFS,ErrorOFS);
             onlineNameMap[rollName] = true;
-	    
             delete aRoll;
 	    
         }
@@ -5459,6 +5460,59 @@ void DeadMaskedInactivePlot(const string & inputFile){
   
   
 }
+
+
+void WriteIDsMap(const string & inputRolls,const string & RawIDsFile,const string & areaFile, const string & towerFile, const string & chipsMapFile,const string & outputFile){
+  
+  DataObject input(inputRolls);
+  DataObject raws(RawIDsFile);
+  DataObject area(areaFile);
+  
+  cout << "{" << endl;
+  
+  for (int i = 0 ; i < input.getLenght() ; i++){
+  
+    ExRoll * aroll = new ExRoll(input.getElement(i+1,1));
+    aroll->allocStrips();	
+    aroll->initStrips();
+    aroll->setRollRawIDfromSource(raws);
+    aroll->setStripsAreaFromSource_cmsswResource(area);
+    
+    //aroll->setTowerNameFromMap();
+    //aroll->assignChipsFromSource();
+    
+    cout << "\"" << aroll->getFullOnlineRollID() << "\":{";
+    
+    for (int clone = 0 ; clone < aroll->getClones(); clone++ ){
+      
+      cout << endl << "     \"" << aroll->getRollIDofCloneWithNewIdentifiers(clone+1) << "\":{\"channels\":[" ;
+      
+      for (int chNum = aroll->getFirstStripNumberOfClone(clone+1) ; chNum <= aroll->getLastStripNumberOfClone(clone+1); chNum++ ){
+	cout << chNum;
+	if (chNum < aroll->getLastStripNumberOfClone(clone+1) ) { cout << ","; }
+      }
+      
+      cout << "],\"strips\":[" ; 
+      for (int chNum = aroll->getFirstStripNumberOfClone(clone+1) ; chNum <= aroll->getLastStripNumberOfClone(clone+1) ; chNum ++){
+	cout << aroll->getStrip(chNum)->getOfflineNumber();
+	if (chNum < aroll->getLastStripNumberOfClone(clone+1) ) { cout << ","; }
+      }
+      
+      cout << "]}";
+      if (clone+1 < aroll->getClones() ) { cout << ","; } 
+    }
+    
+    
+    cout << endl << "}";
+    if ( i+1 < input.getLenght()) { cout << "," << endl; }
+    
+    delete aroll;
+    
+  }
+  cout <<  "}" << endl;
+}
+
+
 
 // endof QueryObject methods
 

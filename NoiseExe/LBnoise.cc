@@ -739,7 +739,7 @@ TH2F hnoisy3("Rate noisy strips vs noise percentage", "Summary of # noisy strips
 	   if (i==0) nMaskedb ++ ;                 
 	   if (i==0) nMasked ++ ;
 	   if ((debug)&(i==5)) 
-	   std::cout << " LB_channel n. = "<<l+1<<" of chamber "<<cha <<" masked. FULL "<<ncount<<" WIN "<<ncountNM <<std::endl;
+	   std::cout << "LB_channel n. = "<<l+1<<" of chamber "<<cha <<" masked. FULL "<<ncount<<" WIN "<<ncountNM <<std::endl;
 
 	   if (i==0) myfile6 << "LB_Channel n. = "<<l+1<<" of chamber "<<cha <<" masked \n";
  
@@ -870,7 +870,7 @@ TH2F hnoisy3("Rate noisy strips vs noise percentage", "Summary of # noisy strips
 	 if (debug) std::cout << " Strip n. = "<<l+1<<" of chamber "<<cha <<" noisy for " << float(timeNoisy/60.) << " minutes, with max rate "<<float(ratemax) <<" Hz/cm2 "<<std::endl;
 	 nToMask ++ ;
 	 nToMaskb ++ ;
-	 myfile1 << " LB_Channel n. = "<<l+1<<" of chamber "<<cha <<" noisy for " << float(timeNoisy/60.) << " minutes, with max rate "<<float(ratemax) <<" Hz/cm2 \n";
+	 myfile1 << "LB_Channel n. = "<<l+1<<" of chamber "<<cha <<" noisy for " << float(timeNoisy/60.) << " minutes, with max rate "<<float(ratemax) <<" Hz/cm2 \n";
        }
 
 
@@ -882,7 +882,7 @@ TH2F hnoisy3("Rate noisy strips vs noise percentage", "Summary of # noisy strips
 
 	 //if (debug) 
 	   std::cout << " Strip n. = "<<l+1<<" of chamber "<<cha <<" masked! But not noisy with max rate "<<ratemax<<" Hz/cm2 " <<std::endl;
-	 myfile2 << "LB_Channel  n. = "<<l+1<<" of chamber "<<cha <<" is masked but not noisy with max rate "<<ratemax<<" Hz/cm2 \n" ;
+	 myfile2 << "LB_Channel n. = "<<l+1<<" of chamber "<<cha <<" is masked but not noisy with max rate "<<ratemax<<" Hz/cm2 \n" ;
        }
 
 

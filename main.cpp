@@ -48,7 +48,7 @@ int main( int argc ,char *argv[] ){
   NewOldLBsHistos(newLBsList,oldLBsList,areaFile,resourceDir,runNum,resultPic,textOutput);
   */
   
-  
+  /*
   string root_file=argv[1],out_put_rolls_db_file=argv[2],out_put_strips_db_file=argv[3],error_file=argv[10],Roll_list=argv[11];                                                                                
   DataObject Mskd;                                                                                                                                                                                             
   DataObject Dead;                                                                                                                                                                                             
@@ -65,13 +65,16 @@ int main( int argc ,char *argv[] ){
   cout << "Translating roll and strip files for DB please wait ..." << endl;
   
   WriteRollsAndStripsFilesForDB_usingRootFile(root_file,out_put_rolls_db_file,out_put_strips_db_file,error_file,Mskd,Dead,ToMask,ToUnmask,Areas,RawIDObj,Roll_list);                                          
-  
+  */
   //cout << "Translating rolls with dead and masked strips only for efficiency studies ..." << endl;                                                                                                           
   //string efficiency_input = argv[10],efficiency_output = argv[11];                                                                                                                                           
   //WriteResultsUsingIOtextFilesAndDataSources(efficiency_input,efficiency_output,Mskd,Dead,RawIDObj);
   
  //exit(exit_code);
-  
-  
+ string inputRolls=argv[1], raw=argv[2], area=argv[3], tower=argv[4], chips=argv[5], output=argv[6];
+ WriteIDsMap(inputRolls,raw,area,tower,chips,output);
+ 
+ 
+ 
   
 }

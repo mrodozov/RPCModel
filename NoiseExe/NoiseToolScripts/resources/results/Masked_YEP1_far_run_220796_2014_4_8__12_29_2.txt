@@ -1,0 +1,6 @@
+LB_Channel n. = 17 of chamber RE+1_2_09 masked 
+LB_Channel n. = 64 of chamber RE+1_2_09 masked 
+LB_Channel n. = 17 of chamber RE+1_2_10 masked 
+LB_Channel n. = 64 of chamber RE+1_2_10 masked 
+LB_Channel n. = 16 of chamber RE+1_2_18 masked 
+LB_Channel n. = 17 of chamber RE+1_2_18 masked 

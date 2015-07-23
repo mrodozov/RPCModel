@@ -15,9 +15,13 @@ import subprocess
 import os
 import time
 import re
+import json
 from DBService import DBService
+from RPCMap import RPCMap
 
 # TODO - Write results, log for each class, where results should be the result the command produced or checked
+# TODO - See if there is need to format HTML for any reason,
+# TODO -
 
 class Command(object):
     args = None
@@ -161,7 +165,7 @@ class DBInputPrepare(Command):
 
     def mergeInputFilesByName(self, fileDir, outputFileName, substringToSearch, orderingList, exploder):
         # TODO - rewrite this clumsy thing (if possible) !
-        listOfFiles = [f for f in os.listdir(fileDir) if f.endswith('.txt') and f.find(substringToSearch) is not -1]
+        listOfFiles = [f for f in os.listdir(fileDir) if f.endswith('.txt') and f.find(substringToSearch) is not -1 and f.find('All') is -1 ]
         # print listOfFiles
         # check if files exists
         if not listOfFiles:
@@ -174,6 +178,7 @@ class DBInputPrepare(Command):
                         for l in lines:
                             listElements = l.split(exploder)
                             if len(listElements) > 2:
+                                #print l, f
                                 argstowrite = [listElements[a] for a in orderingList]
                                 outputFile.write(' '.join(argstowrite) + '\n')
         return True
@@ -193,7 +198,12 @@ class DBInputPrepare(Command):
             rawids = resourcesDir + self.args[8]
             inputrolls = resourcesDir + self.args[9]
             for f in fileToSearch:
-                self.mergeInputFilesByName(resultsDir, 'All' + f + '.txt', f, [6, 3], ' ')
+                listOfOrderedArgs = [6, 3]
+                if f == 'ToMask':
+                    listOfOrderedArgs = [6, 3, 9, 14]
+                if f == 'ToUnmask':
+                    listOfOrderedArgs = [6, 3, 15]
+                self.mergeInputFilesByName(resultsDir, 'All' + f + '.txt', f, listOfOrderedArgs, ' ')
 
             file_to_check = rootFile + ' ' + resultsDir + 'AllMasked.txt ' + resultsDir + 'AllDead.txt ' + resultsDir + 'AllToMask.txt ' + resultsDir + 'AllToUnmask.txt ' + areaFile + ' ' + rawids + ' ' + inputrolls
             arguments = rootFile + ' ' + resultsDir + 'database_new.txt ' + resultsDir + 'database_full.txt ' + resultsDir + 'AllMasked.txt ' + resultsDir + 'AllDead.txt ' + resultsDir + 'AllToMask.txt ' + resultsDir + 'AllToUnmask.txt ' + areaFile + ' ' + rawids + ' ' + resultsDir + 'error_in_translation ' + inputrolls
@@ -224,14 +234,13 @@ class DBInputPrepare(Command):
 
                 print current_stdout, current_stderr, current_excode
 
-
             optionsToUpdate[self.name]['log'] = self.log
 
         return retval
 
 
 class DBFilesContentCheck(Command):
-    # TODO - pass the patterns from the options
+    # TODO - pass the patterns from the options, read them from a file maybe
 
     def contentCheck(self, file_content, file_type='rolls'):
         contentMeta = {'correct': True, 'errors': []}
@@ -334,7 +343,6 @@ class DBDataUpload(Command):
             optionsToUpdate[self.name]['log'] = 'failed'
         return retval
 
-
     def getDBDataFromFile(self, fileName):
 
         dataList = []
@@ -352,13 +360,129 @@ class DBDataUpload(Command):
 class OutputFilesFormat(Command):
 
     '''
-    format all outputs into single file
+    format all outputs into single file. just compactify all the data into single json file, so it could be used later and to be the only remaining thing
+    in the folder apart from the root files
     '''
 
     def execute(self, optionsToUpdate):
-        pass
+        retval = False
+        self.args = optionsToUpdate[self.name]['args']
+        self.options = optionsToUpdate[optionsToUpdate[self.name]['source']]['results']
+        rpcMapFile = self.args[0]
+        rawmapfile = self.args[1]
+        results_folder = self.args[2]
+        rolls_json_file = results_folder+self.args[3]
+        strips_json_file = results_folder+self.args[4]
+        allToUnmaskFile = results_folder+self.args[5]
+        allToMaskFile = results_folder+self.args[6]
+        fileFromInput = [f for f in self.options]
+        detailedFile = fileFromInput[0]
+        rollsFile = fileFromInput[1]
+
+        #first print
+        print detailedFile, rollsFile
+        rollObject = {}
+        stripsobject = {}
+        with open(rollsFile, 'r') as rolls_data:
+            masked = {}
+            dead = {}
+            toMask = {}
+            toUnmask = {}
+            rate = {}
+            for rollrecord in rolls_data.read().splitlines():
+                listofargs = [rec for rec in rollrecord.split()]
+                #print listofargs
+                #print rollrecord
+                if len(listofargs) < 8: continue
+                #print ' '.join(listofargs)
+                rollname = listofargs[1]
+                deadstrips = listofargs[2]
+                maskedstrips = listofargs[3]
+                tounmaskstrips = listofargs[4]
+                tomaskstrips = listofargs[5]
+                rateofroll = listofargs[6]
+                rateofrollcmsquare = listofargs[7]
+                if int(deadstrips) > 0:
+                    dead[rollname] = deadstrips
+                if int(maskedstrips) > 0:
+                    masked[rollname] = maskedstrips
+                if int(tomaskstrips) > 0:
+                    toMask[rollname] = tomaskstrips
+                if int(tounmaskstrips) > 0:
+                    toUnmask[rollname] = tounmaskstrips
+                rate[rollname] = {'rate': rateofroll, 'ratesquarecm': rateofrollcmsquare}
+            rollObject['masked'] = masked
+            rollObject['dead'] = dead
+            rollObject['tomask'] = toMask
+            rollObject['tounmask'] = toUnmask
+            rollObject['rate'] = rate
+
+        #for k in rollObject['masked']:
+        #    print k, rollObject['masked'][k]
+
+        with open(rolls_json_file, 'w') as rolls_out_file:
+            rolls_out_file.write(json.dumps(rollObject, indent=1, sort_keys=True))
+
+        '''
+        maskedk = [k for k in rollObject['masked']]
+        deadk = [k for k in rollObject['dead']]
+        tounk = [k for k in rollObject['tounmask']]
+        tmk = [k for k in rollObject['tomask']]
+        ratek = [k for k in rollObject['rate']]
+
+        print len(maskedk)
+        print len(deadk)
+        print len(tounk)
+        print len(tmk)
+        print len(ratek)
+
+        '''
+
+        rpcMap = RPCMap(rpcMapFile, rawmapfile)
+
+        allTUmap = {}
+        with open(allToUnmaskFile, 'r') as tounmaskfile:
+            for lines in tounmaskfile.read().splitlines():
+                line = [a for a in lines.split()]
+                rname = line[0]
+                channel_num = int(line[1])
+                max_rate = float(line[2])
+                chamberMap = rpcMap.chamberToRollMap[rname]
+
+                for roll_record in chamberMap:
+                    if channel_num in chamberMap[roll_record]['channels']:
+                        channel_index = chamberMap[roll_record]['channels'].index(channel_num)
+                        stripnum = chamberMap[roll_record]['strips'][channel_index]
+                        if not roll_record in allTUmap:
+                             allTUmap[roll_record] = {'channels': [], 'strips': [], 'rates': []}
+                        allTUmap[roll_record]['channels'].append(channel_num)
+                        allTUmap[roll_record]['strips'].append(stripnum)
+                        allTUmap[roll_record]['rates'].append(max_rate)
+
+        for entry in allTUmap:
+            print entry, allTUmap[entry]
+
+        with open(detailedFile, 'r') as detailed_data:
+            prevChamber = ''
+            checkChamber = True
+            #for line in detailed_data.read().splitlines():
+                #print line
+
+        keysinone = [k for k in rpcMap.chamberToRollMap]
+        keysintwo = [k for k in rpcMap.rollToChamberMap]
+        keysinthree = [k for k in rpcMap.rawToRollMap]
+
+        print len(keysinone), len(keysintwo), len(keysinthree)
+
+
+        return retval
 
 class WebResourcesFormat(Command):
+
+    '''
+    write local run html files and prepare some run markup, write it as result
+    '''
+
     def execute(self, optionsToUpdate):
         pass
 
@@ -415,9 +539,8 @@ if __name__ == "__main__":
                          'source': 'noiseexe', 'results': ''},
                      'dbfilescontent': {'args': '', 'source': 'dbinput', 'results': ''},
                      'dbdataupload' : {'args': { 'dbResources': dbSchemasDict,  'dbType':'', 'hostname':'', 'port':'', 'username':'', 'password':'', 'schema':'', 'dbName':''} ,
-                                                 'source': 'dbfilescontent', 'results': ''}
-                     'outputformat' : {'args' :'' , 'source':'dbfilescontent', 'results':'' }
-
+                                                 'source': 'dbfilescontent', 'results': ''},
+                     'outputformat' : {'args' :['resources/rpcMap','resources/resources/RawIDs.txt','resources/results/','output_rolls.json','output_strips.json', 'AllToUnmask.txt', 'AllToMask.txt'], 'source':'dbfilescontent', 'results':'' }
 
                      }
 
@@ -427,8 +550,8 @@ if __name__ == "__main__":
     fileIsCorrupted = CheckIfFilesAreCorrupted(name='check')
     passit = fileIsCorrupted.execute(optionsObject)
 
-    # noiseExe = NoiseToolMainExe(name='noiseexe')
-    # noisepassed = noiseExe.execute(optionsObject)
+    #noiseExe = NoiseToolMainExe(name='noiseexe')
+    #noisepassed = noiseExe.execute(optionsObject)
     # print optionsObject['dbinput']['args']
 
     dbInput = DBInputPrepare(name='dbinput')
@@ -440,24 +563,14 @@ if __name__ == "__main__":
     dbfilescheck = DBFilesContentCheck(name='dbfilescontent')
     dbfilescheck.execute(optionsObject)
 
-    print optionsObject[dbfilescheck.name]['results']
+    #print optionsObject[dbfilescheck.name]['results']
     #print optionsObject[dbfilescheck.name]['log']
 
-    dbUpload = DBDataUpload(name='dbdataupload')
-    dbUpload.execute(optionsObject)
+    #dbUpload = DBDataUpload(name='dbdataupload')
+    #dbUpload.execute(optionsObject)
+
+    mergeContent = OutputFilesFormat(name='outputformat')
+    mergeContent.execute(optionsObject)
 
 
 
-    # print optionsObject
-
-    '''
-
-    argss = ['resources/CheckCorruptedFile.lnxapp','resources/Histos_YEP3_near_run_220816_2014_4_8__14_55_16.root']
-    objWithOptions = {}
-    fileIsCorrupted = CheckIfFileIsCorrupted(argss,"check",objWithOptions)
-    retval = fileIsCorrupted.execute(objWithOptions)
-    #print retval
-    print fileIsCorrupted.stout, fileIsCorrupted.sterr
-    print objWithOptions
-
-    '''

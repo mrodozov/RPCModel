@@ -1,0 +1,1 @@
+Chamber W-1_RB1out_4B rate unmasked 0.765861 Hz      rate masked 0.755834 Hz 

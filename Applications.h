@@ -180,6 +180,8 @@ void printTowerRE4(const string & towerRooFile);
 
 void DeadMaskedInactivePlot(const string & runfolder);
 
+void WriteIDsMap(const string & inputRolls,const string & RawIDsFile,const string & areaFile, const string & towerFile, const string & chipsMapFile,const string & output);
+
 //
 
 #endif
