@@ -17,6 +17,7 @@ class Chain(object):
         self.log = {}
         self.sterr = None
         self.stout = None
+        self.runnumber = None
 
     def add_command(self, command):
         self.commands.append(command)
@@ -39,6 +40,8 @@ class Chain(object):
             self.log[cmndname] = command.log
             self.stout[cmndname] = command.stout
             self.sterr[cmndname] = command.sterr
+
+
 
 
 if __name__ == "__main__":

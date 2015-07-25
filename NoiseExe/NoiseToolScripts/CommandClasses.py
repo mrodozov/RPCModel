@@ -393,7 +393,7 @@ class OutputFilesFormat(Command):
                 listofargs = [rec for rec in rollrecord.split()]
                 #print listofargs
                 #print rollrecord
-                if len(listofargs) < 8 or int(listofargs[2]) == (-99) : continue
+                if len(listofargs) < 8 or int(listofargs[2]) == (-99): continue
                 #print ' '.join(listofargs)
                 rollname = listofargs[1]
                 deadstrips = listofargs[2]
@@ -417,36 +417,12 @@ class OutputFilesFormat(Command):
             rollObject['tounmask'] = toUnmask
             rollObject['rate'] = rate
 
-        #for k in rollObject['masked']:
-        #    print k, rollObject['masked'][k]
-
-        with open(rolls_json_file, 'w') as rolls_out_file:
-            rolls_out_file.write(json.dumps(rollObject, indent=1, sort_keys=True))
-
-        '''
-        # some debug lines
-        maskedk = [k for k in rollObject['masked']]
-        deadk = [k for k in rollObject['dead']]
-        tounk = [k for k in rollObject['tounmask']]
-        tmk = [k for k in rollObject['tomask']]
-        ratek = [k for k in rollObject['rate']]
-
-        print len(maskedk)
-        print len(deadk)
-        print len(tounk)
-        print len(tmk)
-        print len(ratek)
-
-        '''
-
         rpcMap = RPCMap(rpcMapFile, rawmapfile)
-
         allTUmap = {}
         allTMmap = {}
         allMaskedMap = {}
         allDeadMap = {}
         ratesDict = {}
-
 
         with open(allToUnmaskFile, 'r') as tounmaskfile:
             for lines in tounmaskfile.read().splitlines():
@@ -488,12 +464,6 @@ class OutputFilesFormat(Command):
                         allTMmap[roll_record]['rates'].append(max_rate)
                         break
 
-        #for entry in allTUmap:
-        #    print entry, allTUmap[entry]
-
-        #for entry in allTMmap:
-        #    print entry, allTMmap[entry]
-
         with open(detailedFile, 'r') as detailed_data:
             for lines in detailed_data.read().splitlines():
                 roll_record = [a for a in lines.split()]
@@ -521,25 +491,14 @@ class OutputFilesFormat(Command):
                     allDeadMap[roll_name]['channels'].append(channel_num)
                     allDeadMap[roll_name]['strips'].append(strip_num)
 
-        #for entry in ratesDict:
-        #    print entry, ratesDict[entry]
-
-        #for entry in allMaskedMap:
-        #    print entry, allMaskedMap[entry]
-
-        #for entry in allDeadMap:
-        #    print entry, allDeadMap[entry]
-
         # merge into single object and write into a file
         detailedFileOutput = {'tomask':allMaskedMap, 'dead': allDeadMap, 'tomask': allTMmap, 'tounmask': allTUmap, 'rates': ratesDict}
 
-        #keysinone = [k for k in rpcMap.chamberToRollMap]
-        #keysintwo = [k for k in rpcMap.rollToChamberMap]
-        #keysinthree = [k for k in rpcMap.rawToRollMap]
+        with open(rolls_json_file, 'w') as rolls_out_file:
+            rolls_out_file.write(json.dumps(rollObject, indent=1, sort_keys=True))
 
-        #print len(keysinone), len(keysintwo), len(keysinthree)
         with open(strips_json_file, 'w') as strips_out_file:
-            #strips_out_file.write(json.dumps(detailedFileOutput, indent=2, sort_keys=True))
+
             strips_out_file.write('{\n')
             deptone_keys = sorted(detailedFileOutput.keys())
             for deptone in sorted(detailedFileOutput.keys()):
@@ -561,8 +520,9 @@ class OutputFilesFormat(Command):
                 strips_out_file.write('\n')
             strips_out_file.write('}')
 
-        retval = True
+        # check if files has been created and not empty
 
+        retval = True
 
         return retval
 
@@ -602,7 +562,6 @@ class NewToOldDataConverter(Command):
     def __init__(self):
         pass
 
-
 if __name__ == "__main__":
     # test each object
 
@@ -616,20 +575,20 @@ if __name__ == "__main__":
     dbSchemasDict = [{'name' : 'RPC_NOISE_STRIPS', 'schm': ['run_number', 'raw_id', 'channel_number', 'strip_number', 'is_dead', 'is_masked', 'rate_hz_cm2'], 'argsList': [0, 1, 2, 3, 4, 5, 6], 'file': 'database_full.txt'},
                      {'name' : 'RPC_NOISE_ROLLS', 'schm': ['run_number','raw_id', 'rollName' ,'dead_strips', 'masked_strips', 'strips_to_unmask', 'strips_to_mask','noiseRate' ,'rate_hz_cm2'], 'argsList': [0, 1, 3, 4, 5, 6, 8 ], 'file': 'database_new.txt'}]
 
-    optionsObject = {'run': '220796', 'filelister': {'args': ['resources', towers], 'source': '', 'results': ''},
-                     'check': {'args': 'resources/CheckCorruptedFile.lnxapp', 'source': 'filelister', 'results': ''},
-                     'noiseexe': {'args': ['resources/LBNoise', 'resources/resources/lb-chamber-withRE4.txt',
-                                           'resources/resources/area_noise_withRE4.txt',
-                                           'resources/results'], 'source': 'check', 'results': ''},
+    optionsObject = {'run': '220796', 'filelister': {'args': ['inputfiles', towers], 'source': '', 'results': ''},
+                     'check': {'args': 'executables/CheckCorruptedFile.lnxapp', 'source': 'filelister', 'results': ''},
+                     'noiseexe': {'args': ['executables/LBNoise', 'resources/lb-chamber-withRE4.txt',
+                                           'resources/area_noise_withRE4.txt',
+                                           'results'], 'source': 'check', 'results': ''},
                      'dbinput': {
-                         'args': ['resources/DBInputs.lnxapp', 'resources/resources/', 'resources/results/', 'Masked',
+                         'args': ['executables/DBInputs.lnxapp', 'resources/', 'results/', 'Masked',
                                   'Dead', 'ToUnmask',
                                   'ToMask', 'area_noise_cmssw_withRE4', 'RawIDs.txt', 'InputRollList.txt'],
                          'source': 'noiseexe', 'results': ''},
                      'dbfilescontent': {'args': '', 'source': 'dbinput', 'results': ''},
                      'dbdataupload' : {'args': { 'dbResources': dbSchemasDict,  'dbType':'', 'hostname':'', 'port':'', 'username':'', 'password':'', 'schema':'', 'dbName':''} ,
                                                  'source': 'dbfilescontent', 'results': ''},
-                     'outputformat' : {'args' :['resources/rpcMap','resources/resources/RawIDs.txt','resources/results/','output_rolls.json','output_strips.json', 'AllToUnmask.txt', 'AllToMask.txt'], 'source':'dbfilescontent', 'results':'' }
+                     'outputformat' : {'args' :['resources/rpcMap','resources/RawIDs.txt','results/','output_rolls.json','output_strips.json', 'AllToUnmask.txt', 'AllToMask.txt'], 'source':'dbfilescontent', 'results':'' }
 
                      }
 
@@ -639,8 +598,8 @@ if __name__ == "__main__":
     fileIsCorrupted = CheckIfFilesAreCorrupted(name='check')
     passit = fileIsCorrupted.execute(optionsObject)
 
-    #noiseExe = NoiseToolMainExe(name='noiseexe')
-    #noisepassed = noiseExe.execute(optionsObject)
+    noiseExe = NoiseToolMainExe(name='noiseexe')
+    noisepassed = noiseExe.execute(optionsObject)
     # print optionsObject['dbinput']['args']
 
     dbInput = DBInputPrepare(name='dbinput')
