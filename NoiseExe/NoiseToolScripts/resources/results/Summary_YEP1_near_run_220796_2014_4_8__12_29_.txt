@@ -1,9 +1,0 @@
-Summary per tower - Input file resources/Histos_YEP1_near_run_220796_2014_4_8__12_29_26.root
-Total number of masked strips:             22
-Total number of masked strips to unmask:   11
-Total number of strips to mask:            4
-Average rate per roll in WIN data:         214856 Hz 
-Total number of noisy strips in FULL data: 20
-Total number of noisy strips in WIN  data: 10
-Noisy for more than 15' min in WIN data:   4
- 

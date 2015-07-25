@@ -393,7 +393,7 @@ class OutputFilesFormat(Command):
                 listofargs = [rec for rec in rollrecord.split()]
                 #print listofargs
                 #print rollrecord
-                if len(listofargs) < 8: continue
+                if len(listofargs) < 8 or int(listofargs[2]) == (-99) : continue
                 #print ' '.join(listofargs)
                 rollname = listofargs[1]
                 deadstrips = listofargs[2]
@@ -424,6 +424,7 @@ class OutputFilesFormat(Command):
             rolls_out_file.write(json.dumps(rollObject, indent=1, sort_keys=True))
 
         '''
+        # some debug lines
         maskedk = [k for k in rollObject['masked']]
         deadk = [k for k in rollObject['dead']]
         tounk = [k for k in rollObject['tounmask']]
@@ -441,6 +442,12 @@ class OutputFilesFormat(Command):
         rpcMap = RPCMap(rpcMapFile, rawmapfile)
 
         allTUmap = {}
+        allTMmap = {}
+        allMaskedMap = {}
+        allDeadMap = {}
+        ratesDict = {}
+
+
         with open(allToUnmaskFile, 'r') as tounmaskfile:
             for lines in tounmaskfile.read().splitlines():
                 line = [a for a in lines.split()]
@@ -458,21 +465,103 @@ class OutputFilesFormat(Command):
                         allTUmap[roll_record]['channels'].append(channel_num)
                         allTUmap[roll_record]['strips'].append(stripnum)
                         allTUmap[roll_record]['rates'].append(max_rate)
+                        break
 
-        for entry in allTUmap:
-            print entry, allTUmap[entry]
+        with open(allToMaskFile, 'r') as tomaksfile:
+            for lines in tomaksfile.read().splitlines():
+                line = [a for a in lines.split()]
+                rname = line[0]
+                channel_num = int(line[1])
+                max_rate = float(line[3])
+                time_as_noisy = float(line[2])
+                chamberMap = rpcMap.chamberToRollMap[rname]
+
+                for roll_record in chamberMap:
+                    if channel_num in chamberMap[roll_record]['channels']:
+                        channel_index = chamberMap[roll_record]['channels'].index(channel_num)
+                        stripnum = chamberMap[roll_record]['strips'][channel_index]
+                        if not roll_record in allTMmap:
+                            allTMmap[roll_record] = {'channels': [], 'strips': [], 'times': [],'rates': []}
+                        allTMmap[roll_record]['channels'].append(channel_num)
+                        allTMmap[roll_record]['strips'].append(stripnum)
+                        allTMmap[roll_record]['times'].append(time_as_noisy)
+                        allTMmap[roll_record]['rates'].append(max_rate)
+                        break
+
+        #for entry in allTUmap:
+        #    print entry, allTUmap[entry]
+
+        #for entry in allTMmap:
+        #    print entry, allTMmap[entry]
 
         with open(detailedFile, 'r') as detailed_data:
-            prevChamber = ''
-            checkChamber = True
-            #for line in detailed_data.read().splitlines():
-                #print line
+            for lines in detailed_data.read().splitlines():
+                roll_record = [a for a in lines.split()]
+                if len(roll_record) < 6 or int(roll_record[3]) < 0 : continue
+                rawid = roll_record[0]
+                roll_name = rpcMap.rawToRollMap[rawid]
+                channel_num = roll_record[1]
+                strip_num = roll_record[2]
+                is_masked = roll_record[3]
+                is_dead = roll_record[4]
+                ratepcms = roll_record[5]
+                if not roll_name in ratesDict:
+                    ratesDict[roll_name] = {'channels': [], 'strips': [], 'rates': []}
+                ratesDict[roll_name]['channels'].append(channel_num)
+                ratesDict[roll_name]['strips'].append(strip_num)
+                ratesDict[roll_name]['rates'].append(ratepcms)
+                if int(is_masked) == 1:
+                    if not roll_name in allMaskedMap:
+                        allMaskedMap[roll_name] = {'channels': [], 'strips': []}
+                    allMaskedMap[roll_name]['channels'].append(channel_num)
+                    allMaskedMap[roll_name]['strips'].append(strip_num)
+                if int(is_dead) == 1:
+                    if not roll_name in allDeadMap:
+                        allDeadMap[roll_name] = {'channels': [], 'strips': []}
+                    allDeadMap[roll_name]['channels'].append(channel_num)
+                    allDeadMap[roll_name]['strips'].append(strip_num)
 
-        keysinone = [k for k in rpcMap.chamberToRollMap]
-        keysintwo = [k for k in rpcMap.rollToChamberMap]
-        keysinthree = [k for k in rpcMap.rawToRollMap]
+        #for entry in ratesDict:
+        #    print entry, ratesDict[entry]
 
-        print len(keysinone), len(keysintwo), len(keysinthree)
+        #for entry in allMaskedMap:
+        #    print entry, allMaskedMap[entry]
+
+        #for entry in allDeadMap:
+        #    print entry, allDeadMap[entry]
+
+        # merge into single object and write into a file
+        detailedFileOutput = {'tomask':allMaskedMap, 'dead': allDeadMap, 'tomask': allTMmap, 'tounmask': allTUmap, 'rates': ratesDict}
+
+        #keysinone = [k for k in rpcMap.chamberToRollMap]
+        #keysintwo = [k for k in rpcMap.rollToChamberMap]
+        #keysinthree = [k for k in rpcMap.rawToRollMap]
+
+        #print len(keysinone), len(keysintwo), len(keysinthree)
+        with open(strips_json_file, 'w') as strips_out_file:
+            #strips_out_file.write(json.dumps(detailedFileOutput, indent=2, sort_keys=True))
+            strips_out_file.write('{\n')
+            deptone_keys = sorted(detailedFileOutput.keys())
+            for deptone in sorted(detailedFileOutput.keys()):
+                strips_out_file.write(json.dumps(deptone))
+                strips_out_file.write(':{\n')
+                keys = sorted(detailedFileOutput[deptone].keys())
+                for key in keys:
+                    strips_out_file.write('  ')
+                    strips_out_file.write(json.dumps(key))
+                    strips_out_file.write(':')
+                    strips_out_file.write(json.dumps(detailedFileOutput[deptone][key]))
+                    if key is not keys[-1]:
+                        strips_out_file.write(',')
+                    strips_out_file.write('\n')
+
+                strips_out_file.write('}')
+                if deptone is not deptone_keys[-1]:
+                    strips_out_file.write(',')
+                strips_out_file.write('\n')
+            strips_out_file.write('}')
+
+        retval = True
 
 
         return retval

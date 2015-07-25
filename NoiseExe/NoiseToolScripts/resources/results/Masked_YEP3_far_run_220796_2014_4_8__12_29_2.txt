@@ -1,3 +1,0 @@
-LB_Channel n. = 94 of chamber RE+3_2_12 masked 
-LB_Channel n. = 82 of chamber RE+3_2_18 masked 
-LB_Channel n. = 83 of chamber RE+3_2_18 masked 

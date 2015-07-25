@@ -1,2 +1,0 @@
-Chamber RE+4_2_04 rate unmasked 0.054293 Hz      rate masked 0.054293 Hz 
-Chamber RE+4_3_27 rate unmasked 0 Hz      rate masked 0 Hz 

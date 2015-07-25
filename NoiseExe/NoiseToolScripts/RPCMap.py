@@ -10,6 +10,8 @@ provide with list of strip numbers + partition name for given list of channel nu
 and vise versa. This is quite useful when entrire lists has to
 be retrieved since searching one by one may be heavy (searching among 130k records)
 
+TODO - complete the map automizing the most used cases
+
 '''
 
 import json

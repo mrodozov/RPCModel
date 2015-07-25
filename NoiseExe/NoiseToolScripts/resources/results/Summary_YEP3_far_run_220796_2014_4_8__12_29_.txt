@@ -1,9 +1,0 @@
-Summary per tower - Input file resources/Histos_YEP3_far_run_220796_2014_4_8__12_29_21.root
-Total number of masked strips:             3
-Total number of masked strips to unmask:   2
-Total number of strips to mask:            4
-Average rate per roll in WIN data:         -nan Hz 
-Total number of noisy strips in FULL data: 55
-Total number of noisy strips in WIN  data: 53
-Noisy for more than 15' min in WIN data:   4
- 
