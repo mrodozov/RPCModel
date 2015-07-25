@@ -1,6 +1,5 @@
 __author__ = 'rodozov'
 
-from CommandClasses import GetListOfFiles,CheckIfFileIsCorrupted, NoiseToolMainExe
 
 import sys, json, subprocess, os
 
@@ -25,11 +24,18 @@ class Chain(object):
     def addListOfCommands(self,commandsList):
         for command in commandsList: self.add_command(command)
 
-    def execute_chain(self):
+    def execute_chain(self, optionsObj):
+        #opto = {}
+        #opto = optionsObj
+        #print json.dumps(optionsObj)
         retval = False
         for commnd in self.commands:
-            success = commnd.execute(self.options)
+            success = commnd.execute(optionsObj)
+            #print json.dumps(optionsObj)
             retval = success
+            print commnd.name
+
+            print success
             if not success: break
         self.collectLogs()
         return retval
@@ -38,10 +44,8 @@ class Chain(object):
         for command in self.commands:
             cmndname = command.name
             self.log[cmndname] = command.log
-            self.stout[cmndname] = command.stout
-            self.sterr[cmndname] = command.sterr
-
-
+            #self.stout[cmndname] = command.stout
+#            self.sterr[cmndname] = command.sterr
 
 
 if __name__ == "__main__":
@@ -50,11 +54,17 @@ if __name__ == "__main__":
     os.environ['LD_LIBRARY_PATH'] = '/home/rodozov/Programs/ROOT/INSTALL/lib/root' # important
     print os.environ['LD_LIBRARY_PATH']
 
-    runoptions = {}
 
-    aChain = Chain(runoptions)
-    argss = ['resources/CheckCorruptedFile.lnxapp','resources/Histos_YEP3_near_run_220816_2014_4_8__14_55_16.root']
-    listFiles = GetListOfFiles(argss)
+    dbschema = {}
+    optionsObject = {}
+    with open('resources/options_object.txt', 'r') as optobj:
+        optionsObject = json.loads(optobj.read())
+    with open('resources/db_tables_schema.txt', 'r') as dbschemafile:
+        dbschema = json.loads(dbschemafile.read())
+    optionsObject['dbdataupload']['args']['dbResources'] = dbschema
+    optionsObject['run'] = '220796'
+
+    runchain = Chain(optionsObject)
 
 
-    listOfCommands = [listFiles,CheckIfFileIsCorrupted(),NoiseToolMainExe()]
+

@@ -1,0 +1,140 @@
+{
+ "dbfilescontent": {
+  "source": "dbinput", 
+  "args": "", 
+  "results": ""
+ }, 
+ "outputformat": {
+  "source": "dbfilescontent", 
+  "args": [
+   "resources/rpcMap", 
+   "resources/RawIDs.txt", 
+   "results/", 
+   "output_rolls.json", 
+   "output_strips.json", 
+   "AllToUnmask.txt", 
+   "AllToMask.txt"
+  ], 
+  "results": ""
+ }, 
+ "run": "220796", 
+ "dbinput": {
+  "source": "noiseexe",
+  "args": [
+   "executables/DBInputs.lnxapp", 
+   "resources/", 
+   "results/", 
+   "Masked", 
+   "Dead", 
+   "ToUnmask", 
+   "ToMask", 
+   "area_noise_cmssw_withRE4", 
+   "RawIDs.txt", 
+   "InputRollList.txt"
+  ], 
+  "results": ""
+ }, 
+ "dbdataupload": {
+  "source": "dbfilescontent", 
+  "args": {
+   "username": "", 
+   "password": "", 
+   "dbType": "", 
+   "dbResources": [
+    {
+     "schm": [
+      "run_number", 
+      "raw_id", 
+      "channel_number", 
+      "strip_number", 
+      "is_dead", 
+      "is_masked", 
+      "rate_hz_cm2"
+     ], 
+     "argsList": [
+      0, 
+      1, 
+      2, 
+      3, 
+      4, 
+      5, 
+      6
+     ], 
+     "name": "RPC_NOISE_STRIPS", 
+     "file": "database_full.txt"
+    }, 
+    {
+     "schm": [
+      "run_number", 
+      "raw_id", 
+      "rollName", 
+      "dead_strips", 
+      "masked_strips", 
+      "strips_to_unmask", 
+      "strips_to_mask", 
+      "noiseRate", 
+      "rate_hz_cm2"
+     ], 
+     "argsList": [
+      0, 
+      1, 
+      3, 
+      4, 
+      5, 
+      6, 
+      8
+     ], 
+     "name": "RPC_NOISE_ROLLS", 
+     "file": "database_new.txt"
+    }
+   ], 
+   "hostname": "", 
+   "port": "", 
+   "dbName": "", 
+   "schema": ""
+  }, 
+  "results": ""
+ }, 
+ "noiseexe": {
+  "source": "check", 
+  "args": [
+   "executables/LBNoise", 
+   "resources/lb-chamber-withRE4.txt", 
+   "resources/area_noise_withRE4.txt", 
+   "results"
+  ], 
+  "results": ""
+ }, 
+ "filelister": {
+  "source": "", 
+  "args": [
+   "inputfiles", 
+   [
+    "RB+2_far", 
+    "RB+2_near", 
+    "RB+1_near", 
+    "RB+1_far", 
+    "RB-1_far", 
+    "RB-1_near", 
+    "RB-2_far", 
+    "RB-2_near", 
+    "RB0_far", 
+    "RB0_near", 
+    "YEN1_far", 
+    "YEN1_near", 
+    "YEN3_far", 
+    "YEN3_near", 
+    "YEP1_far", 
+    "YEP1_near", 
+    "YEP3_far", 
+    "YEP3_near"
+   ]
+  ], 
+  "results": ""
+ }, 
+ "check": {
+  "source": "filelister", 
+  "args": "executables/CheckCorruptedFile.lnxapp", 
+  "results": ""
+ }
+}
