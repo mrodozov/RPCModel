@@ -1,14 +1,11 @@
 __author__ = 'rodozov'
 
 '''
-
 Abstract command class and different implementations, representing
 independent implementations of command objects, to be put in the
 command queue.
-
 TODO - Many subroutines in execute() method are repetitive.
 Try substitute them with a method
-
 '''
 
 import subprocess
@@ -18,7 +15,8 @@ import re
 import json
 from DBService import DBService
 from RPCMap import RPCMap
-from Chain import Chain
+#from Chain import Chain
+
 
 # TODO - Write results, log for each class, where results should be the result the command produced or checked
 # TODO - See if there is need to format HTML for any reason,
@@ -210,7 +208,6 @@ class NoiseToolMainExe(Command):
 
 class DBInputPrepare(Command):
     '''
-
     '''
     # TODO - merge the .root files into total.root, from the executable itself
 
@@ -371,10 +368,8 @@ class DBFilesContentCheck(Command):
         return True
 
 '''
-
 commands that could be executed independent from one another.
 So far, make them in a in a queue, and when its possible use threads to parallel processing
-
 '''
 
 
@@ -700,7 +695,3 @@ if __name__ == "__main__":
     runchain.addListOfCommands(arrayofcommands)
     runchain.execute_chain(optionsObject)
     print json.dumps(runchain.log,indent=1)
-
-
-
-
