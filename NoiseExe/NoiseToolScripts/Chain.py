@@ -7,10 +7,8 @@ import threading
 from Event import SimpleEvent
 from Event import Observer
 from EventsHandler import EventsHandler
-from CommandClasses import Command
+#from CommandClasses import Command
 import time
-import weakref
-# just use it to test some dummy commands
 
 class CommandThread(threading.Thread):
     def __init__(self, queue, event_handler):
@@ -22,9 +20,9 @@ class CommandThread(threading.Thread):
     def run(self):
         while True:
             command = self.queue.get()
-            pssd_args = command.options['passed_opts']
-            success = command.execute(pssd_args)
-            event = SimpleEvent(command.name, success, command.options['result'])
+            #pssd_args = command.options
+            success = command.execute()
+            event = SimpleEvent(command.name, success, command.results)
             self.ehandler.notify(event)
             self.queue.task_done()
 
@@ -57,11 +55,13 @@ class Chain(Observer):
             for c in commands_for_queue:
                 # get options from event
                 print 'received update to put ', c.name, ' on the queue'
-                c.options['passed_opts'] = event.message
+                c.options = event.message
                 self.jobsQueue.put(c)
 
     def startChainWithEvent(self, init_event):
-        number_of_threads = len(self.commands)
+        number_of_threads = 0
+        for c in self.commands:
+            number_of_threads += len(self.commands[c])
         print number_of_threads
         self.event_handler.notify(init_event)
         for i in range(number_of_threads):
@@ -81,14 +81,15 @@ class Chain(Observer):
 
 # self.sterr[cmndname] = command.sterr
 
-
+''' test unit code, uncomment the Command class import to use '''
+'''
 class BaseCommand(Command):
-    def __init__(self, args=None, name=None):
+    def __init__(self, args=None, name=None, wait_time=None):
         self.stout = None
         self.sterr = None
         self.name = name
         self.log = {}
-        self.waittime = 0
+        self.waittime = wait_time
         self.options = {}
         if args is None or self.args is None:
             self.args = args
@@ -99,23 +100,18 @@ class BaseCommand(Command):
     def __del__(self):
         pass
 
-    def execute(self, dynamic_opts):
+    def execute(self):
         retval = False
 
-        if 'passed_opts' in self.options and 'counter' in self.options['passed_opts']:
-            self.waittime = int(self.options['passed_opts']['counter'])
-        self.waittime += 2
         starttime = time.time()
         time.sleep(self.waittime)
-        endtime = time.time()
 
         self.options['result'] = {
-            'decription': 'comming from ' + self.name + ' results: run from ' + str(starttime) + ' to ' + str(
-                endtime) + ' for ' + str(endtime - starttime) + ' seconds and dynamic opts ' + str(dynamic_opts),
-            'counter': self.waittime}
+            "decription": self.name + " results: run from " + str(starttime)  + " to " + str(time.time()) + " for " + str(time.time() - starttime) + " seconds and dynamic opts " + str(self.options['passed_opts']),
+            "counter": self.waittime}
 
         retval = True
-        self.log['success'] = self.name + ' ended with status ' + str(retval) + ' start time ' + str(starttime) + ' endtime ' + str(endtime)
+        self.log["success"] = self.name + " ended with status " + str(retval) + " start time " + str(starttime)
         return retval
 
     def getStdErr(self):
@@ -124,7 +120,7 @@ class BaseCommand(Command):
     def getLog(self):
         raise NotImplementedError
 
-
+'''
 if __name__ == "__main__":
     # test each object
 
@@ -133,45 +129,25 @@ if __name__ == "__main__":
 
     # try some simple queue, update it while looping over it
 
-    bc = BaseCommand('fcArgs', 'firstCommand')
-    bc.execute('resources/')
-    secondcmmnd = BaseCommand('scArgs', 'secondCommand')
-    secondcmmnd.execute('resources/area')
-    thirdcmmnd = BaseCommand('thArgs', 'thirdCommand')
-    thirdcmmnd.execute('resources/towers')
-    forth = BaseCommand('forthArgs', 'forthCommand')
-    forth.execute('resources/rpcMap')
-    fifth = BaseCommand('fifthArgs', 'fifthCommand')
-    fifth.execute('resources/chips')
-    sixt = BaseCommand('sixtArgs', 'sixtCommand')
-    sixt.execute('resources/dbSchema')
+    bc = BaseCommand('fcArgs', 'firstCommand', 5)
+    secondcmmnd = BaseCommand('scArgs', 'secondCommand', 7)
+    thirdcmmnd = BaseCommand('thArgs', 'thirdCommand', 3)
+    forth = BaseCommand('forthArgs', 'forthCommand', 2)
+    fifth = BaseCommand('fifthArgs', 'fifthCommand', 4)
+    sixt = BaseCommand('sixtArgs', 'sixtCommand', 15)
+    seventh = BaseCommand('sevArgs', 'seventhCommand', 2)
+    eight = BaseCommand('eightArgs', 'eightCommand', 3)
 
-    commandsDict = {'initCommand': [bc], 'firstCommand': [secondcmmnd], 'secondCommand': [thirdcmmnd], 'thirdCommand': [forth, fifth, sixt]}
+    commandsDict = {'initCommand': [bc], 'firstCommand': [secondcmmnd], 'secondCommand': [thirdcmmnd], 'thirdCommand': [forth, fifth, sixt], 'fifthCommand': [seventh], 'forthCommand': [eight]}
 
     achain = Chain(commandsDict)
     for k, v in commandsDict.iteritems():
         achain.add_commands_for_event_name(v, k)
-    initialEvent = SimpleEvent('initCommand', True ,'starting options for first command')
+    initialEvent = SimpleEvent('initCommand', True , 'starting options for first command')
     achain.startChainWithEvent(initialEvent)
 
     for c  in achain.commands:
         print c
         for l in achain.commands[c]:
             print l.log
-            #for d in l.log:
-                #print d
-
-
-    '''
-    dbschema = {}
-    optionsObject = {}
-    with open('resources/options_object.txt', 'r') as optobj:
-        optionsObject = json.loads(optobj.read())
-    with open('resources/db_tables_schema.txt', 'r') as dbschemafile:
-        dbschema = json.loads(dbschemafile.read())
-    optionsObject['dbdataupload']['args']['dbResources'] = dbschema
-    optionsObject['run'] = '220796'
-
-    runchain = Chain(optionsObj
-ct)
-    '''
+            if 'result' in l.options: print l.options['result']

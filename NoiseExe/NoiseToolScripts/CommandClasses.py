@@ -15,38 +15,65 @@ import re
 import json
 from DBService import DBService
 from RPCMap import RPCMap
-#from Chain import Chain
+from Event import SimpleEvent
+from Chain import Chain
 
-
-# TODO - Write results, log for each class, where results should be the result the command produced or checked
 # TODO - See if there is need to format HTML for any reason,
-# TODO -
+# TODO - Write scp command, using this http://stackoverflow.com/questions/250283/how-to-scp-in-python
+# TODO - 3. Decide how to handle if command crashes
 
 class Command(object):
-    args = None
-    log = None
-    stout = None
-    sterr = None
-    name = None
-    exitcode = None
-    options = None
 
-    def __init__(self, args=None, name=None):
+    def __init__(self, name=None, args=None):
         self.stout = None
         self.sterr = None
         self.name = name
         self.log = {}
-        if args is None or self.args is None:
-            self.args = args
-            self.exitcode = "NOARGS"
-            # some standard errors enum, maybe ?
-            # self.execute(opts_to_update)
+        self.results = {}
+        self.warnings = []
+        self.args = args
+        self.options = {}
+        self.exitcode = None
 
     def __del__(self):
         pass
 
-    def execute(self, optionsToUpdate):
+    def getArgumentsFromObject(self, argsObject):
+        self.args = argsObject[self.name]
+
+    def checkRequirements(self):
+        # generic method, always check self.args and self.options - the static and the dynamic resources required. just check if not empty
+        retval = False
+        if self.args and self.options and self.options != 'Failed':
+            retval = True
+        else:
+            self.results = 'Failed'
+            self.log = 'Failed'
+            self.warnings.append('Requirements missing')
+            retval = False
+        return retval
+
+    def checkResult(self):
+        # generic, checks if the result (the event message) no empty
+        if self.results:
+            return True
+        else:
+            self.results = 'Failed'
+            self.warnings.append('Result is empty')
+            return False
+
+    def processTask(self):
         raise NotImplementedError
+
+    def execute(self):
+
+        if not self.checkRequirements():
+            return False
+        if not self.processTask():
+            return False
+        if not self.checkResult():
+            return False
+        return True
 
     def getStdErr(self):
         raise NotImplementedError
@@ -54,49 +81,46 @@ class Command(object):
     def getLog(self):
         raise NotImplementedError
 
-
 class GetListOfFiles(Command):
+
     def getTowerNameFromFileName(self, filename):
         parts = filename.split('_')
         return parts[1] + '_' + parts[2]
 
-    def execute(self, optionsToUpdate):
+    def processTask(self):
         complete = False
         files_per_tower_more_than_one = False
         missing_towers_files = []
         total_files_n = 0
-        if optionsToUpdate is not None:
-            self.args = optionsToUpdate[self.name]['args']
-            filespath = self.args[0]
-            runnum = optionsToUpdate['run']
-            towers = self.args[1]
-            # print runnum
-            files = [f for f in os.listdir(filespath) if f.endswith('.root') and f.find(runnum) is not -1]
-            # print towers
-            shortlist = []
-            total_files_n = len(files)
-            if len(files) > 18:
-                files_per_tower_more_than_one = True
-                towerMap = {}
-                for t in towers:
-                    towerMap[t] = {'file': None, 'size': 0}
-                for f in files:
-                    tf = self.getTowerNameFromFileName(f)
-                    # print tf
-                    statinfo = os.stat(filespath + '/' + f)
-                    fsize = statinfo.st_size
-                    # print f, fsize
-                    if towerMap[tf]['file'] is None or fsize > towerMap[tf]['size']:
-                        towerMap[tf] = {'file': f, 'size': fsize}
-                for k in towerMap.keys():
-                    shortlist.append(towerMap[k]['file'])
-                #print towerMap
-                files = shortlist
-            # print files
-            filespath += '/'
-        optionsToUpdate[self.name]['results'] = [filespath + f for f in files]
+        filespath = self.args['filesfolder']
+        runnum = self.options
+        towers = self.args['towers_list']
+        # print runnum
+        files = [f for f in os.listdir(filespath) if f.endswith('.root') and f.find(runnum) is not -1]
+        # print towers
+        shortlist = []
+        total_files_n = len(files)
+        if len(files) > 18:
+            files_per_tower_more_than_one = True
+            towerMap = {}
+            for t in towers:
+                towerMap[t] = {'file': None, 'size': 0}
+            for f in files:
+                tf = self.getTowerNameFromFileName(f)
+                # print tf
+                statinfo = os.stat(filespath + '/' + f)
+                fsize = statinfo.st_size
+                # print f, fsize
+                if towerMap[tf]['file'] is None or fsize > towerMap[tf]['size']:
+                    towerMap[tf] = {'file': f, 'size': fsize}
+            for k in towerMap.keys():
+                shortlist.append(towerMap[k]['file'])
+            #print towerMap
+            files = shortlist
+        # print files
+        self.results = [filespath + f for f in files]
         #format the output
-        towerslist = self.args[1]
+        towerslist = self.args['towers_list']
         for t in towerslist:
             match = False
             for f in files:
@@ -105,14 +129,17 @@ class GetListOfFiles(Command):
                     break
             if not match:
                 missing_towers_files.append(t)
-
+        print filespath
         if missing_towers_files:
             self.log['missing_files'] = missing_towers_files
+            self.warnings.append('missing towers files')
         if files_per_tower_more_than_one:
             self.log['files_for_run'] = total_files_n
+            self.warnings.append('multiple files per tower')
         if len(files) is 0:
             self.log['missing_files'] = 'no files for this run, skip'
-            optionsToUpdate[self.name]['result'] = 'Failed'
+            self.results = 'Failed'
+            self.warnings.append('root files missing, check the source')
         if len(files) > 0:
             self.log['files_for_run'] = total_files_n
             complete = True
@@ -120,34 +147,34 @@ class GetListOfFiles(Command):
 
 
 class CheckIfFilesAreCorrupted(Command):
-    def execute(self, optionsToUpdate=None):
+    def processTask(self):
 
         complete = False
         goodresult = {}
         corrupted_files = {}
-        if optionsToUpdate is not None:
-            self.args = optionsToUpdate[self.name]['args']
-            self.options = optionsToUpdate[optionsToUpdate[self.name]['source']]['results']
+        #if self.args is not None:
+        #    self.args = static_opts[self.name]['args']
+        #    self.options = static_opts[static_opts[self.name]['source']]['results']
 
-            for file in self.options:
-                executable = self.args
-                childp = subprocess.Popen(executable + ' ' + file, shell=True, stdout=subprocess.PIPE,
-                                          stderr=subprocess.STDOUT, close_fds=True)
-                self.stout, self.sterr = childp.communicate()
-                self.exitcode = childp.returncode
-                overall = {'sterr': self.sterr, 'stout': self.stout, 'exitcode': self.exitcode}
+        for file in self.options:
+            executable = self.args
+            childp = subprocess.Popen(executable + ' ' + file, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
+            self.stout, self.sterr = childp.communicate()
+            self.exitcode = childp.returncode
+            overall = {'sterr': self.sterr, 'stout': self.stout, 'exitcode': self.exitcode}
 
-                if self.exitcode == 0 and self.sterr is None:
-                    complete = True
-                    goodresult[file] = overall
-                else:
-                    corrupted_files[file] = overall
+            if self.exitcode == 0 and self.sterr is None:
+                complete = True
+                goodresult[file] = overall
+            else:
+                corrupted_files[file] = overall
 
-            self.log = {'good_files':goodresult,'corrupted_files': corrupted_files}
-            optionsToUpdate[self.name]['results'] = goodresult
-            if not complete:
-                optionsToUpdate[self.name]['results'] = 'Failed'
-
+        self.log = {'good_files':goodresult, 'corrupted_files': corrupted_files}
+        if corrupted_files: self.warnings.append('corrupted files found')
+        self.results = goodresult
+        if not complete:
+            self.results = 'Failed'
+            self.warnings.append('all files corrupted')
             #print 'exit code', self.exitcode
         return complete
 
@@ -157,51 +184,49 @@ class NoiseToolMainExe(Command):
     Noise tool main executable command
     If the file check is passed, it process the files (one by one ? really ?)
     '''
+    # TODO - list the files, put them in the result
 
-    def execute(self, optionsToUpdate):
+    def processTask(self):
 
         complete = False
         results = {'masked':[],'dead':[],'tomask':[],'tounmask':[],'rootfiles':[],'totalroot':''}
-        if optionsToUpdate is not None:
-            self.args = optionsToUpdate[self.name]['args']
-            self.options = optionsToUpdate[optionsToUpdate[self.name]['source']]['results']
-            self.log = {}
-            filesToProcess = [k for k, v in self.options.iteritems() if v['exitcode'] is not '0']
-            # print filesToProcess # for debug
-            executable = self.args[0]
-            arguments = self.args[1] + ' ' + self.args[2] + ' ' + self.args[3]
-            results_folder = self.args[3]
-            for f in filesToProcess:
-                # print executable, f, arguments
-                #childp = subprocess.Popen(executable + ' ' + f + ' ' + arguments, shell=True, stdout=subprocess.PIPE,
-                #                          stderr=subprocess.STDOUT, close_fds=True)
-                #current_stdout, current_stderr = childp.communicate()
-                #current_excode = childp.returncode
-                current_stdout = ''
-                current_excode = 0
-                current_stderr = None
-                mskdch= 'm'
-                deadch='d'
-                tomch='t'
-                tounmch='tu'
-                rootrate='r'
+        filesToProcess = [k for k, v in self.options.iteritems() if v['exitcode'] is not '0']
+        # print filesToProcess # for debug
+        executable = self.args[0]
+        arguments = self.args[1] + ' ' + self.args[2] + ' ' + self.args[3]
+        results_folder = self.args[3]
+        for f in filesToProcess:
+            # print executable, f, arguments
+            #childp = subprocess.Popen(executable + ' ' + f + ' ' + arguments, shell=True, stdout=subprocess.PIPE,
+            #                          stderr=subprocess.STDOUT, close_fds=True)
+            #current_stdout, current_stderr = childp.communicate()
+            #current_excode = childp.returncode
+            current_stdout = ''
+            current_excode = 0
+            current_stderr = None
+            mskdch= 'm'
+            deadch='d'
+            tomch='t'
+            tounmch='tu'
+            rootrate='r'
 
-                #if at least one file has finished
-                if current_excode == 0 and current_stderr is None:
-                    complete = True
-                    results['masked'].append(mskdch)
-                    results['dead'].append(deadch)
-                    results['tomask'].append(tomch)
-                    results['tounmask'].append(tounmch)
-                    results['rootfiles'].append(rootrate)
-                self.log[f] = {'complete': complete,'err': current_stderr,'out':current_stdout,'exitcode':current_excode}
-                    # so far, and thanks for all the fish
-            #TODO - make the executable create the total.root and fill it
-            if not complete:
-                results = 'Failed'
-            else:
-                results['totalroot'] = results_folder+'/total.root'
-            optionsToUpdate[self.name]['results'] = results
+            #if at least one file has finished
+            if current_excode == 0 and current_stderr is None:
+                complete = True
+                results['masked'].append(mskdch)
+                results['dead'].append(deadch)
+                results['tomask'].append(tomch)
+                results['tounmask'].append(tounmch)
+                results['rootfiles'].append(rootrate)
+            self.log[f] = {'complete': complete,'err': current_stderr,'out':current_stdout,'exitcode':current_excode}
+                # so far, and thanks for all the fish
+        #TODO - make the executable create the total.root and fill it
+        if not complete:
+            results = 'Failed'
+            self.warnings.append('no properly processed files')
+        else:
+            results['totalroot'] = results_folder+'/total.root'
+        self.results = results
 
         return complete
 
@@ -233,66 +258,62 @@ class DBInputPrepare(Command):
                                 outputFile.write(' '.join(argstowrite) + '\n')
         return True
 
-    def execute(self, optionsToUpdate):
+    def processTask(self):
         complete = False
         results = {}
-        if optionsToUpdate is not None:
-            self.args = optionsToUpdate[self.name]['args']
 
-            self.options = optionsToUpdate[optionsToUpdate[self.name]['source']]['results']
+        executable = self.args[0]
+        resourcesDir = self.args[1]
+        resultsDir = self.args[2]
+        rootFile = self.options['totalroot']
+        fileToSearch = self.args[3:7]
+        areaFile = resourcesDir + self.args[7]
+        rawids = resourcesDir + self.args[8]
+        inputrolls = resourcesDir + self.args[9]
+        for f in fileToSearch:
+            listOfOrderedArgs = [6, 3]
+            if f == 'ToMask':
+                listOfOrderedArgs = [6, 3, 9, 14]
+            if f == 'ToUnmask':
+                listOfOrderedArgs = [6, 3, 15]
+            self.mergeInputFilesByName(resultsDir, 'All' + f + '.txt', f, listOfOrderedArgs, ' ')
 
-            executable = self.args[0]
-            resourcesDir = self.args[1]
-            resultsDir = self.args[2]
-            rootFile = self.options['totalroot']
-            fileToSearch = self.args[3:7]
-            areaFile = resourcesDir + self.args[7]
-            rawids = resourcesDir + self.args[8]
-            inputrolls = resourcesDir + self.args[9]
-            for f in fileToSearch:
-                listOfOrderedArgs = [6, 3]
-                if f == 'ToMask':
-                    listOfOrderedArgs = [6, 3, 9, 14]
-                if f == 'ToUnmask':
-                    listOfOrderedArgs = [6, 3, 15]
-                self.mergeInputFilesByName(resultsDir, 'All' + f + '.txt', f, listOfOrderedArgs, ' ')
+        file_to_check = rootFile + ' ' + resultsDir + 'AllMasked.txt ' + resultsDir + 'AllDead.txt ' + resultsDir + 'AllToMask.txt ' + resultsDir + 'AllToUnmask.txt ' + areaFile + ' ' + rawids + ' ' + inputrolls
+        arguments = rootFile + ' ' + resultsDir + 'database_new.txt ' + resultsDir + 'database_full.txt ' + resultsDir + 'AllMasked.txt ' + resultsDir + 'AllDead.txt ' + resultsDir + 'AllToMask.txt ' + resultsDir + 'AllToUnmask.txt ' + areaFile + ' ' + rawids + ' ' + resultsDir + 'error_in_translation ' + inputrolls
+        fnf_list = [fnf for fnf in file_to_check.split(' ') if not os.path.isfile(fnf)]
+        if fnf_list:
+            # file is missing, write log and abort
+            self.log = 'Files missing: ' + ' '.join(fnf_list) + ', Abort'
+            self.warnings.append('required file missing, requirements not completed')
+            self.results = 'Failed'
+        else:
+            childp = subprocess.Popen(executable + ' ' + arguments, shell=True, stdout=subprocess.PIPE,
+                                      stderr=subprocess.STDOUT, close_fds=True)
+            current_stdout, current_stderr = childp.communicate()
+            current_excode = childp.returncode
+            if current_excode == 0:
+                complete = True
+                self.log = 'Completed'
+                # print self.log
+                self.result = {'strips_file': resultsDir + 'database_full.txt', 'rolls_file': resultsDir + 'database_new.txt'}
+                fileList = [self.result['strips_file'], self.result['rolls_file']]
+                for finlist in fileList:
+                    existingData = None
+                    with open(finlist, 'r') as df:
+                        existingData = df.read()
+                    with open(finlist, 'w') as data_file:
+                        timestamp = int(time.time())
+                        data_file.write(self.options['run'] + ' ' + str(timestamp) + '\n')
+                        data_file.write(existingData)
 
-            file_to_check = rootFile + ' ' + resultsDir + 'AllMasked.txt ' + resultsDir + 'AllDead.txt ' + resultsDir + 'AllToMask.txt ' + resultsDir + 'AllToUnmask.txt ' + areaFile + ' ' + rawids + ' ' + inputrolls
-            arguments = rootFile + ' ' + resultsDir + 'database_new.txt ' + resultsDir + 'database_full.txt ' + resultsDir + 'AllMasked.txt ' + resultsDir + 'AllDead.txt ' + resultsDir + 'AllToMask.txt ' + resultsDir + 'AllToUnmask.txt ' + areaFile + ' ' + rawids + ' ' + resultsDir + 'error_in_translation ' + inputrolls
-            fnf_list = [fnf for fnf in file_to_check.split(' ') if not os.path.isfile(fnf)]
-            if fnf_list:
-                # file is missing, write log and abort, so abort
-                self.log = 'Files missing: ' + ' '.join(fnf_list) + ', Abort'
-                optionsToUpdate[self.name]['results'] = 'Failed'
-            else:
-                childp = subprocess.Popen(executable + ' ' + arguments, shell=True, stdout=subprocess.PIPE,
-                                          stderr=subprocess.STDOUT, close_fds=True)
-                current_stdout, current_stderr = childp.communicate()
-                current_excode = childp.returncode
-                if current_excode == 0:
-                    complete = True
-                    self.log = 'Completed'
-                    # print self.log
-                    optionsToUpdate[self.name]['results'] = {'strips_file': resultsDir + 'database_full.txt',
-                                                             'rolls_file': resultsDir + 'database_new.txt'}
-                    fileList = [optionsToUpdate[self.name]['results']['strips_file'],
-                                optionsToUpdate[self.name]['results']['rolls_file']]
-                    for finlist in fileList:
-                        existingData = None
-                        with open(finlist, 'r') as df:
-                            existingData = df.read()
-                        with open(finlist, 'w') as data_file:
-                            timestamp = int(time.time())
-                            data_file.write(optionsToUpdate['run'] + ' ' + str(timestamp) + '\n')
-                            data_file.write(existingData)
-
-                #print current_stdout, current_stderr, current_excode
+            #print current_stdout, current_stderr, current_excode
 
         return complete
 
 
 class DBFilesContentCheck(Command):
     # TODO - pass the patterns from the options, read them from a file maybe
+    # TODO - check only completely switched off detector, but the flag RPC ON would be false and the run wont be returned anyway
 
     def contentCheck(self, file_content, file_type='rolls'):
         contentMeta = {'correct': True, 'errors': []}
@@ -342,10 +363,8 @@ class DBFilesContentCheck(Command):
                 contentMeta['errors'].append('run data ' + run + ' is incorrect')
         return contentMeta
 
-    def execute(self, optionsToUpdate):
+    def processTask(self):
         complete = True
-        self.args = optionsToUpdate[self.name]['args']
-        self.options = optionsToUpdate[optionsToUpdate[self.name]['source']]['results']
         strips_file = self.options['strips_file']
         rolls_file = self.options['rolls_file']
         cont_files = [strips_file, rolls_file]
@@ -363,21 +382,19 @@ class DBFilesContentCheck(Command):
                 llog[f] = filecheck['errors']
                 if not filecheck['correct']:
                     complete = False
-        optionsToUpdate[self.name]['results'] = checkResults
+        self.results = checkResults
         #self.log = filecheck['errors']
         return True
 
 '''
-commands that could be executed independent from one another.
+commands that could be processTaskd independent from one another.
 So far, make them in a in a queue, and when its possible use threads to parallel processing
 '''
 
-
 class DBDataUpload(Command):
-    def execute(self, optionsToUpdate):
+
+    def processTask(self):
         complete = False
-        self.args = optionsToUpdate[self.name]['args']
-        self.options = optionsToUpdate[optionsToUpdate[self.name]['source']]['results']
         # files from results, table names and schemas from options
         dbService = DBService(dbType=self.args['dbType'], host=self.args['hostname'], port=self.args['port'],
                               user=self.args['username'], password=self.args['password'], schema=self.args['schema'],
@@ -386,11 +403,13 @@ class DBDataUpload(Command):
             dataFile = ''.join([f for f in self.options if f.find(rec['file']) is not -1])
             data = self.getDBDataFromFile(dataFile)
             completed = dbService.insertToDB(data, rec['name'], rec['schm'], rec['argsList'])
-            optionsToUpdate[self.name]['results'] = {dataFile: completed}
+            #catch the error, push it to the log
+            self.results = {dataFile: completed}
             self.log[dataFile] = completed
             complete = completed
             if not completed:
-                optionsToUpdate[self.name]['results'] = 'Failed'
+                self.results = 'Failed'
+                self.warnings.append('file failed to be inserted')
                 break
 
         return complete
@@ -415,11 +434,9 @@ class OutputFilesFormat(Command):
     in the folder apart from the root files
     '''
 
-    def execute(self, optionsToUpdate):
+    def processTask(self):
         complete = False
-        #print optionsToUpdate
-        self.args = optionsToUpdate[self.name]['args']
-        self.options = optionsToUpdate[optionsToUpdate[self.name]['source']]['results']
+        #print static_opts
         rpcMapFile = self.args[0]
         rawmapfile = self.args[1]
         results_folder = self.args[2]
@@ -431,7 +448,7 @@ class OutputFilesFormat(Command):
         detailedFile = fileFromInput[0]
         rollsFile = fileFromInput[1]
         self.log = {'strips_file': None, 'rolls_file': None}
-        optionsToUpdate[self.name]['results'] = []
+        self.results = []
 
         # first print
         print detailedFile, rollsFile
@@ -579,31 +596,30 @@ class OutputFilesFormat(Command):
         with open(strips_json_file, 'r') as strips_file_check:
             if json.loads(strips_file_check.read()) and os.stat(strips_json_file) > 0:
                 self.log['strips_file'] = 'Completed!'
-                optionsToUpdate[self.name]['results'].append(strips_json_file)
+                self.results.append(strips_json_file)
         with open(rolls_json_file, 'r') as rolls_file_check:
             if json.loads(rolls_file_check.read()) and os.stat(rolls_json_file) > 0:
                 self.log['rolls_file'] = 'Completed!'
-                optionsObject[self.name]['results'].append(rolls_json_file)
+                self.results.append(rolls_json_file)
         complete = True
         for i in self.log:
             if self.log[i] is not 'Completed!':
-                optionsObject[self.name]['results'] = 'Failed'
+                self.results = 'Failed'
+                self.warnings.append('file(s) production failure')
                 complete = False
         return complete
-
 
 class WebResourcesFormat(Command):
     '''
     write local run html files and prepare some run markup, write it as result
     '''
 
-    def execute(self, optionsToUpdate):
+    def processTask(self, static_opts):
         pass
-
 
 class GarbageRemoval(Command):
     '''
-    Compress or erase all outputs, to be executed after all the outputs are finished
+    Compress or erase all outputs, to be processTaskd after all the outputs are finished
     '''
 
     def __init__(self):
@@ -611,19 +627,19 @@ class GarbageRemoval(Command):
 
 class UploadWebResources(Command):
     '''
-    Upload files on location or writes into a DB, lets see
+    Use scp to upload files on the web server, also to update the index, maybe ?
+    Probably this and the following could be merged, and use multiple objects of the class
     '''
 
-    def execute(self, optionsToUpdate):
+    def processTask(self, static_opts):
         pass
 
 class CopyFilesOnRemoteLocation(Command):
     '''
     sends any file to any location, use file name and destination
     '''
-    def execute(self, optionsToUpdate):
+    def processTask(self, static_opts):
         pass
-
 
 class OldToNewDataConverter(Command):
     '''
@@ -633,7 +649,6 @@ class OldToNewDataConverter(Command):
     def __init__(self):
         pass
 
-
 class NewToOldDataConverter(Command):
     '''
     converts new resources to the old type
@@ -641,7 +656,6 @@ class NewToOldDataConverter(Command):
 
     def __init__(self):
         pass
-
 
 if __name__ == "__main__":
     # test each object
@@ -653,45 +667,61 @@ if __name__ == "__main__":
     optionsObject = {}
     with open('resources/options_object.txt', 'r') as optobj:
         optionsObject = json.loads(optobj.read())
+        optobj.close()
     with open('resources/db_tables_schema.txt', 'r') as dbschemafile:
         dbschema = json.loads(dbschemafile.read())
     optionsObject['dbdataupload']['args']['dbResources'] = dbschema
     optionsObject['run'] = '220796'
+    rnum = '220796'
 
-    getFiles = GetListOfFiles(name='filelister')
-    #getFiles.execute(optionsObject)
+    opts = optionsObject['filelister']
+    listFiles = GetListOfFiles(name='filelister', args=opts)
 
-    fileIsCorrupted = CheckIfFilesAreCorrupted(name='check')
-    #passit = fileIsCorrupted.execute(optionsObject)
+    #getFiles.processTask(optionsObject)
 
-    noiseExe = NoiseToolMainExe(name='noiseexe')
-    #noisepassed = noiseExe.execute(optionsObject)
+    #fileIsCorrupted = CheckIfFilesAreCorrupted(name='check', args=optionsObject['check'])
+    #passit = fileIsCorrupted.processTask(optionsObject)
+
+    #noiseExe = NoiseToolMainExe(name='noiseexe',args=optionsObject['noiseexe'])
+    #noisepassed = noiseExe.processTask(optionsObject)
     # print optionsObject['dbinput']['args']
 
-    dbInput = DBInputPrepare(name='dbinput')
-    #dbinpass = dbInput.execute(optionsObject)
+    #dbInput = DBInputPrepare(name='dbinput',args=optionsObject['dbinput'])
+    #dbinpass = dbInput.processTask(optionsObject)
 
     #print optionsObject[dbInput.name]['log']
     #print optionsObject[dbInput.name]['results']
 
-    dbfilescheck = DBFilesContentCheck(name='dbfilescontent')
-    #dbfilescheck.execute(optionsObject)
+    #dbfilescheck = DBFilesContentCheck(name='dbfilescontent',args=optionsObject['dbfilescontent'])
+    #dbfilescheck.processTask(optionsObject)
 
     # print optionsObject[dbfilescheck.name]['results']
     # print optionsObject[dbfilescheck.name]['log']
 
     #dbUpload = DBDataUpload(name='dbdataupload')
-    # dbUpload.execute(optionsObject)
+    # dbUpload.processTask(optionsObject)
 
-    mergeContent = OutputFilesFormat(name='outputformat')
-    #mergeContent.execute(optionsObject)
+    #mergeContent = OutputFilesFormat(name='outputformat', args=optionsObject['outputformat'])
+    #mergeContent.processTask(optionsObject)
 
     #print mergeContent.log
     #print optionsObject[mergeContent.name]['results']
 
+    event_name_command_start_dict = {'initEvent' : [listFiles]}#, listFiles.name : [fileIsCorrupted], fileIsCorrupted.name: [noiseExe]}
 
+    #print listFiles.args
     runchain = Chain()
-    arrayofcommands = [getFiles,fileIsCorrupted,noiseExe,dbInput,dbfilescheck,mergeContent]
-    runchain.addListOfCommands(arrayofcommands)
-    runchain.execute_chain(optionsObject)
-    print json.dumps(runchain.log,indent=1)
+    runchain.commands = event_name_command_start_dict
+    initialEvent = SimpleEvent('initEvent', True, rnum)
+
+    runchain.startChainWithEvent(initialEvent)
+    print listFiles.results
+    print listFiles.log
+    print listFiles.warnings
+    print listFiles.options
+
+
+    #arrayofcommands = [getFiles,fileIsCorrupted,noiseExe,dbInput,dbfilescheck,mergeContent]
+    #runchain.addListOfCommands(arrayofcommands)
+    #runchain.processTask_chain(optionsObject)
+    #print json.dumps(runchain.log,indent=1)

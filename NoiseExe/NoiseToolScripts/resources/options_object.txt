@@ -106,9 +106,9 @@
   "results": ""
  }, 
  "filelister": {
-  "source": "", 
-  "args": [
-   "inputfiles", 
+   "filesfolder" :
+   "inputfiles/",
+   "towers_list":
    [
     "RB+2_far", 
     "RB+2_near", 
@@ -129,9 +129,7 @@
     "YEP3_far", 
     "YEP3_near"
    ]
-  ], 
-  "results": ""
- }, 
+  },
  "check": {
   "source": "filelister", 
   "args": "executables/CheckCorruptedFile.lnxapp", 

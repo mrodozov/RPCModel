@@ -79,7 +79,7 @@ class RunlistManager:
         :return: success
         '''
         retval = False
-        #TODO - implement protection, like copying the file opened with another name and then writing.
+        #TODO - implement protection, like copying the file opened with another name and then writing. UPDATE - implement archive, not protection
 
         try:
             with open(runlistFile,"w") as runFile:

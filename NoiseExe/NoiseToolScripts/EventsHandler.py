@@ -16,7 +16,7 @@ class EventsHandler(object):
             for o in observers:
                 self.addObserver(o)
 
-    def addObserver(self,observer):
+    def addObserver(self, observer):
         if not observer in self.observers:
             self.observers.append(observer)
 
