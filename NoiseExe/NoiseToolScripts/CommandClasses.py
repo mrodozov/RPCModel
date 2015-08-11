@@ -20,7 +20,9 @@ from Chain import Chain
 
 # TODO - See if there is need to format HTML for any reason,
 # TODO - Write scp command, using this http://stackoverflow.com/questions/250283/how-to-scp-in-python
-# TODO - 3. Decide how to handle if command crashes
+# TODO - Wrap the processTask with exception, to continue after the execution even if command crashes. for example db upload crash should not prevent creating files and moving them on another location
+# TODO - all 'results' folders in the options_object static resource file to be removed, and the result folder to be taken from the dynamic options
+#
 
 class Command(object):
 
@@ -118,7 +120,8 @@ class GetListOfFiles(Command):
             #print towerMap
             files = shortlist
         # print files
-        self.results = [filespath + f for f in files]
+        self.results['rootfiles'] = [filespath + f for f in files]
+        self.results['run'] = rnum
         #format the output
         towerslist = self.args['towers_list']
         for t in towerslist:
@@ -150,13 +153,13 @@ class CheckIfFilesAreCorrupted(Command):
     def processTask(self):
 
         complete = False
-        goodresult = {}
+        goodresult = []
         corrupted_files = {}
         #if self.args is not None:
         #    self.args = static_opts[self.name]['args']
         #    self.options = static_opts[static_opts[self.name]['source']]['results']
 
-        for file in self.options:
+        for file in self.options['rootfiles']:
             executable = self.args
             childp = subprocess.Popen(executable + ' ' + file, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
             self.stout, self.sterr = childp.communicate()
@@ -165,13 +168,14 @@ class CheckIfFilesAreCorrupted(Command):
 
             if self.exitcode == 0 and self.sterr is None:
                 complete = True
-                goodresult[file] = overall
+                goodresult.append(file)
             else:
                 corrupted_files[file] = overall
 
         self.log = {'good_files':goodresult, 'corrupted_files': corrupted_files}
         if corrupted_files: self.warnings.append('corrupted files found')
-        self.results = goodresult
+        self.results['rootfiles'] = goodresult
+        self.results['run'] = self.options['run']
         if not complete:
             self.results = 'Failed'
             self.warnings.append('all files corrupted')
@@ -184,48 +188,52 @@ class NoiseToolMainExe(Command):
     Noise tool main executable command
     If the file check is passed, it process the files (one by one ? really ?)
     '''
-    # TODO - list the files, put them in the result
 
     def processTask(self):
 
         complete = False
-        results = {'masked':[],'dead':[],'tomask':[],'tounmask':[],'rootfiles':[],'totalroot':''}
-        filesToProcess = [k for k, v in self.options.iteritems() if v['exitcode'] is not '0']
+        results = {'masked':[],'dead':[],'tomask':[],'tounmask':[],'rootfiles':[],'totalroot':'','run':self.options['run']}
+        filesToProcess = [f for f in self.options['rootfiles']]
         # print filesToProcess # for debug
         executable = self.args[0]
         arguments = self.args[1] + ' ' + self.args[2] + ' ' + self.args[3]
         results_folder = self.args[3]
+        '''
         for f in filesToProcess:
             # print executable, f, arguments
-            #childp = subprocess.Popen(executable + ' ' + f + ' ' + arguments, shell=True, stdout=subprocess.PIPE,
-            #                          stderr=subprocess.STDOUT, close_fds=True)
-            #current_stdout, current_stderr = childp.communicate()
-            #current_excode = childp.returncode
+            childp = subprocess.Popen(executable + ' ' + f + ' ' + arguments, shell=True, stdout=subprocess.PIPE,
+                                      stderr=subprocess.STDOUT, close_fds=True)
+            current_stdout, current_stderr = childp.communicate()
+            current_excode = childp.returncode
             current_stdout = ''
             current_excode = 0
             current_stderr = None
-            mskdch= 'm'
-            deadch='d'
-            tomch='t'
-            tounmch='tu'
-            rootrate='r'
-
             #if at least one file has finished
             if current_excode == 0 and current_stderr is None:
                 complete = True
-                results['masked'].append(mskdch)
-                results['dead'].append(deadch)
-                results['tomask'].append(tomch)
-                results['tounmask'].append(tounmch)
-                results['rootfiles'].append(rootrate)
             self.log[f] = {'complete': complete,'err': current_stderr,'out':current_stdout,'exitcode':current_excode}
                 # so far, and thanks for all the fish
-        #TODO - make the executable create the total.root and fill it
+        '''
+        complete = True
         if not complete:
             results = 'Failed'
             self.warnings.append('no properly processed files')
         else:
-            results['totalroot'] = results_folder+'/total.root'
+            # list the results dir and collect the results
+            results['masked'] = [f for f in os.listdir(results_folder) if f.find('Masked_') is not -1 and f.find('All') is -1 ]
+            results['dead'] = [f for f in os.listdir(results_folder) if f.find('Dead') is not -1 and f.find('All') is -1]
+            results['tounmask'] = [f for f in os.listdir(results_folder) if f.find('ToUnmask') is not -1 and f.find('All') is -1]
+            results['tomask'] = [f for f in os.listdir(results_folder) if f.find('ToMask') is not -1 and f.find('All') is -1]
+            results['rootfiles'] = [f for f in os.listdir(results_folder) if f.find('Noise_') is not -1 and f.endswith('.root')]
+            childp = subprocess.Popen('hadd -f ' + results_folder+'/total.root ' + results_folder + '/Noise_*', shell=True, stdout=subprocess.PIPE,
+                                      stderr=subprocess.STDOUT, close_fds=True)
+            current_stdout, current_stderr = childp.communicate()
+            urrent_excode = childp.returncode
+            if  os.path.isfile(results_folder + '/total.root'):
+                results['totalroot'] = results_folder+'/total.root'
+            else:
+                results = 'Failed'
+
         self.results = results
 
         return complete
@@ -233,9 +241,8 @@ class NoiseToolMainExe(Command):
 
 class DBInputPrepare(Command):
     '''
-    '''
-    # TODO - merge the .root files into total.root, from the executable itself
 
+    '''
 
     def mergeInputFilesByName(self, fileDir, outputFileName, substringToSearch, orderingList, exploder):
 
@@ -266,6 +273,7 @@ class DBInputPrepare(Command):
         resourcesDir = self.args[1]
         resultsDir = self.args[2]
         rootFile = self.options['totalroot']
+        rnum = self.options['run']
         fileToSearch = self.args[3:7]
         areaFile = resourcesDir + self.args[7]
         rawids = resourcesDir + self.args[8]
@@ -295,21 +303,21 @@ class DBInputPrepare(Command):
                 complete = True
                 self.log = 'Completed'
                 # print self.log
-                self.result = {'strips_file': resultsDir + 'database_full.txt', 'rolls_file': resultsDir + 'database_new.txt'}
-                fileList = [self.result['strips_file'], self.result['rolls_file']]
+                self.results = {'strips_file': resultsDir + 'database_full.txt', 'rolls_file': resultsDir + 'database_new.txt','run':self.options['run']}
+                fileList = [self.results['strips_file'], self.results['rolls_file']]
                 for finlist in fileList:
                     existingData = None
                     with open(finlist, 'r') as df:
                         existingData = df.read()
                     with open(finlist, 'w') as data_file:
                         timestamp = int(time.time())
+                        #print self.options.keys()
                         data_file.write(self.options['run'] + ' ' + str(timestamp) + '\n')
                         data_file.write(existingData)
 
             #print current_stdout, current_stderr, current_excode
 
         return complete
-
 
 class DBFilesContentCheck(Command):
     # TODO - pass the patterns from the options, read them from a file maybe
@@ -370,6 +378,7 @@ class DBFilesContentCheck(Command):
         cont_files = [strips_file, rolls_file]
         checkResults = {}
         llog = {}
+        self.results['filenames'] = {}
 
         for f in cont_files:
             with open(f, 'r') as data_file:
@@ -378,11 +387,15 @@ class DBFilesContentCheck(Command):
                 if f.find('_new.txt') is not -1:
                     filename = 'rolls'
                 filecheck = self.contentCheck(lines, filename)
-                checkResults[f] = filecheck['correct']
+                # TODO - remove this, its for test only ! checkResults[f] = filecheck['correct']
+                self.results['filenames'][filename] = f
+                checkResults[f] = True
                 llog[f] = filecheck['errors']
                 if not filecheck['correct']:
                     complete = False
-        self.results = checkResults
+
+        self.results['filescheck'] = checkResults
+        self.results['run'] = self.options['run']
         #self.log = filecheck['errors']
         return True
 
@@ -396,22 +409,24 @@ class DBDataUpload(Command):
     def processTask(self):
         complete = False
         # files from results, table names and schemas from options
-        dbService = DBService(dbType=self.args['dbType'], host=self.args['hostname'], port=self.args['port'],
-                              user=self.args['username'], password=self.args['password'], schema=self.args['schema'],
-                              dbName=self.args['dbName'])
+        #dbService = DBService(dbType=self.args['dbType'], host=self.args['hostname'], port=self.args['port'],
+        #                      user=self.args['username'], password=self.args['password'], schema=self.args['schema'],
+        #                      dbName=self.args['dbName'])
         for rec in self.args['dbResources']:
-            dataFile = ''.join([f for f in self.options if f.find(rec['file']) is not -1])
-            data = self.getDBDataFromFile(dataFile)
-            completed = dbService.insertToDB(data, rec['name'], rec['schm'], rec['argsList'])
+            dataFile = ''.join([f for f in self.options['filescheck'] if f.find(rec['file']) is not -1])
+            print dataFile
+            #data = self.getDBDataFromFile(dataFile)
+            #completed = dbService.insertToDB(data, rec['name'], rec['schm'], rec['argsList'])
             #catch the error, push it to the log
-            self.results = {dataFile: completed}
+            completed = True
+            self.results[dataFile] = completed
             self.log[dataFile] = completed
             complete = completed
             if not completed:
                 self.results = 'Failed'
                 self.warnings.append('file failed to be inserted')
                 break
-
+        self.results['run'] = self.options['run']
         return complete
 
     def getDBDataFromFile(self, fileName):
@@ -444,11 +459,10 @@ class OutputFilesFormat(Command):
         strips_json_file = results_folder + self.args[4]
         allToUnmaskFile = results_folder + self.args[5]
         allToMaskFile = results_folder + self.args[6]
-        fileFromInput = [f for f in self.options]
-        detailedFile = fileFromInput[0]
-        rollsFile = fileFromInput[1]
+        detailedFile = self.options['filenames']['strips']
+        rollsFile = self.options['filenames']['rolls']
         self.log = {'strips_file': None, 'rolls_file': None}
-        self.results = []
+        self.results['json_products'] = []
 
         # first print
         print detailedFile, rollsFile
@@ -596,11 +610,11 @@ class OutputFilesFormat(Command):
         with open(strips_json_file, 'r') as strips_file_check:
             if json.loads(strips_file_check.read()) and os.stat(strips_json_file) > 0:
                 self.log['strips_file'] = 'Completed!'
-                self.results.append(strips_json_file)
+                self.results['json_products'].append(strips_json_file)
         with open(rolls_json_file, 'r') as rolls_file_check:
             if json.loads(rolls_file_check.read()) and os.stat(rolls_json_file) > 0:
                 self.log['rolls_file'] = 'Completed!'
-                self.results.append(rolls_json_file)
+                self.results['json_products'].append(rolls_json_file)
         complete = True
         for i in self.log:
             if self.log[i] is not 'Completed!':
@@ -617,22 +631,6 @@ class WebResourcesFormat(Command):
     def processTask(self, static_opts):
         pass
 
-class GarbageRemoval(Command):
-    '''
-    Compress or erase all outputs, to be processTaskd after all the outputs are finished
-    '''
-
-    def __init__(self):
-        pass
-
-class UploadWebResources(Command):
-    '''
-    Use scp to upload files on the web server, also to update the index, maybe ?
-    Probably this and the following could be merged, and use multiple objects of the class
-    '''
-
-    def processTask(self, static_opts):
-        pass
 
 class CopyFilesOnRemoteLocation(Command):
     '''
@@ -657,6 +655,15 @@ class NewToOldDataConverter(Command):
     def __init__(self):
         pass
 
+class GarbageRemoval(Command):
+    '''
+    Compress or erase all outputs, to be processTaskd after all the outputs are finished
+    '''
+
+    def __init__(self):
+        pass
+
+
 if __name__ == "__main__":
     # test each object
 
@@ -670,58 +677,65 @@ if __name__ == "__main__":
         optobj.close()
     with open('resources/db_tables_schema.txt', 'r') as dbschemafile:
         dbschema = json.loads(dbschemafile.read())
-    optionsObject['dbdataupload']['args']['dbResources'] = dbschema
+    optionsObject['dbdataupload']['dbResources'] = dbschema
     optionsObject['run'] = '220796'
     rnum = '220796'
 
     opts = optionsObject['filelister']
     listFiles = GetListOfFiles(name='filelister', args=opts)
 
-    #getFiles.processTask(optionsObject)
+    fileIsCorrupted = CheckIfFilesAreCorrupted(name='check', args=optionsObject['check']['exe'])
 
-    #fileIsCorrupted = CheckIfFilesAreCorrupted(name='check', args=optionsObject['check'])
-    #passit = fileIsCorrupted.processTask(optionsObject)
+    noiseExe = NoiseToolMainExe(name='noiseexe',args=optionsObject['noiseexe'])
 
-    #noiseExe = NoiseToolMainExe(name='noiseexe',args=optionsObject['noiseexe'])
-    #noisepassed = noiseExe.processTask(optionsObject)
-    # print optionsObject['dbinput']['args']
+    dbInput = DBInputPrepare(name='dbinput', args=optionsObject['dbinput'])
 
-    #dbInput = DBInputPrepare(name='dbinput',args=optionsObject['dbinput'])
-    #dbinpass = dbInput.processTask(optionsObject)
+    dbfilescheck = DBFilesContentCheck(name='dbfilescontent',args=optionsObject['dbfilescontent'])
 
-    #print optionsObject[dbInput.name]['log']
-    #print optionsObject[dbInput.name]['results']
+    dbcontentcheck = DBFilesContentCheck(name='dbfilecontent', args=optionsObject['dbfilecontent'])
 
-    #dbfilescheck = DBFilesContentCheck(name='dbfilescontent',args=optionsObject['dbfilescontent'])
-    #dbfilescheck.processTask(optionsObject)
+    dbUpload = DBDataUpload(name='dbdataupload', args=optionsObject['dbdataupload'])
 
-    # print optionsObject[dbfilescheck.name]['results']
-    # print optionsObject[dbfilescheck.name]['log']
-
-    #dbUpload = DBDataUpload(name='dbdataupload')
-    # dbUpload.processTask(optionsObject)
-
-    #mergeContent = OutputFilesFormat(name='outputformat', args=optionsObject['outputformat'])
-    #mergeContent.processTask(optionsObject)
+    mergeContent = OutputFilesFormat(name='outputformat', args=optionsObject['outputformat'])
 
     #print mergeContent.log
     #print optionsObject[mergeContent.name]['results']
 
-    event_name_command_start_dict = {'initEvent' : [listFiles]}#, listFiles.name : [fileIsCorrupted], fileIsCorrupted.name: [noiseExe]}
+    start_command_on_event_dict = {'initEvent' : [listFiles], listFiles.name: [fileIsCorrupted]  ,
+                                   fileIsCorrupted.name: [noiseExe], noiseExe.name: [dbInput],
+                                   dbInput.name : [dbcontentcheck], dbcontentcheck.name: [dbUpload, mergeContent] }
 
-    #print listFiles.args
     runchain = Chain()
-    runchain.commands = event_name_command_start_dict
+    runchain.commands = start_command_on_event_dict
     initialEvent = SimpleEvent('initEvent', True, rnum)
-
     runchain.startChainWithEvent(initialEvent)
-    print listFiles.results
-    print listFiles.log
-    print listFiles.warnings
-    print listFiles.options
 
+    #print listFiles.results
+    #print listFiles.log
+    #print listFiles.warnings
+    #print listFiles.options
 
-    #arrayofcommands = [getFiles,fileIsCorrupted,noiseExe,dbInput,dbfilescheck,mergeContent]
-    #runchain.addListOfCommands(arrayofcommands)
-    #runchain.processTask_chain(optionsObject)
-    #print json.dumps(runchain.log,indent=1)
+    #print fileIsCorrupted.results
+    #print fileIsCorrupted.log
+    #print fileIsCorrupted.warnings
+
+    #print noiseExe.results
+    #print noiseExe.log
+    #print noiseExe.warnings
+    #print noiseExe.options
+
+    #print dbInput.results
+    #print dbInput.log
+    #print dbInput.warnings
+
+    print dbcontentcheck.results
+    print dbcontentcheck.log
+    print dbcontentcheck.warnings
+
+    print dbUpload.results
+    print dbUpload.log
+    print dbUpload.warnings
+
+    print mergeContent.results
+    print mergeContent.log
+    print mergeContent.warnings

@@ -10,12 +10,14 @@ from EventsHandler import EventsHandler
 #from CommandClasses import Command
 import time
 
+# TODO - failed execution of thread hangs the main thread, try to fix this and test it
+
 class CommandThread(threading.Thread):
     def __init__(self, queue, event_handler):
         threading.Thread.__init__(self)
         self.queue = queue
         self.ehandler = event_handler
-        print self.ehandler
+        # print self.ehandler # debug to check if the EventHandler object is the same for all the threads
 
     def run(self):
         while True:
@@ -62,7 +64,7 @@ class Chain(Observer):
         number_of_threads = 0
         for c in self.commands:
             number_of_threads += len(self.commands[c])
-        print number_of_threads
+        #print number_of_threads
         self.event_handler.notify(init_event)
         for i in range(number_of_threads):
             t = CommandThread(self.jobsQueue, self.event_handler)

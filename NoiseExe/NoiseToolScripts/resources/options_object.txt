@@ -4,9 +4,7 @@
   "args": "", 
   "results": ""
  }, 
- "outputformat": {
-  "source": "dbfilescontent", 
-  "args": [
+ "outputformat": [
    "resources/rpcMap", 
    "resources/RawIDs.txt", 
    "results/", 
@@ -14,29 +12,24 @@
    "output_strips.json", 
    "AllToUnmask.txt", 
    "AllToMask.txt"
-  ], 
-  "results": ""
- }, 
- "run": "220796", 
- "dbinput": {
-  "source": "noiseexe",
-  "args": [
+  ]
+ ,
+ "dbinput":
+   [
    "executables/DBInputs.lnxapp", 
    "resources/", 
-   "results/", 
+   "results/",
    "Masked", 
    "Dead", 
    "ToUnmask", 
    "ToMask", 
    "area_noise_cmssw_withRE4", 
    "RawIDs.txt", 
-   "InputRollList.txt"
-  ], 
-  "results": ""
- }, 
+   "InputRollList.txt",
+   "0"
+  ]
+ ,
  "dbdataupload": {
-  "source": "dbfilescontent", 
-  "args": {
    "username": "", 
    "password": "", 
    "dbType": "", 
@@ -92,19 +85,13 @@
    "port": "", 
    "dbName": "", 
    "schema": ""
-  }, 
-  "results": ""
  }, 
- "noiseexe": {
-  "source": "check", 
-  "args": [
+ "noiseexe": [
    "executables/LBNoise", 
    "resources/lb-chamber-withRE4.txt", 
    "resources/area_noise_withRE4.txt", 
    "results"
-  ], 
-  "results": ""
- }, 
+  ],
  "filelister": {
    "filesfolder" :
    "inputfiles/",
@@ -131,8 +118,8 @@
    ]
   },
  "check": {
-  "source": "filelister", 
-  "args": "executables/CheckCorruptedFile.lnxapp", 
-  "results": ""
+  "exe": "executables/CheckCorruptedFile.lnxapp"
+ },
+ "dbfilecontent" :{"None":"None"
  }
 }
