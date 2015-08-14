@@ -7,7 +7,7 @@
  "outputformat": [
    "resources/rpcMap", 
    "resources/RawIDs.txt", 
-   "results/", 
+   "/home/rodozov/Projects/CERN/RPCModel/NoiseExe/NoiseToolScripts/results/",
    "output_rolls.json", 
    "output_strips.json", 
    "AllToUnmask.txt", 
@@ -121,5 +121,13 @@
   "exe": "executables/CheckCorruptedFile.lnxapp"
  },
  "dbfilecontent" :{"None":"None"
+ },
+ "webserver_remote":{
+ "ssh_credentials":{"username":"mrodozov","password":"","port":"20222","rhost":"localhost"},
+ "destination_root":"/afs/cern.ch/user/m/mrodozov/www/Plots/GR2014/"
+ },
+ "lxplus_archive_remote":{
+ "ssh_credentials":{"username":"mrodozov","password":"","port":"20222","rhost":"localhost"},
+ "destination_root":"/afs/cern.ch/work/m/mrodozov/noiseBackUp/"
  }
 }

@@ -2,10 +2,7 @@ __author__ = 'rodozov'
 
 '''
 Abstract command class and different implementations, representing
-independent implementations of command objects, to be put in the
-command queue.
-TODO - Many subroutines in execute() method are repetitive.
-Try substitute them with a method
+independent implementations of command objects.
 '''
 
 import subprocess
@@ -13,6 +10,7 @@ import os
 import time
 import re
 import json
+import paramiko
 from DBService import DBService
 from RPCMap import RPCMap
 from Event import SimpleEvent
@@ -399,11 +397,6 @@ class DBFilesContentCheck(Command):
         #self.log = filecheck['errors']
         return True
 
-'''
-commands that could be processTaskd independent from one another.
-So far, make them in a in a queue, and when its possible use threads to parallel processing
-'''
-
 class DBDataUpload(Command):
 
     def processTask(self):
@@ -418,7 +411,7 @@ class DBDataUpload(Command):
             #data = self.getDBDataFromFile(dataFile)
             #completed = dbService.insertToDB(data, rec['name'], rec['schm'], rec['argsList'])
             #catch the error, push it to the log
-            completed = True
+            completed = True # TODO - to remove
             self.results[dataFile] = completed
             self.log[dataFile] = completed
             complete = completed
@@ -610,12 +603,14 @@ class OutputFilesFormat(Command):
         with open(strips_json_file, 'r') as strips_file_check:
             if json.loads(strips_file_check.read()) and os.stat(strips_json_file) > 0:
                 self.log['strips_file'] = 'Completed!'
-                self.results['json_products'].append(strips_json_file)
+                self.results['json_products'].append(self.args[3])
         with open(rolls_json_file, 'r') as rolls_file_check:
             if json.loads(rolls_file_check.read()) and os.stat(rolls_json_file) > 0:
                 self.log['rolls_file'] = 'Completed!'
-                self.results['json_products'].append(rolls_json_file)
+                self.results['json_products'].append(self.args[4])
         complete = True
+        self.results['results_folder'] = results_folder
+        self.results['run'] = rnum
         for i in self.log:
             if self.log[i] is not 'Completed!':
                 self.results = 'Failed'
@@ -628,16 +623,105 @@ class WebResourcesFormat(Command):
     write local run html files and prepare some run markup, write it as result
     '''
 
-    def processTask(self, static_opts):
+    def processTask(self):
         pass
-
 
 class CopyFilesOnRemoteLocation(Command):
     '''
-    sends any file to any location, use file name and destination
+    sends files to remote locations, using sftp, use file list and destination
     '''
-    def processTask(self, static_opts):
-        pass
+
+    def __init__(self, name=None, args=None):
+        Command.__init__(self, name, args)
+        self.ssh_client = None
+        self.sftp_client = None
+        self.connection_established = False
+        self.open_connection()
+
+    def __del__(self):
+        self.close_connection()
+
+    def open_connection(self):
+        rval = False
+        args_check = None
+        if self.args and self.args['ssh_credentials']:
+            for a in self.args['ssh_credentials'].keys():
+                if not self.args['ssh_credentials'][a]:
+                    print 'not ok, ', a
+                    self.warnings.append('value for ' + a + ' is ' + self.args['ssh_credentials'][a])
+                    self.results = 'Failed'
+                    args_check = False
+                    break
+                else:
+                    args_check = True
+            if args_check:
+                transfer_username = self.args['ssh_credentials']['username']
+                transfer_password = self.args['ssh_credentials']['password']
+                transfer_port = int(self.args['ssh_credentials']['port'])
+                remote_host = self.args['ssh_credentials']['rhost']
+                self.ssh_client = paramiko.SSHClient()
+                self.ssh_client.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
+                try:
+                    self.ssh_client.connect(remote_host, transfer_port, username=transfer_username, password=transfer_password)
+                    self.sftp_client = self.ssh_client.open_sftp()
+                    rval = True
+                    self.connection_established = True
+                except Exception as exc:
+                    print exc.message
+
+        return rval
+
+    def close_connection(self):
+        if self.connection_established:
+            self.ssh_client.close()
+            self.sftp_client.close()
+            self.connection_established = False
+
+    def processTask(self):
+        rval = False
+        rnum = self.options['run']
+        list_of_files = self.options['json_products']
+        results_folder = self.options['results_folder']
+        runfolder = 'run'+rnum
+        destination = self.args['destination_root'] + runfolder
+        if not self.connection_established:
+            try:
+                self.open_connection()
+            except Exception as exc:
+                print exc.message
+        self.create_dir_on_remotehost(destination)
+        self.results = {}
+        self.results['files'] = {}
+        if not self.connection_established:
+            'Connection failed, stop'
+            self.results = 'Failed'
+            return False
+        for f in list_of_files:
+            sent = False
+            try:
+                self.sftp_client.put(results_folder + f, destination + '/' + f)
+                sent = True
+                rval = True # at least one file made it
+            except IOError as exc:
+                errout = "I/O error({0}): {1}".format(exc.errno, exc.strerror)
+                self.warnings.append('file transfer failed for ' + f + 'with ' + errout)
+                sent = False
+                print errout
+            self.results['files'][f] = sent
+        if not rval:
+            self.results='Failed'
+
+        return rval
+
+    def create_dir_on_remotehost(self, dirname):
+        try:
+            stdin, stdout, stderr = self.ssh_client.exec_command("if [[ ! -d " + dirname + " ]]; then mkdir " + dirname + "; fi")
+            print stdin
+            print stdout
+            print stderr
+        except Exception as exc:
+            print exc.message
+
 
 class OldToNewDataConverter(Command):
     '''
@@ -681,6 +765,9 @@ if __name__ == "__main__":
     optionsObject['run'] = '220796'
     rnum = '220796'
 
+    optionsObject['webserver_remote']['ssh_credentials']['password'] = ''
+    optionsObject['lxplus_archive_remote']['ssh_credentials']['password'] = ''
+
     opts = optionsObject['filelister']
     listFiles = GetListOfFiles(name='filelister', args=opts)
 
@@ -698,17 +785,23 @@ if __name__ == "__main__":
 
     mergeContent = OutputFilesFormat(name='outputformat', args=optionsObject['outputformat'])
 
+    webserver_copy = CopyFilesOnRemoteLocation(name='webserver_remote', args=optionsObject['webserver_remote'])
+
+    archive_copy = CopyFilesOnRemoteLocation(name='lxplus_archive_remote', args=optionsObject['lxplus_archive_remote'])
+
     #print mergeContent.log
     #print optionsObject[mergeContent.name]['results']
 
     start_command_on_event_dict = {'initEvent' : [listFiles], listFiles.name: [fileIsCorrupted]  ,
                                    fileIsCorrupted.name: [noiseExe], noiseExe.name: [dbInput],
-                                   dbInput.name : [dbcontentcheck], dbcontentcheck.name: [dbUpload, mergeContent] }
+                                   dbInput.name : [dbcontentcheck], dbcontentcheck.name: [dbUpload, mergeContent],
+                                   mergeContent.name : [webserver_copy, archive_copy] }
 
     runchain = Chain()
     runchain.commands = start_command_on_event_dict
     initialEvent = SimpleEvent('initEvent', True, rnum)
     runchain.startChainWithEvent(initialEvent)
+
 
     #print listFiles.results
     #print listFiles.log
@@ -728,6 +821,7 @@ if __name__ == "__main__":
     #print dbInput.log
     #print dbInput.warnings
 
+
     print dbcontentcheck.results
     print dbcontentcheck.log
     print dbcontentcheck.warnings
@@ -739,3 +833,9 @@ if __name__ == "__main__":
     print mergeContent.results
     print mergeContent.log
     print mergeContent.warnings
+
+    print webserver_copy.results
+    print webserver_copy.log
+    print webserver_copy.warnings
+
+    
