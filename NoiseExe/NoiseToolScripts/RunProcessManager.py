@@ -35,8 +35,8 @@ def processSingleChain(chain_args=None):
     optionsObject['dbdataupload']['dbResources'] = dbschema
     rnum = rn
 
-    optionsObject['webserver_remote']['ssh_credentials']['password'] = 'BAKsho___321'
-    optionsObject['lxplus_archive_remote']['ssh_credentials']['password'] = 'BAKsho___321'
+    optionsObject['webserver_remote']['ssh_credentials']['password'] = ''
+    optionsObject['lxplus_archive_remote']['ssh_credentials']['password'] = ''
 
     opts = optionsObject['filelister']
     listFiles = GetListOfFiles(name='filelister', args=opts)
