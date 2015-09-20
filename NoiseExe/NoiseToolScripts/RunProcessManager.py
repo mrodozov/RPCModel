@@ -22,7 +22,7 @@ def processSingleChain(chain_args=None):
     '''
     print 'process is ', mp.current_process().name
     rn = chain_args
-
+    rnum = rn
     dbschema = {}
     optionsObject = {}
     with open('resources/options_object.txt', 'r') as optobj:
@@ -33,8 +33,6 @@ def processSingleChain(chain_args=None):
     optionsObject['run'] = rn
     optionsObject['result_folder'] = 'run' + optionsObject['run']
     optionsObject['dbdataupload']['dbResources'] = dbschema
-    rnum = rn
-
     optionsObject['webserver_remote']['ssh_credentials']['password'] = ''
     optionsObject['lxplus_archive_remote']['ssh_credentials']['password'] = ''
 
@@ -59,18 +57,17 @@ def processSingleChain(chain_args=None):
 
     start_command_on_event_dict = {'initEvent' : [listFiles], listFiles.name: [fileIsCorrupted]  ,
                                    fileIsCorrupted.name: [noiseExe], noiseExe.name: [dbInput],
-                                   dbInput.name : [dbcontentcheck], dbcontentcheck.name: [dbUpload, mergeContent],
-                                   mergeContent.name : [webserver_copy, archive_copy] }
+                                   dbInput.name : [dbcontentcheck], dbcontentcheck.name: [dbUpload, mergeContent] }
+        #,mergeContent.name : [webserver_copy, archive_copy] }
 
     runchain = Chain()
     runchain.commands = start_command_on_event_dict
     initialEvent = SimpleEvent('initEvent', True, rnum)
     runchain.startChainWithEvent(initialEvent)
-
     result_is = chain_args['run']
 
-    return 'result %' % (result_is)
-
+    #return  chain_args['run']
+    #return 'result %' % (result_is)
 
 class RunProcessPool(object):
 
@@ -83,55 +80,26 @@ class RunProcessPool(object):
     def getLogs(self):
         pass
 
-    def processRuns(self):
-        results = [self.pool.apply_async(processSingleChain, (rnum, )) for rnum in self.runlist]
-        for r in results:
-            print '\t', r.get()
+    def processRuns(self, functoapply):
+        results = [self.pool.apply_async(functoapply, (rnum, )) for rnum in self.runlist]
+        self.pool.close()
+        self.pool.join()
+        #for r in results:
+        #    print '\t', r.get()
+
 
 '''
 testing pool behavior class
 '''
 
-def gosleep(secs):
-    td = TimeDelay(secs)
-    td.gotosleep()
-    return '%s lasted %s' % (mp.current_process().name, td.time_delay)
-
-
-class TimeDelay(object):
-
-    def __init__(self, delay_in_seconds=0):
-        self.time_delay = delay_in_seconds
-
-    def gotosleep(self):
-        time.sleep(self.time_delay)
-        return self.time_delay
-
-
-class Collector(object):
-
-    def __init__(self):
-        self.delays = []
-        print mp.cpu_count()
-        self.ppool = mp.Pool(mp.cpu_count())
-
-    def runone(self, delay):
-        d = TimeDelay(delay)
-        return '%s lasted %s' % (mp.current_process().name, self.delay)
-
-    def runAll(self):
-        results = [self.ppool.apply_async(gosleep, (d, )) for d in self.delays]
-        for r in results:
-            print '\t', r.get()
-
 if __name__ == "__main__":
-
 
     os.environ['LD_LIBRARY_PATH'] = '/home/rodozov/Programs/ROOT/INSTALL/lib/root'  # important
 
-    rlist = ['251718']
+    rlist = ['251643','251638','251718', '220796']
 
     rprocpool = RunProcessPool()
     rprocpool.runlist = rlist
 
-    rprocpool.processRuns()
+    rprocpool.processRuns(processSingleChain)
+

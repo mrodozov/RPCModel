@@ -18,7 +18,6 @@ from Chain import Chain
 
 # TODO - See if there is need to format HTML for any reason,
 # TODO - Wrap the processTask with exception, to continue after the execution even if command crashes. for example db upload crash should not prevent creating files and moving them on another location
-# TODO - all 'results' folders in the options_object static resource file to be removed, and the result folder to be taken from the dynamic options
 #
 
 class Command(object):
@@ -210,7 +209,7 @@ class NoiseToolMainExe(Command):
                 print e.message
         executable = self.args[0]
         arguments = self.args[1] + ' ' + self.args[2] + ' ' + res_folder
-
+        '''
         for f in filesToProcess:
             # print executable, f, arguments
             childp = subprocess.Popen(executable + ' ' + f + ' ' + arguments, shell=True, stdout=subprocess.PIPE,
@@ -225,7 +224,7 @@ class NoiseToolMainExe(Command):
                 complete = True
             self.log[f] = {'complete': complete,'err': current_stderr,'out':current_stdout,'exitcode':current_excode}
                 # so far, and thanks for all the fish
-
+        '''
         complete = True
         if not complete:
             results = 'Failed'
@@ -335,7 +334,6 @@ class DBInputPrepare(Command):
 
 class DBFilesContentCheck(Command):
     # TODO - pass the patterns from the options, read them from a file maybe
-    # TODO - check only completely switched off detector, but the flag RPC ON would be false and the run wont be returned anyway
 
     def contentCheck(self, file_content, file_type='rolls'):
         contentMeta = {'correct': True, 'errors': []}
@@ -654,6 +652,7 @@ class CopyFilesOnRemoteLocation(Command):
         Command.__init__(self, name, args)
         self.ssh_client = None
         self.sftp_client = None
+        self.sftp = None
         self.connection_established = False
         self.open_connection()
 
@@ -683,6 +682,7 @@ class CopyFilesOnRemoteLocation(Command):
                 try:
                     self.ssh_client.connect(remote_host, transfer_port, username=transfer_username, password=transfer_password)
                     self.sftp_client = self.ssh_client.open_sftp()
+                    self.sftp = paramiko.SFTPClient.from_transport(self.ssh_client.get_transport())
                     rval = True
                     self.connection_established = True
                 except Exception as exc:
@@ -694,6 +694,7 @@ class CopyFilesOnRemoteLocation(Command):
         if self.connection_established:
             self.ssh_client.close()
             self.sftp_client.close()
+            self.sftp.close()
             self.connection_established = False
 
     def processTask(self):
@@ -703,6 +704,7 @@ class CopyFilesOnRemoteLocation(Command):
         results_folder = self.options['result_folder']
         runfolder = 'run'+rnum
         destination = self.args['destination_root'] + runfolder
+        print destination
         if not self.connection_established:
             try:
                 self.open_connection()
@@ -735,12 +737,10 @@ class CopyFilesOnRemoteLocation(Command):
 
     def create_dir_on_remotehost(self, dirname):
         try:
-            stdin, stdout, stderr = self.ssh_client.exec_command("if [[ ! -d " + dirname + " ]]; then mkdir " + dirname + "; fi")
-            print stdin
-            print stdout
-            print stderr
-        except Exception as exc:
-            print exc.message
+            self.sftp.chdir(dirname)
+        except IOError:
+            self.sftp.mkdir(dirname)
+            self.sftp.chdir(dirname)
 
 
 class OldToNewDataConverter(Command):
@@ -767,6 +767,70 @@ class GarbageRemoval(Command):
     def __init__(self):
         pass
 
+class CommandSequence(object):
+    '''
+    class to represent sequence of command objects,
+    that are given to the chain. every type of command correspond to key,
+    where the key is written in a file and for each key given type object is created.
+    Thus, using config files we create predefined sequences of commands
+    suited for different cases. First and the most used should be 'new run ' case,
+    but we could have cases where only certain commands has to be finished - like DB upload,
+    ot backups. Such cases requires shorter sequences. Each command object have single
+    key that defines its type, while the different configs (files) should define
+    order and additional arguments. A config file describes the order, names and arguments
+    for each command in given sequence, this class defines the types of command objects for each key.
+    '''
+
+    def __init__(self, config=None, name=None):
+        self.command_sequence = {}
+        self.name = name
+        self.config = config
+        if self.name and self.config:
+            try:
+                self.setupSequence()
+            except Exception as e:
+                print e.message
+
+    def setupSequence(self):
+        with open(self.config, 'r') as config_file:
+            try:
+                sequence_description = json.load(config_file)
+                try:
+                    sequence_obj = sequence_description[self.name]
+                    for c in sequence_obj:
+                        msg = c['starton']
+                        if not msg in self.command_sequence.keys(): self.command_sequence[msg] = []
+                        self.command_sequence[msg].append(c['name'])
+                        cmnd_type = c['type']
+                        cmnd = self.getCommandObjectForKey(cmnd_type)
+                        cmnd.options = c['options']
+                        self.command_sequence[msg].append(cmnd)
+
+                except KeyError:
+                    print 'no sequence object for key ', self.name
+
+            except Exception as e:
+                print 'bla'
+                #print e.message
+
+    def getCommandObjectForKey(self, key=None):
+        obj = None
+        if key == 'filelist' : obj = GetListOfFiles()
+        if key == 'filecheck' : obj = CheckIfFilesAreCorrupted()
+        if key == 'noiseexe' : obj = NoiseToolMainExe()
+        if key == 'dbinput' : obj = DBInputPrepare()
+        if key == 'dbfilecheck' : obj = DBFilesContentCheck()
+        if key == 'dbdataupload' : obj = DBDataUpload()
+        if key == 'outputfilesprep' : obj = OutputFilesFormat()
+        if key == 'remotecopy' : obj = CopyFilesOnRemoteLocation()
+
+        return obj
+
 if __name__ == "__main__":
-    # test each object
-    print 'blabla'
+
+    seqfile = 'resources/SequenceDictionaries.json'
+    seqname = 'newrun'
+    commseq = CommandSequence(seqfile, seqname)
+
+    print commseq.command_sequence
+

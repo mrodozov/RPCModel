@@ -1,0 +1,18 @@
+{
+  "newrun":
+    [
+        {"type":"filelist","name":"filelist","options":"o","starton":"init"},
+        {"type":"noiseexe","name":"noiseexe","options":"o","starton":"check"},
+        {"type":"filecheck","name":"check","options":"o","starton":"filelist"},
+        {"type":"dbinput","name":"dbinput","options":"o","starton":"noiseexe"},
+        {"type":"dbfilecheck","name":"dbfilecheck","options":"o","starton":"dbinput"},
+        {"type":"dbdataupload","name":"dbdataupload","options":"o","starton":"dbfilecheck"},
+        {"type":"outputfilesprep","name":"outputprep","options":"o","starton":"dbfilecheck"},
+        {"type":"remotecopy","name":"webserver","options":"o","starton":"outputprep"},
+        {"type":"remotecopy","name":"lxplus","options":"o","starton":"outputprep"}
+    ],
+  "resubmitrun":{},
+  "dbretry":{},
+  "backupretry":{},
+  "convertto":{}
+}

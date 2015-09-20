@@ -59,7 +59,7 @@ class DBService(object):
             #print insertion
         #print  insertionList
         action = table.insert().values(insertionList)
-        queryResult = ResultProxy
+        #queryResult = ResultProxy
         queryResult = connection.execute(action) # TODO - handle this execution more transparent
         connection.close()
         retval = queryResult

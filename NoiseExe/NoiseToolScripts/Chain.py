@@ -83,7 +83,7 @@ class Chain(Observer):
         return self.log
 
 
-# self.sterr[cmndname] = command.sterr
+
 
 ''' test unit code, uncomment the BaseCommand class import to use '''
 

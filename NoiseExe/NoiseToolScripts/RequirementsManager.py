@@ -38,7 +38,7 @@ class EnvHandler:
     debug = False
 
     #TODO - make the external classes internal
-    #TODO - check connection event handler, uses detached asynch call that fire events on connection fail. use this
+
     #http://stackoverflow.com/questions/3764291/checking-network-connection
     #http://stackoverflow.com/questions/4689984/implementing-a-callback-in-python-passing-a-callable-reference-to-the-current
 

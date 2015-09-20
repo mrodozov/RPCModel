@@ -1,13 +1,11 @@
 {
  "dbfilescontent": {
   "source": "dbinput", 
-  "args": "", 
-  "results": ""
+  "args": "",
  }, 
  "outputformat": [
    "resources/rpcMap", 
-   "resources/RawIDs.txt", 
-   "results/",
+   "resources/RawIDs.txt",
    "output_rolls.json", 
    "output_strips.json", 
    "AllToUnmask.txt", 
@@ -17,8 +15,7 @@
  "dbinput":
    [
    "executables/DBInputs.lnxapp", 
-   "resources/", 
-   "results/",
+   "resources/",
    "Masked", 
    "Dead", 
    "ToUnmask", 
@@ -89,8 +86,7 @@
  "noiseexe": [
    "executables/LBNoise", 
    "resources/lb-chamber-withRE4.txt", 
-   "resources/area_noise_withRE4.txt", 
-   "results"
+   "resources/area_noise_withRE4.txt",
   ],
  "filelister": {
    "filesfolder" :
