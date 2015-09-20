@@ -20,8 +20,8 @@ def processSingleChain(chain_args=None):
     Function to run single runChain object
     Setup the run chain object with the args
     '''
-
-    rn = chain_args['run']
+    print 'process is ', mp.current_process().name
+    rn = chain_args
 
     dbschema = {}
     optionsObject = {}
@@ -30,12 +30,13 @@ def processSingleChain(chain_args=None):
         optobj.close()
     with open('resources/db_tables_schema.txt', 'r') as dbschemafile:
         dbschema = json.loads(dbschemafile.read())
-    optionsObject['dbdataupload']['dbResources'] = dbschema
     optionsObject['run'] = rn
+    optionsObject['result_folder'] = 'run' + optionsObject['run']
+    optionsObject['dbdataupload']['dbResources'] = dbschema
     rnum = rn
 
-    optionsObject['webserver_remote']['ssh_credentials']['password'] = ''
-    optionsObject['lxplus_archive_remote']['ssh_credentials']['password'] = ''
+    optionsObject['webserver_remote']['ssh_credentials']['password'] = 'BAKsho___321'
+    optionsObject['lxplus_archive_remote']['ssh_credentials']['password'] = 'BAKsho___321'
 
     opts = optionsObject['filelister']
     listFiles = GetListOfFiles(name='filelister', args=opts)
@@ -45,8 +46,6 @@ def processSingleChain(chain_args=None):
     noiseExe = NoiseToolMainExe(name='noiseexe',args=optionsObject['noiseexe'])
 
     dbInput = DBInputPrepare(name='dbinput', args=optionsObject['dbinput'])
-
-    dbfilescheck = DBFilesContentCheck(name='dbfilescontent',args=optionsObject['dbfilescontent'])
 
     dbcontentcheck = DBFilesContentCheck(name='dbfilecontent', args=optionsObject['dbfilecontent'])
 
@@ -58,9 +57,6 @@ def processSingleChain(chain_args=None):
 
     archive_copy = CopyFilesOnRemoteLocation(name='lxplus_archive_remote', args=optionsObject['lxplus_archive_remote'])
 
-    #print mergeContent.log
-    #print optionsObject[mergeContent.name]['results']
-
     start_command_on_event_dict = {'initEvent' : [listFiles], listFiles.name: [fileIsCorrupted]  ,
                                    fileIsCorrupted.name: [noiseExe], noiseExe.name: [dbInput],
                                    dbInput.name : [dbcontentcheck], dbcontentcheck.name: [dbUpload, mergeContent],
@@ -71,9 +67,9 @@ def processSingleChain(chain_args=None):
     initialEvent = SimpleEvent('initEvent', True, rnum)
     runchain.startChainWithEvent(initialEvent)
 
+    result_is = chain_args['run']
 
-    return 'result %' % (runchain.collectLogs)
-
+    return 'result %' % (result_is)
 
 
 class RunProcessPool(object):
@@ -132,8 +128,10 @@ if __name__ == "__main__":
 
 
     os.environ['LD_LIBRARY_PATH'] = '/home/rodozov/Programs/ROOT/INSTALL/lib/root'  # important
-    ropts = {}
-    ropts['run'] = '220796'
+
+    rlist = ['251718']
+
     rprocpool = RunProcessPool()
-    rprocpool.runlist.append(ropts)
+    rprocpool.runlist = rlist
+
     rprocpool.processRuns()

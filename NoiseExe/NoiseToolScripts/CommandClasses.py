@@ -173,6 +173,7 @@ class CheckIfFilesAreCorrupted(Command):
         if corrupted_files: self.warnings.append('corrupted files found')
         self.results['rootfiles'] = goodresult
         self.results['run'] = self.options['run']
+        self.results['result_folder'] = ''
         if not complete:
             self.results = 'Failed'
             self.warnings.append('all files corrupted')
@@ -189,13 +190,27 @@ class NoiseToolMainExe(Command):
     def processTask(self):
 
         complete = False
-        results = {'masked':[],'dead':[],'tomask':[],'tounmask':[],'rootfiles':[],'totalroot':'','run':self.options['run']}
+        results = {'masked':[],'dead':[],'tomask':[],'tounmask':[],'rootfiles':[],'totalroot':'','run':self.options['run'],'result_folder':''}
         filesToProcess = [f for f in self.options['rootfiles']]
         # print filesToProcess # for debug
-        executable = self.args[0]
-        arguments = self.args[1] + ' ' + self.args[2] + ' ' + self.args[3]
-        results_folder = self.args[3]
+
         '''
+        create the result dir if doesn't exist yet
+
+        '''
+
+        self.options['result_folder'] = self.args[3] + '/run' + self.options['run'] + '/'
+        if not self.options['result_folder'].endswith('/'): self.options['result_folder'] += '/'
+        print self.options['result_folder']
+        res_folder = self.options['result_folder']
+        if not os.path.isdir(res_folder):
+            try:
+                os.mkdir(res_folder)
+            except Exception as e:
+                print e.message
+        executable = self.args[0]
+        arguments = self.args[1] + ' ' + self.args[2] + ' ' + res_folder
+
         for f in filesToProcess:
             # print executable, f, arguments
             childp = subprocess.Popen(executable + ' ' + f + ' ' + arguments, shell=True, stdout=subprocess.PIPE,
@@ -210,28 +225,30 @@ class NoiseToolMainExe(Command):
                 complete = True
             self.log[f] = {'complete': complete,'err': current_stderr,'out':current_stdout,'exitcode':current_excode}
                 # so far, and thanks for all the fish
-        '''
+
         complete = True
         if not complete:
             results = 'Failed'
             self.warnings.append('no properly processed files')
         else:
             # list the results dir and collect the results
-            results['masked'] = [f for f in os.listdir(results_folder) if f.find('Masked_') is not -1 and f.find('All') is -1 ]
-            results['dead'] = [f for f in os.listdir(results_folder) if f.find('Dead') is not -1 and f.find('All') is -1]
-            results['tounmask'] = [f for f in os.listdir(results_folder) if f.find('ToUnmask') is not -1 and f.find('All') is -1]
-            results['tomask'] = [f for f in os.listdir(results_folder) if f.find('ToMask') is not -1 and f.find('All') is -1]
-            results['rootfiles'] = [f for f in os.listdir(results_folder) if f.find('Noise_') is not -1 and f.endswith('.root')]
-            childp = subprocess.Popen('hadd -f ' + results_folder+'/total.root ' + results_folder + '/Noise_*', shell=True, stdout=subprocess.PIPE,
+            results['masked'] = [f for f in os.listdir(res_folder) if f.find('Masked_') is not -1 and f.find('All') is -1 ]
+            results['dead'] = [f for f in os.listdir(res_folder) if f.find('Dead') is not -1 and f.find('All') is -1]
+            results['tounmask'] = [f for f in os.listdir(res_folder) if f.find('ToUnmask') is not -1 and f.find('All') is -1]
+            results['tomask'] = [f for f in os.listdir(res_folder) if f.find('ToMask') is not -1 and f.find('All') is -1]
+            results['rootfiles'] = [f for f in os.listdir(res_folder) if f.find('Noise_') is not -1 and f.endswith('.root')]
+            childp = subprocess.Popen('hadd -f ' + res_folder+'total.root ' + res_folder + 'Noise_*', shell=True, stdout=subprocess.PIPE,
                                       stderr=subprocess.STDOUT, close_fds=True)
             current_stdout, current_stderr = childp.communicate()
             urrent_excode = childp.returncode
-            if  os.path.isfile(results_folder + '/total.root'):
-                results['totalroot'] = results_folder+'/total.root'
+            if  os.path.isfile(res_folder + 'total.root'):
+                results['totalroot'] = res_folder+'total.root'
             else:
                 results = 'Failed'
 
         self.results = results
+        self.results['result_folder'] = self.options['result_folder']
+        # TODO - improve the options again, this is redundant here.
 
         return complete
 
@@ -268,7 +285,7 @@ class DBInputPrepare(Command):
 
         executable = self.args[0]
         resourcesDir = self.args[1]
-        resultsDir = self.args[2]
+        resultsDir = self.options['result_folder']
         rootFile = self.options['totalroot']
         rnum = self.options['run']
         fileToSearch = self.args[3:7]
@@ -313,7 +330,7 @@ class DBInputPrepare(Command):
                         data_file.write(existingData)
 
             #print current_stdout, current_stderr, current_excode
-
+        self.results['result_folder'] = self.options['result_folder']
         return complete
 
 class DBFilesContentCheck(Command):
@@ -393,6 +410,7 @@ class DBFilesContentCheck(Command):
 
         self.results['filescheck'] = checkResults
         self.results['run'] = self.options['run']
+        self.results['result_folder'] = self.options['result_folder']
         #self.log = filecheck['errors']
         return True
 
@@ -446,7 +464,7 @@ class OutputFilesFormat(Command):
         #print static_opts
         rpcMapFile = self.args[0]
         rawmapfile = self.args[1]
-        results_folder = self.args[2]
+        results_folder = self.options['result_folder']
         rolls_json_file = results_folder + self.args[3]
         strips_json_file = results_folder + self.args[4]
         allToUnmaskFile = results_folder + self.args[5]
@@ -616,6 +634,7 @@ class OutputFilesFormat(Command):
                 self.results = 'Failed'
                 self.warnings.append('file(s) production failure')
                 complete = False
+        self.results['result_folder'] = self.options['result_folder']
         return complete
 
 class WebResourcesFormat(Command):
@@ -681,7 +700,7 @@ class CopyFilesOnRemoteLocation(Command):
         rval = False
         rnum = self.options['run']
         list_of_files = self.options['json_products']
-        results_folder = self.options['results_folder']
+        results_folder = self.options['result_folder']
         runfolder = 'run'+rnum
         destination = self.args['destination_root'] + runfolder
         if not self.connection_established:
@@ -711,6 +730,7 @@ class CopyFilesOnRemoteLocation(Command):
         if not rval:
             self.results='Failed'
 
+        self.results['result_folder'] = self.options['result_folder']
         return rval
 
     def create_dir_on_remotehost(self, dirname):
@@ -749,3 +769,4 @@ class GarbageRemoval(Command):
 
 if __name__ == "__main__":
     # test each object
+    print 'blabla'

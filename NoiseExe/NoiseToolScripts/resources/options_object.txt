@@ -7,7 +7,7 @@
  "outputformat": [
    "resources/rpcMap", 
    "resources/RawIDs.txt", 
-   "/home/rodozov/Projects/CERN/RPCModel/NoiseExe/NoiseToolScripts/results/",
+   "results/",
    "output_rolls.json", 
    "output_strips.json", 
    "AllToUnmask.txt", 

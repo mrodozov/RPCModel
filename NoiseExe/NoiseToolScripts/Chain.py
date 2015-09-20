@@ -75,11 +75,12 @@ class Chain(Observer):
 
         #
     def collectLogs(self):
+
         for command in self.commands:
             cmndname = command.name
             self.log[cmndname] = command.log
             # self.stout[cmndname] = command.stout
-
+        return self.log
 
 
 # self.sterr[cmndname] = command.sterr
@@ -88,3 +89,4 @@ class Chain(Observer):
 
 if __name__ == "__main__":
 
+    print 'blabla'
