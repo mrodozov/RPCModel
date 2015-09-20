@@ -3,7 +3,7 @@ Author : Mircho Rodozov
 mrodozov@cern.ch
 '''
 
-import smtplib,email,sys,getopt
+import smtplib,email,sys, getopt
 from email.mime.text import MIMEText
 
 def sendMail(self, emailText, subject, emails):
@@ -38,4 +38,4 @@ fp = open(sys.argv[1],'r')
 arrayOfEmails = fp.readlines()
 fp.close()
 
-sendMail('',theMessage,theSubject,arrayOfEmails);
+sendMail(theMessage,theSubject,arrayOfEmails);

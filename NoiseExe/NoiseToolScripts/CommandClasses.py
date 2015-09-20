@@ -17,7 +17,6 @@ from Event import SimpleEvent
 from Chain import Chain
 
 # TODO - See if there is need to format HTML for any reason,
-# TODO - Write scp command, using this http://stackoverflow.com/questions/250283/how-to-scp-in-python
 # TODO - Wrap the processTask with exception, to continue after the execution even if command crashes. for example db upload crash should not prevent creating files and moving them on another location
 # TODO - all 'results' folders in the options_object static resource file to be removed, and the result folder to be taken from the dynamic options
 #
@@ -119,7 +118,7 @@ class GetListOfFiles(Command):
             files = shortlist
         # print files
         self.results['rootfiles'] = [filespath + f for f in files]
-        self.results['run'] = rnum
+        self.results['run'] = runnum
         #format the output
         towerslist = self.args['towers_list']
         for t in towerslist:
@@ -456,6 +455,7 @@ class OutputFilesFormat(Command):
         rollsFile = self.options['filenames']['rolls']
         self.log = {'strips_file': None, 'rolls_file': None}
         self.results['json_products'] = []
+        rnum = self.options['run']
 
         # first print
         print detailedFile, rollsFile
@@ -747,95 +747,5 @@ class GarbageRemoval(Command):
     def __init__(self):
         pass
 
-
 if __name__ == "__main__":
     # test each object
-
-    os.environ['LD_LIBRARY_PATH'] = '/home/rodozov/Programs/ROOT/INSTALL/lib/root'  # important
-    print os.environ['LD_LIBRARY_PATH']
-
-    dbschema = {}
-    optionsObject = {}
-    with open('resources/options_object.txt', 'r') as optobj:
-        optionsObject = json.loads(optobj.read())
-        optobj.close()
-    with open('resources/db_tables_schema.txt', 'r') as dbschemafile:
-        dbschema = json.loads(dbschemafile.read())
-    optionsObject['dbdataupload']['dbResources'] = dbschema
-    optionsObject['run'] = '220796'
-    rnum = '220796'
-
-    optionsObject['webserver_remote']['ssh_credentials']['password'] = ''
-    optionsObject['lxplus_archive_remote']['ssh_credentials']['password'] = ''
-
-    opts = optionsObject['filelister']
-    listFiles = GetListOfFiles(name='filelister', args=opts)
-
-    fileIsCorrupted = CheckIfFilesAreCorrupted(name='check', args=optionsObject['check']['exe'])
-
-    noiseExe = NoiseToolMainExe(name='noiseexe',args=optionsObject['noiseexe'])
-
-    dbInput = DBInputPrepare(name='dbinput', args=optionsObject['dbinput'])
-
-    dbfilescheck = DBFilesContentCheck(name='dbfilescontent',args=optionsObject['dbfilescontent'])
-
-    dbcontentcheck = DBFilesContentCheck(name='dbfilecontent', args=optionsObject['dbfilecontent'])
-
-    dbUpload = DBDataUpload(name='dbdataupload', args=optionsObject['dbdataupload'])
-
-    mergeContent = OutputFilesFormat(name='outputformat', args=optionsObject['outputformat'])
-
-    webserver_copy = CopyFilesOnRemoteLocation(name='webserver_remote', args=optionsObject['webserver_remote'])
-
-    archive_copy = CopyFilesOnRemoteLocation(name='lxplus_archive_remote', args=optionsObject['lxplus_archive_remote'])
-
-    #print mergeContent.log
-    #print optionsObject[mergeContent.name]['results']
-
-    start_command_on_event_dict = {'initEvent' : [listFiles], listFiles.name: [fileIsCorrupted]  ,
-                                   fileIsCorrupted.name: [noiseExe], noiseExe.name: [dbInput],
-                                   dbInput.name : [dbcontentcheck], dbcontentcheck.name: [dbUpload, mergeContent],
-                                   mergeContent.name : [webserver_copy, archive_copy] }
-
-    runchain = Chain()
-    runchain.commands = start_command_on_event_dict
-    initialEvent = SimpleEvent('initEvent', True, rnum)
-    runchain.startChainWithEvent(initialEvent)
-
-
-    #print listFiles.results
-    #print listFiles.log
-    #print listFiles.warnings
-    #print listFiles.options
-
-    #print fileIsCorrupted.results
-    #print fileIsCorrupted.log
-    #print fileIsCorrupted.warnings
-
-    #print noiseExe.results
-    #print noiseExe.log
-    #print noiseExe.warnings
-    #print noiseExe.options
-
-    #print dbInput.results
-    #print dbInput.log
-    #print dbInput.warnings
-
-
-    print dbcontentcheck.results
-    print dbcontentcheck.log
-    print dbcontentcheck.warnings
-
-    print dbUpload.results
-    print dbUpload.log
-    print dbUpload.warnings
-
-    print mergeContent.results
-    print mergeContent.log
-    print mergeContent.warnings
-
-    print webserver_copy.results
-    print webserver_copy.log
-    print webserver_copy.warnings
-
-    

@@ -2451,6 +2451,8 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
      * 
     */
     
+//     cout << "marks" << endl;
+     
     TH1F * WP2_histo_masked = new TH1F( "WP2_histo_masked", "WP2_histo_masked", 12, 0.5,12.5);
     TH1F * WP1_histo_masked = new TH1F( "WP1_histo_masked", "WP1_histo_masked", 12, 0.5,12.5);
     TH1F * WP0_histo_masked = new TH1F( "WP0_histo_masked", "WP0_histo_masked", 12, 0.5,12.5);
@@ -2465,6 +2467,8 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
     TH1F * EP1_histo_masked = new TH1F( "EP1_histo_masked", "EP1_histo_masked", 36, 0.5,36.5);
     TH1F * EP2_histo_masked = new TH1F( "EP2_histo_masked", "EP2_histo_masked", 36, 0.5,36.5);
     TH1F * EP3_histo_masked = new TH1F( "EP3_histo_masked", "EP3_histo_masked", 36, 0.5,36.5);
+    TH1F * EP4_histo_masked = new TH1F( "EP4_histo_masked", "EP3_histo_masked", 36, 0.5,36.5);
+    TH1F * EN4_histo_masked = new TH1F( "EN4_histo_masked", "EP3_histo_masked", 36, 0.5,36.5);
 
     WP2_histo_masked->SetBinContent(4,5);  WP2_histo_masked->SetBinError(4,1.0);  WP2_histo_masked->SetFillColor(kGray+1);
     
@@ -2493,6 +2497,8 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
     EP1_histo_masked->SetBinContent(25,2.5); EP1_histo_masked->SetBinError(25,0.5); EP1_histo_masked->SetFillColor(kGray);
     EP1_histo_masked->SetBinContent(29,1.5);   EP1_histo_masked->SetBinError(29,0.5); EP1_histo_masked->SetFillColor(kGray);
     
+    
+    
     /*
      * End of efficiency taken masks
      * 
@@ -2502,7 +2508,7 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
      * Make a map between Histo object name and Piet histogram masks
      * 
      */
-    
+//     cout << "marks2" << endl;
     map <string,TH1F*> mapOfMasks ;
     //  <partitionAsString,maskHistogram>
     
@@ -2517,6 +2523,8 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
     mapOfMasks["RE-3"] = EN3_histo_masked;
     mapOfMasks["RE-2"] = EN2_histo_masked;
     mapOfMasks["RE-1"] = EN1_histo_masked;
+    mapOfMasks["RE-4"] = EN4_histo_masked;
+    mapOfMasks["RE4"] = EP4_histo_masked;
     
     // end of map
     
@@ -2557,33 +2565,38 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
     TCanvas * EP1_canvas = new TCanvas( "EP1_canvas", "EP1_canvas", 800,600);
     TCanvas * EP2_canvas = new TCanvas( "EP2_canvas", "EP2_canvas", 800,600);
     TCanvas * EP3_canvas = new TCanvas( "EP3_canvas", "EP3_canvas", 800,600);
+    TCanvas * EP4_canvas = new TCanvas( "EP4_canvas", "EP3_canvas", 800,600);
+    TCanvas * EN4_canvas = new TCanvas( "EN4_canvas", "EP3_canvas", 800,600);
     
     map <string,TCanvas*> mapCanvases;
-    
+//     cout << "marks3" << endl;
     mapCanvases["W-1"]= WM1_canvas;
     mapCanvases["W-2"]= WM2_canvas;
     mapCanvases["W0"]= WP0_canvas;
     mapCanvases["W1"]= WP1_canvas;
     mapCanvases["W2"]= WP2_canvas;
+    mapCanvases["RE4"] = EP4_canvas;
     mapCanvases["RE3"] = EP3_canvas;
     mapCanvases["RE2"] = EP2_canvas;
     mapCanvases["RE1"] = EP1_canvas;
+    mapCanvases["RE-4"] = EN4_canvas;
     mapCanvases["RE-3"] = EN3_canvas;
     mapCanvases["RE-2"] = EN2_canvas;
     mapCanvases["RE-1"] = EN1_canvas;
     
     //
-    
+    //cout << "marks4" << endl;
     for (int i=1;i<=ListRolls.getLenght();i++) {
         singleRollName = ListRolls.getElement(i,1);
+// 	cout << "lol" << endl;
+	cout << singleRollName << endl;
         ExRoll * a_roll = new ExRoll(singleRollName);
-	//cout << singleRollName << endl;
 	a_roll->allocStrips();
 	a_roll->initStrips();
         a_roll->setStripsAreaFromSource_cmsswResource(area);
 	
-	//cout << a_roll->getRollIDofClone(1) << endl;
-	//cout <<  a_roll->getFullOnlineRollID() << endl;;
+	cout << a_roll->getRollIDofClone(1) << endl;
+	cout <<  a_roll->getFullOnlineRollID() << endl;;
         AllRolls[singleRollName] = a_roll;
     }
     cout << " 1 " << endl;
@@ -2609,14 +2622,14 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
                 if ( currentName.substr(0,1) == "W" || currentName.substr(0,2) == "RE" ) {
                     currentName = h1->GetName();
 		    //cout << h1->GetName() << endl;
-
+		    
                     aRoll = AllRolls.find(currentName)->second;
 		    //cout << aRoll->getFullOnlineRollID() << endl;
                     aRoll->setStripsRatesFromTH1FObject(h1);
                     RollNamesOnly[currentName] = currentName;
-
-
+		    
                     for (int i=1;i <= aRoll->getClones();i++) {
+			cout << aRoll->getFullOnlineRollID() << endl;
 
                         if (aRoll->getAvgRatePSCWithoutCorrectionsForClone(i) < 20) {
 
@@ -2631,18 +2644,17 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
 
                             if (RollName_RateSum.find(aRoll->getRollIDofCloneWithNewIdentifiers(i)) == RollName_RateSum.end()) {
                                 RollName_RateSum[aRoll->getRollIDofCloneWithNewIdentifiers(i)] = aRoll->getAvgRatePSCWithoutCorrectionsForClone(i);
-                            }
+                            }	
                             else {
                                 RollName_RateSum.find(aRoll->getRollIDofCloneWithNewIdentifiers(i))->second += aRoll->getAvgRatePSCWithoutCorrectionsForClone(i);
                             }
 
                         }
+                        //cout << aRoll->getFullOnlineRollID() << endl;
                     }
-
+                    
                 }
-
                 delete h1;
-
             }
         }
 
@@ -2650,7 +2662,9 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
         rootFile->Delete();
 
     }
-
+    
+    cout << "is out" << endl;
+    
     TH2F * WM1histo = new TH2F("WM1","W-1",12,0.5,12.5,21,0,21);
     TH2F * WM2histo = new TH2F("WM2","W-2",12,0.5,12.5,21,0,21);
     TH2F * W0histo = new TH2F("WZ","W0",12,0.5,12.5,21,0,21);
@@ -2662,6 +2676,8 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
     TH2F * DM3Endcap = new TH2F("EM3","Disk-3",36,0.5,36.5,6,0,6);
     TH2F * DM2Endcap = new TH2F("EM2","Disk-2",36,0.5,36.5,6,0,6);
     TH2F * DM1Endcap = new TH2F("EM1","Disk-1",36,0.5,36.5,6,0,6);
+    TH2F * DP4Endcap = new TH2F("EP4","Disk+4",36,0.5,36.5,6,0,6);
+    TH2F * DM4Endcap = new TH2F("EM4","Disk-4",36,0.5,36.5,6,0,6);
 
     // add the histos to the map
 
@@ -2676,6 +2692,8 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
     allHistograms["RE-3"] = DM3Endcap;
     allHistograms["RE-2"] = DM2Endcap;
     allHistograms["RE-1"] = DM1Endcap;
+    allHistograms["RE4"] = DP4Endcap;
+    allHistograms["RE-4"] = DM4Endcap;
   
 //   cout << "fill barrel map" << endl;
     for (int i=1 ; i <= shortBarrel.getLenght();i++) {
@@ -2695,6 +2713,8 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
 //   cout << "fill ecap map" << endl;
     for (int i=1 ; i <= shortEcap.getLenght();i++) {
         ecap_labels_map[shortEcap.getElement(i,1)] = shortEcap.getElementAsInt(i,2);
+	allHistograms.find("RE4")->second->GetYaxis()->SetBinLabel(shortEcap.getElementAsInt(i,2),shortEcap.getElement(i,1).c_str());
+	allHistograms.find("RE-4")->second->GetYaxis()->SetBinLabel(shortEcap.getElementAsInt(i,2),shortEcap.getElement(i,1).c_str());
         allHistograms.find("RE3")->second->GetYaxis()->SetBinLabel(shortEcap.getElementAsInt(i,2),shortEcap.getElement(i,1).c_str());
         allHistograms.find("RE2")->second->GetYaxis()->SetBinLabel(shortEcap.getElementAsInt(i,2),shortEcap.getElement(i,1).c_str());
         allHistograms.find("RE1")->second->GetYaxis()->SetBinLabel(shortEcap.getElementAsInt(i,2),shortEcap.getElement(i,1).c_str());
@@ -2702,6 +2722,9 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
         allHistograms.find("RE-2")->second->GetYaxis()->SetBinLabel(shortEcap.getElementAsInt(i,2),shortEcap.getElement(i,1).c_str());
         allHistograms.find("RE-1")->second->GetYaxis()->SetBinLabel(shortEcap.getElementAsInt(i,2),shortEcap.getElement(i,1).c_str());
     }
+    
+    cout << "map filled" << endl;
+    
     gStyle->Reset();
     gStyle->SetPalette(1);
     
@@ -2713,6 +2736,7 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
         //cout << iter->first << " " << iter->second->getFullOnlineRollID() <<  " " << iter->second->getAvgRatePSCWithoutCorrections()<< endl;
         string theName = iter->first;
         aRoll = AllRolls.find(theName)->second;
+	if (aRoll->isInEndcap() && theName.find("1_1_") != string::npos) continue;
 
         //aRoll->setStripsRatesFromTH1FObject(iter->second);
         //aRoll->setStripsAreaFromSource_cmsswResource(area);
@@ -2761,11 +2785,11 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
         //delete aRoll;
 
     }
-    
+    cout << " mark1 " << endl;
     //allHistograms.find("W0")->second->SetBinContent(1,1,20);
     TCanvas * canvasTest = new TCanvas("can0","can0",1300,700);
     TCanvas * canvasBarrel = new TCanvas("can1","can1",1300,700);
-    TCanvas * canvasEndcap = new TCanvas("can2","can2",1300,700);
+    TCanvas * canvasEndcap = new TCanvas("can2","can2",1300,1300);
     
     // approval definitions
     TPaveText* text = new TPaveText(0.223663, 0.908299, 0.615908, 0.968894, "NDC"); //(0.368779, 0.916955, 0.715578, 0.980436, "NDC")
@@ -2785,7 +2809,7 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
     text->SetTextSize(secondText->GetTextSize());
     
     canvasBarrel->Divide(3,2);
-    canvasEndcap->Divide(3,2);
+    canvasEndcap->Divide(3,3);
     canvasBarrel->SetFillColor(0);
     canvasEndcap->SetFillColor(0);
     int counterBarrel =0 , counterEcap = 0;
@@ -2807,7 +2831,7 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
     detectormasked->SetBorderSize(0);
     //detectormasked->SetB
     detectormasked->AddEntry(WM1_histo_masked_en,"Det Unit overflow","f");
-    
+    cout << " mark2 " << endl;
     
     for (map<string,TH2F*>::iterator itr = allHistograms.begin();itr != allHistograms.end();itr++) {
       itr->second->SetStats(false);
@@ -2818,7 +2842,7 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
       TPaveText * titleText = new TPaveText(0.044226, 0.906466, 0.941032, 0.950426, "NDC");//(0.211782, 0.922726, 0.345346, 0.983322, "NDC");
       titleText->SetFillColor(0);
       titleText->SetBorderSize(0);
-      string textForTitle = "#sqrt{s} = 8 TeV ";
+      string textForTitle = "#sqrt{s} = 13 TeV ";
       textForTitle += "      CMS Preliminary      ";
       textForTitle += itr->second->GetTitle();
       titleText->AddText(textForTitle.c_str());
@@ -2828,10 +2852,10 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
       
       if (itr->first.find("W") != string::npos) {
             ++counterBarrel;
-            //canvasBarrel->cd(counterBarrel)->SetFillColor(kWhite);
-	    //canvasBarrel->cd(counterBarrel)->SetFrameFillColor(kWhite);
-	    //canvasBarrel->cd(counterBarrel)->set
-	    mapCanvases.find(itr->first)->second->cd();
+            canvasBarrel->cd(counterBarrel)->SetFillColor(kWhite);
+	    canvasBarrel->cd(counterBarrel)->SetFrameFillColor(kWhite);
+// 	    canvasBarrel->cd(counterBarrel)->set
+// 	    mapCanvases.find(itr->first)->second->cd();
 	    
 	    itr->second->SetMaximum(BarrelMax);
 	    
@@ -2874,8 +2898,8 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
         else {
             ++counterEcap;
 	    mapCanvases.find(itr->first)->second->cd();
-            //canvasEndcap->cd(counterEcap)->SetFillColor(0);
-	    //canvasEndcap->cd(counterEcap)->SetFrameFillColor(0);
+            canvasEndcap->cd(counterEcap)->SetFillColor(0);
+	    canvasEndcap->cd(counterEcap)->SetFrameFillColor(0);
 	    itr->second->SetMaximum(EcapMax);
             //itr->second->GetYaxis()->SetTitle("Layer");
 	    
@@ -2927,7 +2951,7 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
         
         
     }
-        
+    cout << " mark3 " << endl;    
     
     lastRunNum = listOfRootFiles.getElement(listOfRootFiles.getLenght(),1);
     canvasBarrel->cd(6)->SetFillColor(kWhite);

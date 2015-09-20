@@ -7,7 +7,8 @@ import threading
 from Event import SimpleEvent
 from Event import Observer
 from EventsHandler import EventsHandler
-#from CommandClasses import Command
+#from CommandClasses import *
+
 import time
 
 # TODO - failed execution of thread hangs the main thread, try to fix this and test it
@@ -83,73 +84,7 @@ class Chain(Observer):
 
 # self.sterr[cmndname] = command.sterr
 
-''' test unit code, uncomment the Command class import to use '''
-'''
-class BaseCommand(Command):
-    def __init__(self, args=None, name=None, wait_time=None):
-        self.stout = None
-        self.sterr = None
-        self.name = name
-        self.log = {}
-        self.waittime = wait_time
-        self.options = {}
-        if args is None or self.args is None:
-            self.args = args
-            self.exitcode = "NOARGS"
-            # some standard errors enum, maybe ?
-            # self.execute(opts_to_update)
+''' test unit code, uncomment the BaseCommand class import to use '''
 
-    def __del__(self):
-        pass
-
-    def execute(self):
-        retval = False
-
-        starttime = time.time()
-        time.sleep(self.waittime)
-
-        self.options['result'] = {
-            "decription": self.name + " results: run from " + str(starttime)  + " to " + str(time.time()) + " for " + str(time.time() - starttime) + " seconds and dynamic opts " + str(self.options['passed_opts']),
-            "counter": self.waittime}
-
-        retval = True
-        self.log["success"] = self.name + " ended with status " + str(retval) + " start time " + str(starttime)
-        return retval
-
-    def getStdErr(self):
-        raise NotImplementedError
-
-    def getLog(self):
-        raise NotImplementedError
-
-'''
 if __name__ == "__main__":
-    # test each object
 
-    os.environ['LD_LIBRARY_PATH'] = '/home/rodozov/Programs/ROOT/INSTALL/lib/root'  # important
-    # print os.environ['LD_LIBRARY_PATH']
-
-    # try some simple queue, update it while looping over it
-
-    bc = BaseCommand('fcArgs', 'firstCommand', 5)
-    secondcmmnd = BaseCommand('scArgs', 'secondCommand', 7)
-    thirdcmmnd = BaseCommand('thArgs', 'thirdCommand', 3)
-    forth = BaseCommand('forthArgs', 'forthCommand', 2)
-    fifth = BaseCommand('fifthArgs', 'fifthCommand', 4)
-    sixt = BaseCommand('sixtArgs', 'sixtCommand', 15)
-    seventh = BaseCommand('sevArgs', 'seventhCommand', 2)
-    eight = BaseCommand('eightArgs', 'eightCommand', 3)
-
-    commandsDict = {'initCommand': [bc], 'firstCommand': [secondcmmnd], 'secondCommand': [thirdcmmnd], 'thirdCommand': [forth, fifth, sixt], 'fifthCommand': [seventh], 'forthCommand': [eight]}
-
-    achain = Chain(commandsDict)
-    for k, v in commandsDict.iteritems():
-        achain.add_commands_for_event_name(v, k)
-    initialEvent = SimpleEvent('initCommand', True , 'starting options for first command')
-    achain.startChainWithEvent(initialEvent)
-
-    for c  in achain.commands:
-        print c
-        for l in achain.commands[c]:
-            print l.log
-            if 'result' in l.options: print l.options['result']

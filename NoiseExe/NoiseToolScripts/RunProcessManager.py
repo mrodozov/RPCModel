@@ -1,22 +1,139 @@
 __author__ = 'rodozov'
 
-import CommandClasses, Chain
+from CommandClasses import *
+from Chain import Chain
+from RPCMap import RPCMap
+from Event import SimpleEvent
+import multiprocessing as mp
+import time
+import json
 
 '''
 
-This class is used as client which employs Chain-of-responsibility to process
-sequence of Commands, passing them . In idea, run process should be multi process queue,
-spawning new thread for each run in the runlist, until the number of processors is reached,
-
+In idea, run process should be multi process queue,
+spawning new process for each run in the runlist, until the number of processors is reached.
 
 '''
 
-class RunProcess(object):
+def processSingleChain(chain_args=None):
+    '''
+    Function to run single runChain object
+    Setup the run chain object with the args
+    '''
 
-    def __init__(self, runlist=None, commandsList=None):
-        if runlist is not None and:
+    rn = chain_args['run']
 
+    dbschema = {}
+    optionsObject = {}
+    with open('resources/options_object.txt', 'r') as optobj:
+        optionsObject = json.loads(optobj.read())
+        optobj.close()
+    with open('resources/db_tables_schema.txt', 'r') as dbschemafile:
+        dbschema = json.loads(dbschemafile.read())
+    optionsObject['dbdataupload']['dbResources'] = dbschema
+    optionsObject['run'] = rn
+    rnum = rn
+
+    optionsObject['webserver_remote']['ssh_credentials']['password'] = ''
+    optionsObject['lxplus_archive_remote']['ssh_credentials']['password'] = ''
+
+    opts = optionsObject['filelister']
+    listFiles = GetListOfFiles(name='filelister', args=opts)
+
+    fileIsCorrupted = CheckIfFilesAreCorrupted(name='check', args=optionsObject['check']['exe'])
+
+    noiseExe = NoiseToolMainExe(name='noiseexe',args=optionsObject['noiseexe'])
+
+    dbInput = DBInputPrepare(name='dbinput', args=optionsObject['dbinput'])
+
+    dbfilescheck = DBFilesContentCheck(name='dbfilescontent',args=optionsObject['dbfilescontent'])
+
+    dbcontentcheck = DBFilesContentCheck(name='dbfilecontent', args=optionsObject['dbfilecontent'])
+
+    dbUpload = DBDataUpload(name='dbdataupload', args=optionsObject['dbdataupload'])
+
+    mergeContent = OutputFilesFormat(name='outputformat', args=optionsObject['outputformat'])
+
+    webserver_copy = CopyFilesOnRemoteLocation(name='webserver_remote', args=optionsObject['webserver_remote'])
+
+    archive_copy = CopyFilesOnRemoteLocation(name='lxplus_archive_remote', args=optionsObject['lxplus_archive_remote'])
+
+    #print mergeContent.log
+    #print optionsObject[mergeContent.name]['results']
+
+    start_command_on_event_dict = {'initEvent' : [listFiles], listFiles.name: [fileIsCorrupted]  ,
+                                   fileIsCorrupted.name: [noiseExe], noiseExe.name: [dbInput],
+                                   dbInput.name : [dbcontentcheck], dbcontentcheck.name: [dbUpload, mergeContent],
+                                   mergeContent.name : [webserver_copy, archive_copy] }
+
+    runchain = Chain()
+    runchain.commands = start_command_on_event_dict
+    initialEvent = SimpleEvent('initEvent', True, rnum)
+    runchain.startChainWithEvent(initialEvent)
+
+
+    return 'result %' % (runchain.collectLogs)
+
+
+
+class RunProcessPool(object):
+
+    def __init__(self, runlist=[], options = None):
+        self.runlist = runlist
+        self.options = options
+        self.pool = mp.Pool()
+        self.queue = mp.Queue()
 
     def getLogs(self):
+        pass
 
-    def
+    def processRuns(self):
+        results = [self.pool.apply_async(processSingleChain, (rnum, )) for rnum in self.runlist]
+        for r in results:
+            print '\t', r.get()
+
+'''
+testing pool behavior class
+'''
+
+def gosleep(secs):
+    td = TimeDelay(secs)
+    td.gotosleep()
+    return '%s lasted %s' % (mp.current_process().name, td.time_delay)
+
+
+class TimeDelay(object):
+
+    def __init__(self, delay_in_seconds=0):
+        self.time_delay = delay_in_seconds
+
+    def gotosleep(self):
+        time.sleep(self.time_delay)
+        return self.time_delay
+
+
+class Collector(object):
+
+    def __init__(self):
+        self.delays = []
+        print mp.cpu_count()
+        self.ppool = mp.Pool(mp.cpu_count())
+
+    def runone(self, delay):
+        d = TimeDelay(delay)
+        return '%s lasted %s' % (mp.current_process().name, self.delay)
+
+    def runAll(self):
+        results = [self.ppool.apply_async(gosleep, (d, )) for d in self.delays]
+        for r in results:
+            print '\t', r.get()
+
+if __name__ == "__main__":
+
+
+    os.environ['LD_LIBRARY_PATH'] = '/home/rodozov/Programs/ROOT/INSTALL/lib/root'  # important
+    ropts = {}
+    ropts['run'] = '220796'
+    rprocpool = RunProcessPool()
+    rprocpool.runlist.append(ropts)
+    rprocpool.processRuns()

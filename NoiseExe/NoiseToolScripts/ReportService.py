@@ -1,4 +1,3 @@
-#add Log files handler class, email service class, tunnels handler class, newdata handler class
 
 class Report:
     

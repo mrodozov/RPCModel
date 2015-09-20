@@ -71,10 +71,24 @@ int main( int argc ,char *argv[] ){
   //WriteResultsUsingIOtextFilesAndDataSources(efficiency_input,efficiency_output,Mskd,Dead,RawIDObj);
   
  //exit(exit_code);
- string inputRolls=argv[1], raw=argv[2], area=argv[3], tower=argv[4], chips=argv[5], output=argv[6];
- WriteIDsMap(inputRolls,raw,area,tower,chips,output);
+ //string inputRolls=argv[1], raw=argv[2], area=argv[3], tower=argv[4], chips=argv[5], output=argv[6];
+ //WriteIDsMap(inputRolls,raw,area,tower,chips,output);
  
+ string folder=argv[1];
+ string areaFile = argv[2];
+ string shortBarrelIDS = argv[3];
+ string shortEcapIDS = argv[4];
+ string runList = argv[5];
+ string ListOfRolls = argv[6];
+ bool correctionToBeApplied = atoi(argv[7]);
+ int correctionInPercents = atoi(argv[8]);
+ int barrelMax= atoi(argv[9]);
+ int ecapMax = atoi(argv[10]);	
  
+ cout << "blabla" << endl;
  
-  
+ draw2DbackgroundPlot( folder, areaFile, shortBarrelIDS, shortEcapIDS, runList, ListOfRolls, correctionToBeApplied, correctionInPercents, barrelMax, ecapMax);
+ 
+ return 0;
+ 
 }

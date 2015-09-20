@@ -1,7 +1,7 @@
 __author__ = 'rodozov'
 
 '''
-Helper class that provides convertions from
+Helper class that provides conversions from
 one notation to another in terms of any known identifier.
 Example usage is when one needs the chamber name but knows
 the roll name, the other way around or when it only knows
@@ -9,9 +9,7 @@ the RawID(detectorID). Another usable case would be to
 provide with list of strip numbers + partition name for given list of channel numbers + chamber name
 and vise versa. This is quite useful when entrire lists has to
 be retrieved since searching one by one may be heavy (searching among 130k records)
-
 TODO - complete the map automizing the most used cases
-
 '''
 
 import json
@@ -29,7 +27,6 @@ class RPCMap(object):
             self.rollToChamberMap = self.getRollToChamberMapFromFile(self.rpcmap)
         if RawIDsFile:
             self.rawToRollMap = self.getRawIDtoRollMapFromFile(self.rawidsfile)
-
 
     def getChToRollMapFromFile(self, fileToCheck):
 
