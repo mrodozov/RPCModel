@@ -1,7 +1,7 @@
 {
  "dbfilescontent": {
   "source": "dbinput", 
-  "args": "",
+  "args": ""
  }, 
  "outputformat": [
    "resources/rpcMap", 
@@ -29,8 +29,12 @@
  "dbdataupload": {
    "username": "", 
    "password": "", 
-   "dbType": "", 
-   "dbResources": [
+   "dbType": "",
+   "hostname": "",
+   "port": "",
+   "dbName": "",
+   "schema": "",
+   "connectionDetails": [
     {
      "schm": [
       "run_number", 
@@ -77,16 +81,12 @@
      "name": "RPC_NOISE_ROLLS", 
      "file": "database_new.txt"
     }
-   ], 
-   "hostname": "", 
-   "port": "", 
-   "dbName": "", 
-   "schema": ""
+   ]
  }, 
  "noiseexe": [
    "executables/LBNoise", 
    "resources/lb-chamber-withRE4.txt", 
-   "resources/area_noise_withRE4.txt",
+   "resources/area_noise_withRE4.txt"
   ],
  "filelister": {
    "filesfolder" :
@@ -127,3 +127,4 @@
  "destination_root":"/afs/cern.ch/work/m/mrodozov/noiseBackUp/"
  }
 }
+

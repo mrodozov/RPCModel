@@ -767,7 +767,7 @@ class GarbageRemoval(Command):
     def __init__(self):
         pass
 
-class CommandSequence(object):
+class CommandSequenceHandler(object):
     '''
     class to represent sequence of command objects,
     that are given to the chain. every type of command correspond to key,
@@ -781,37 +781,39 @@ class CommandSequence(object):
     for each command in given sequence, this class defines the types of command objects for each key.
     '''
 
-    def __init__(self, config=None, name=None):
-        self.command_sequence = {}
-        self.name = name
-        self.config = config
-        if self.name and self.config:
+    def __init__(self, sequence_file=None, options_file=None):
+
+        self.sequence_file = sequence_file
+        self.sequence_maps = None
+        self.options_file = options_file
+        self.command_options = None
+        if self.sequence_file and self.options_file:
             try:
-                self.setupSequence()
+                self.setupMaps()
             except Exception as e:
                 print e.message
 
-    def setupSequence(self):
-        with open(self.config, 'r') as config_file:
-            try:
-                sequence_description = json.load(config_file)
-                try:
-                    sequence_obj = sequence_description[self.name]
-                    for c in sequence_obj:
-                        msg = c['starton']
-                        if not msg in self.command_sequence.keys(): self.command_sequence[msg] = []
-                        self.command_sequence[msg].append(c['name'])
-                        cmnd_type = c['type']
-                        cmnd = self.getCommandObjectForKey(cmnd_type)
-                        cmnd.options = c['options']
-                        self.command_sequence[msg].append(cmnd)
+    def setupMaps(self):
+        with open(self.sequence_file, 'r') as sequences_file:
+            self.sequence_maps = json.load(sequences_file)
+        with open(self.options_file, 'r') as options_file:
+            self.command_options = json.load(options_file)
 
-                except KeyError:
-                    print 'no sequence object for key ', self.name
+    def getSequenceForName(self, name=None):
+        command_sequence ={}
 
-            except Exception as e:
-                print 'bla'
-                #print e.message
+        try:
+            for c in self.sequence_maps[name]:
+                msg = c['starton']
+                if not msg in command_sequence.keys(): command_sequence[msg] = []
+                cmnd = self.getCommandObjectForKey(c['type'])
+                cmnd.name = c['name']
+                cmnd.args = self.command_options[c['optionskey']]
+                command_sequence[msg].append(cmnd)
+
+            return command_sequence
+        except Exception as e:
+            print e.message
 
     def getCommandObjectForKey(self, key=None):
         obj = None
@@ -829,8 +831,13 @@ class CommandSequence(object):
 if __name__ == "__main__":
 
     seqfile = 'resources/SequenceDictionaries.json'
+    optfile = 'resources/options_object.txt'
     seqname = 'newrun'
-    commseq = CommandSequence(seqfile, seqname)
+    commseq = CommandSequenceHandler(seqfile, optfile)
+    seq = commseq.getSequenceForName(seqname)
+    print seq.keys()
 
-    print commseq.command_sequence
+    for l in seq.keys():
+        for o in seq[l]:
+            print o.name, o.args
 

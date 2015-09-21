@@ -22,19 +22,14 @@ def processSingleChain(chain_args=None):
     '''
     print 'process is ', mp.current_process().name
     rn = chain_args
-    rnum = rn
-    dbschema = {}
+
     optionsObject = {}
     with open('resources/options_object.txt', 'r') as optobj:
         optionsObject = json.loads(optobj.read())
         optobj.close()
-    with open('resources/db_tables_schema.txt', 'r') as dbschemafile:
-        dbschema = json.loads(dbschemafile.read())
+
     optionsObject['run'] = rn
     optionsObject['result_folder'] = 'run' + optionsObject['run']
-    optionsObject['dbdataupload']['dbResources'] = dbschema
-    optionsObject['webserver_remote']['ssh_credentials']['password'] = ''
-    optionsObject['lxplus_archive_remote']['ssh_credentials']['password'] = ''
 
     opts = optionsObject['filelister']
     listFiles = GetListOfFiles(name='filelister', args=opts)
@@ -60,6 +55,7 @@ def processSingleChain(chain_args=None):
                                    dbInput.name : [dbcontentcheck], dbcontentcheck.name: [dbUpload, mergeContent] }
         #,mergeContent.name : [webserver_copy, archive_copy] }
 
+    '''
     runchain = Chain()
     runchain.commands = start_command_on_event_dict
     initialEvent = SimpleEvent('initEvent', True, rnum)
@@ -68,6 +64,7 @@ def processSingleChain(chain_args=None):
 
     #return  chain_args['run']
     #return 'result %' % (result_is)
+    '''
 
 class RunProcessPool(object):
 
@@ -96,10 +93,12 @@ if __name__ == "__main__":
 
     os.environ['LD_LIBRARY_PATH'] = '/home/rodozov/Programs/ROOT/INSTALL/lib/root'  # important
 
-    rlist = ['251643','251638','251718', '220796']
+    #rlist = ['251643','251638','251718', '220796']
+    rlist = ['251643']
 
     rprocpool = RunProcessPool()
     rprocpool.runlist = rlist
 
-    rprocpool.processRuns(processSingleChain)
+    processSingleChain('251643')
+    #rprocpool.processRuns(processSingleChain)
 
