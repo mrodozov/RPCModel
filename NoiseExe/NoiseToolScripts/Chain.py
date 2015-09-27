@@ -30,24 +30,23 @@ class CommandThread(threading.Thread):
             self.queue.task_done()
 
 class Chain(Observer):
+
     '''
     this class is chain that put commands in list, and executes them in order.
-
     '''
 
-    def __init__(self, options=None):
+    def __init__(self):
         self.commands = {}
-        self.options = options
         self.log = {}
-        self.runnumber = None
         self.event_handler = EventsHandler([self])
         self.jobsQueue = Queue.Queue()
 
     def add_commands_for_event_name(self, commandsList, eventname):
         self.commands[eventname] = commandsList
 
-    def get_commands_static_options_from_dict(self, dict_with_options=None):
-        for c in self.commands:
+    def set_commands_static_options(self, dict_with_options):
+
+        for c in self.commands.keys():
             for cmmnd in self.commands[c]:
                 if cmmnd.name in dict_with_options:
                     cmmnd.args = dict_with_options[cmmnd.name]
@@ -75,13 +74,7 @@ class Chain(Observer):
 
         #
     def collectLogs(self):
-
-        for command in self.commands:
-            cmndname = command.name
-            self.log[cmndname] = command.log
-            # self.stout[cmndname] = command.stout
-        return self.log
-
+        pass
 
 
 

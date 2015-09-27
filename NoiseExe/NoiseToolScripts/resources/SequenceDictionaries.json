@@ -1,5 +1,5 @@
 {
-  "newrun":
+  "new":
     [
         {"type":"filelist","name":"filelist","optionskey":"filelister","starton":"init"},
         {"type":"noiseexe","name":"noiseexe","optionskey":"noiseexe","starton":"check"},
@@ -11,8 +11,8 @@
         {"type":"remotecopy","name":"webserver","optionskey":"webserver_remote","starton":"outputprep"},
         {"type":"remotecopy","name":"lxplus","optionskey":"lxplus_archive_remote","starton":"outputprep"}
     ],
-  "resubmitrun":{},
-  "dbretry":{},
-  "backupretry":{},
+  "resubmit":{},
+  "db_retry":{},
+  "backup_retry":{},
   "convertto":{}
 }

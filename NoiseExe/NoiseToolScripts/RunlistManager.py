@@ -9,6 +9,7 @@ class RunlistManager:
     run list manager manages
     1. file with runs
     2. new runs using the RRApi
+    3. changes
     '''
 
     runlist = {} #runlist is dictionary with runs, and their corresponding status. the status is
@@ -20,6 +21,8 @@ class RunlistManager:
         :param runlist: run list is file with json description of runs analyzed.
         :return: none
         '''
+        self.toProcessQueue = None
+        self.processedRunsQueue = None
         runlistLoaded = False
         if runlist is not None:
             self.loadRunlistFile(runlist)
@@ -71,7 +74,7 @@ class RunlistManager:
                 print e.message
         return retval
 
-    def updateRunlistFile(self,runlistFile,oldFile):
+    def updateRunlistFile(self,runlistFile,oldFile=None):
         '''
         writes the runlist file using the merged runlist object. careful with this method ! it writes the file with runs, so if the runlist is emptied, it may wipe out the history !
         :param runlistFile: runlist file
@@ -122,6 +125,12 @@ class RunlistManager:
             if self.runlist[run]['status'] != 'finished':
                 shortlist[run] = self.runlist[run]
         return shortlist
+
+    def putRunsOnProcessQueue(self, runlist = None):
+        try:
+            self.toProcessQueue.put(runlist)
+        except Exception as e:
+            print e.message
 
 
     #def getSortedListOfRuns(self):

@@ -22,8 +22,7 @@
    "ToMask", 
    "area_noise_cmssw_withRE4", 
    "RawIDs.txt", 
-   "InputRollList.txt",
-   "0"
+   "InputRollList.txt"
   ]
  ,
  "dbdataupload": {
@@ -113,17 +112,16 @@
     "YEP3_near"
    ]
   },
- "check": {
-  "exe": "executables/CheckCorruptedFile.lnxapp"
- },
+ "check":  "executables/CheckCorruptedFile.lnxapp"
+ ,
  "dbfilecontent" :{"None":"None"
  },
  "webserver_remote":{
- "ssh_credentials":{"username":"mrodozov","password":"","port":"20222","rhost":"localhost"},
+ "ssh_credentials":{"username":"mrodozov","password":"","port":"22","rhost":"lxplus.cern.ch"},
  "destination_root":"/afs/cern.ch/user/m/mrodozov/www/Plots/GR2014/"
  },
  "lxplus_archive_remote":{
- "ssh_credentials":{"username":"mrodozov","password":"","port":"20222","rhost":"localhost"},
+ "ssh_credentials":{"username":"mrodozov","password":"","port":"22","rhost":"lxplus.cern.ch"},
  "destination_root":"/afs/cern.ch/work/m/mrodozov/noiseBackUp/"
  }
 }

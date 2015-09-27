@@ -91,7 +91,8 @@ class GetListOfFiles(Command):
         missing_towers_files = []
         total_files_n = 0
         filespath = self.args['filesfolder']
-        runnum = self.options
+        runnum = self.options['run']
+        rfolder = self.options['result_folder']
         towers = self.args['towers_list']
         # print runnum
         files = [f for f in os.listdir(filespath) if f.endswith('.root') and f.find(runnum) is not -1]
@@ -118,6 +119,7 @@ class GetListOfFiles(Command):
         # print files
         self.results['rootfiles'] = [filespath + f for f in files]
         self.results['run'] = runnum
+        self.results['result_folder'] = 'results'
         #format the output
         towerslist = self.args['towers_list']
         for t in towerslist:
@@ -128,7 +130,7 @@ class GetListOfFiles(Command):
                     break
             if not match:
                 missing_towers_files.append(t)
-        print filespath
+        #print filespath
         if missing_towers_files:
             self.log['missing_files'] = missing_towers_files
             self.warnings.append('missing towers files')
@@ -142,6 +144,7 @@ class GetListOfFiles(Command):
         if len(files) > 0:
             self.log['files_for_run'] = total_files_n
             complete = True
+        #print self.results['rootfiles']
         return complete
 
 
@@ -154,9 +157,9 @@ class CheckIfFilesAreCorrupted(Command):
         #if self.args is not None:
         #    self.args = static_opts[self.name]['args']
         #    self.options = static_opts[static_opts[self.name]['source']]['results']
-
+        executable = self.args
         for file in self.options['rootfiles']:
-            executable = self.args
+            #print file
             childp = subprocess.Popen(executable + ' ' + file, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
             self.stout, self.sterr = childp.communicate()
             self.exitcode = childp.returncode
@@ -171,12 +174,19 @@ class CheckIfFilesAreCorrupted(Command):
         self.log = {'good_files':goodresult, 'corrupted_files': corrupted_files}
         if corrupted_files: self.warnings.append('corrupted files found')
         self.results['rootfiles'] = goodresult
+
         self.results['run'] = self.options['run']
-        self.results['result_folder'] = ''
+        self.results['result_folder'] = self.options['result_folder']
+
+        #print self.results['result_folder']
+
         if not complete:
+            print complete
             self.results = 'Failed'
             self.warnings.append('all files corrupted')
             #print 'exit code', self.exitcode
+        self.results = self.options # ??????????? #TODO - fix this lousy bug !
+
         return complete
 
 
@@ -189,19 +199,21 @@ class NoiseToolMainExe(Command):
     def processTask(self):
 
         complete = False
-        results = {'masked':[],'dead':[],'tomask':[],'tounmask':[],'rootfiles':[],'totalroot':'','run':self.options['run'],'result_folder':''}
+        #print self.options
+        results = {'masked':[],'dead':[],'tomask':[],'tounmask':[],'rootfiles':[],'totalroot':'','run':self.options['run']}
         filesToProcess = [f for f in self.options['rootfiles']]
-        # print filesToProcess # for debug
+        #print filesToProcess # for debug
+
 
         '''
         create the result dir if doesn't exist yet
 
         '''
 
-        self.options['result_folder'] = self.args[3] + '/run' + self.options['run'] + '/'
         if not self.options['result_folder'].endswith('/'): self.options['result_folder'] += '/'
-        print self.options['result_folder']
-        res_folder = self.options['result_folder']
+        res_folder = self.options['result_folder'] + 'run' + self.options['run'] + '/'
+        #print res_folder
+        #print 'nexe results in ', self.options['result_folder']
         if not os.path.isdir(res_folder):
             try:
                 os.mkdir(res_folder)
@@ -287,10 +299,12 @@ class DBInputPrepare(Command):
         resultsDir = self.options['result_folder']
         rootFile = self.options['totalroot']
         rnum = self.options['run']
-        fileToSearch = self.args[3:7]
-        areaFile = resourcesDir + self.args[7]
-        rawids = resourcesDir + self.args[8]
-        inputrolls = resourcesDir + self.args[9]
+        resultsDir += 'run' + rnum + '/'
+        fileToSearch = self.args[2:6]
+        areaFile = resourcesDir + self.args[6]
+        rawids = resourcesDir + self.args[7]
+        inputrolls = resourcesDir + self.args[8]
+        print resultsDir
         for f in fileToSearch:
             listOfOrderedArgs = [6, 3]
             if f == 'ToMask':
@@ -301,6 +315,7 @@ class DBInputPrepare(Command):
 
         file_to_check = rootFile + ' ' + resultsDir + 'AllMasked.txt ' + resultsDir + 'AllDead.txt ' + resultsDir + 'AllToMask.txt ' + resultsDir + 'AllToUnmask.txt ' + areaFile + ' ' + rawids + ' ' + inputrolls
         arguments = rootFile + ' ' + resultsDir + 'database_new.txt ' + resultsDir + 'database_full.txt ' + resultsDir + 'AllMasked.txt ' + resultsDir + 'AllDead.txt ' + resultsDir + 'AllToMask.txt ' + resultsDir + 'AllToUnmask.txt ' + areaFile + ' ' + rawids + ' ' + resultsDir + 'error_in_translation ' + inputrolls
+
         fnf_list = [fnf for fnf in file_to_check.split(' ') if not os.path.isfile(fnf)]
         if fnf_list:
             # file is missing, write log and abort
@@ -316,7 +331,7 @@ class DBInputPrepare(Command):
                 complete = True
                 self.log = 'Completed'
                 # print self.log
-                self.results = {'strips_file': resultsDir + 'database_full.txt', 'rolls_file': resultsDir + 'database_new.txt','run':self.options['run']}
+                self.results = {'strips_file': resultsDir + 'database_full.txt', 'rolls_file': resultsDir + 'database_new.txt','run':self.options['run'], 'result_folder':self.options['result_folder']}
                 fileList = [self.results['strips_file'], self.results['rolls_file']]
                 for finlist in fileList:
                     existingData = None
@@ -329,7 +344,8 @@ class DBInputPrepare(Command):
                         data_file.write(existingData)
 
             #print current_stdout, current_stderr, current_excode
-        self.results['result_folder'] = self.options['result_folder']
+
+        #self.results['result_folder'] = self.options['result_folder']
         return complete
 
 class DBFilesContentCheck(Command):
@@ -420,7 +436,7 @@ class DBDataUpload(Command):
         #dbService = DBService(dbType=self.args['dbType'], host=self.args['hostname'], port=self.args['port'],
         #                      user=self.args['username'], password=self.args['password'], schema=self.args['schema'],
         #                      dbName=self.args['dbName'])
-        for rec in self.args['dbResources']:
+        for rec in self.args['connectionDetails']:
             dataFile = ''.join([f for f in self.options['filescheck'] if f.find(rec['file']) is not -1])
             print dataFile
             #data = self.getDBDataFromFile(dataFile)
@@ -463,10 +479,12 @@ class OutputFilesFormat(Command):
         rpcMapFile = self.args[0]
         rawmapfile = self.args[1]
         results_folder = self.options['result_folder']
-        rolls_json_file = results_folder + self.args[3]
-        strips_json_file = results_folder + self.args[4]
-        allToUnmaskFile = results_folder + self.args[5]
-        allToMaskFile = results_folder + self.args[6]
+        results_folder += 'run' + self.options['run'] + '/'
+        rolls_json_file = results_folder + self.args[2]
+        strips_json_file = results_folder + self.args[3]
+        allToUnmaskFile = results_folder + self.args[4]
+        allToMaskFile = results_folder + self.args[5]
+
         detailedFile = self.options['filenames']['strips']
         rollsFile = self.options['filenames']['rolls']
         self.log = {'strips_file': None, 'rolls_file': None}
@@ -701,7 +719,7 @@ class CopyFilesOnRemoteLocation(Command):
         rval = False
         rnum = self.options['run']
         list_of_files = self.options['json_products']
-        results_folder = self.options['result_folder']
+        results_folder = self.options['result_folder'] + 'run' + rnum + '/'
         runfolder = 'run'+rnum
         destination = self.args['destination_root'] + runfolder
         print destination
@@ -732,7 +750,7 @@ class CopyFilesOnRemoteLocation(Command):
         if not rval:
             self.results='Failed'
 
-        self.results['result_folder'] = self.options['result_folder']
+        #self.results['result_folder'] = self.options['result_folder']
         return rval
 
     def create_dir_on_remotehost(self, dirname):
@@ -767,6 +785,7 @@ class GarbageRemoval(Command):
     def __init__(self):
         pass
 
+
 class CommandSequenceHandler(object):
     '''
     class to represent sequence of command objects,
@@ -781,13 +800,12 @@ class CommandSequenceHandler(object):
     for each command in given sequence, this class defines the types of command objects for each key.
     '''
 
-    def __init__(self, sequence_file=None, options_file=None):
-
+    def __init__(self, sequence_file=None, stat_opts_file=None):
         self.sequence_file = sequence_file
         self.sequence_maps = None
-        self.options_file = options_file
-        self.command_options = None
-        if self.sequence_file and self.options_file:
+        self.statoptsfile = stat_opts_file
+        self.statoptsmap = None
+        if self.sequence_file:
             try:
                 self.setupMaps()
             except Exception as e:
@@ -796,8 +814,8 @@ class CommandSequenceHandler(object):
     def setupMaps(self):
         with open(self.sequence_file, 'r') as sequences_file:
             self.sequence_maps = json.load(sequences_file)
-        with open(self.options_file, 'r') as options_file:
-            self.command_options = json.load(options_file)
+        with open(self.statoptsfile, 'r') as statopfile:
+            self.statoptsmap = json.load(statopfile)
 
     def getSequenceForName(self, name=None):
         command_sequence ={}
@@ -808,36 +826,50 @@ class CommandSequenceHandler(object):
                 if not msg in command_sequence.keys(): command_sequence[msg] = []
                 cmnd = self.getCommandObjectForKey(c['type'])
                 cmnd.name = c['name']
-                cmnd.args = self.command_options[c['optionskey']]
+                cmnd.args = self.statoptsmap[c['optionskey']]
                 command_sequence[msg].append(cmnd)
 
             return command_sequence
         except Exception as e:
             print e.message
 
-    def getCommandObjectForKey(self, key=None):
+    def getCommandObjectForKey(self, type_key=None):
         obj = None
-        if key == 'filelist' : obj = GetListOfFiles()
-        if key == 'filecheck' : obj = CheckIfFilesAreCorrupted()
-        if key == 'noiseexe' : obj = NoiseToolMainExe()
-        if key == 'dbinput' : obj = DBInputPrepare()
-        if key == 'dbfilecheck' : obj = DBFilesContentCheck()
-        if key == 'dbdataupload' : obj = DBDataUpload()
-        if key == 'outputfilesprep' : obj = OutputFilesFormat()
-        if key == 'remotecopy' : obj = CopyFilesOnRemoteLocation()
+        if type_key == 'filelist' : obj = GetListOfFiles()
+        if type_key == 'filecheck' : obj = CheckIfFilesAreCorrupted()
+        if type_key == 'noiseexe' : obj = NoiseToolMainExe()
+        if type_key == 'dbinput' : obj = DBInputPrepare()
+        if type_key == 'dbfilecheck' : obj = DBFilesContentCheck()
+        if type_key == 'dbdataupload' : obj = DBDataUpload()
+        if type_key == 'outputfilesprep' : obj = OutputFilesFormat()
+        if type_key == 'remotecopy' : obj = CopyFilesOnRemoteLocation()
 
         return obj
 
 if __name__ == "__main__":
 
-    seqfile = 'resources/SequenceDictionaries.json'
-    optfile = 'resources/options_object.txt'
-    seqname = 'newrun'
-    commseq = CommandSequenceHandler(seqfile, optfile)
-    seq = commseq.getSequenceForName(seqname)
-    print seq.keys()
+    optionsObject = None
+    with open('resources/options_object.txt', 'r') as optobj:
+        optionsObject = json.loads(optobj.read())
 
-    for l in seq.keys():
-        for o in seq[l]:
-            print o.name, o.args
+    optionsObject['run'] = '220796'
+    rnum = '220796'
 
+    listFiles = GetListOfFiles(name='filelister', args=optionsObject['filelister'])
+    fileIsCorrupted = CheckIfFilesAreCorrupted(name='check', args=optionsObject['check'])
+    noiseExe = NoiseToolMainExe(name='noiseexe',args=optionsObject['noiseexe'])
+
+    start_command_on_event_dict = {'initEvent' : [listFiles], listFiles.name: [fileIsCorrupted], fileIsCorrupted.name: [noiseExe]}
+
+    runchain = Chain()
+    dyn_opts = {'run':rnum, 'result_folder':'results/'}
+
+    runchain.commands = start_command_on_event_dict
+    initialEvent = SimpleEvent('initEvent', True, dyn_opts)
+    runchain.startChainWithEvent(initialEvent)
+
+
+    print noiseExe.args
+    print noiseExe.args[2]
+    #print noiseExe.options
+    print noiseExe.results
