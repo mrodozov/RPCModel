@@ -44,13 +44,6 @@ class Chain(Observer):
     def add_commands_for_event_name(self, commandsList, eventname):
         self.commands[eventname] = commandsList
 
-    def set_commands_static_options(self, dict_with_options):
-
-        for c in self.commands.keys():
-            for cmmnd in self.commands[c]:
-                if cmmnd.name in dict_with_options:
-                    cmmnd.args = dict_with_options[cmmnd.name]
-
     def update(self, event=None):
         if event.name in self.commands:
             commands_for_queue = self.commands[event.name]
@@ -72,14 +65,16 @@ class Chain(Observer):
             t.start()
         self.jobsQueue.join()
 
-        #
-    def collectLogs(self):
-        pass
+    def getResult(self):
+        result = {'results':{},'logs':{},'warnings':{}}
 
+        for k in self.commands:
+            for c in self.commands[k]:
+                result['results'][c.name] = [c.results]
+                result['logs'][c.name] = [c.log]
+                result['warnings'][c.name] = [c.warnings]
 
-
-''' test unit code, uncomment the BaseCommand class import to use '''
+        return result
 
 if __name__ == "__main__":
-
-    print 'blabla'
+    pass

@@ -128,7 +128,8 @@ class RunlistManager:
 
     def putRunsOnProcessQueue(self, runlist = None):
         try:
-            self.toProcessQueue.put(runlist)
+            for r in runlist:
+                self.toProcessQueue.put(r)
         except Exception as e:
             print e.message
 

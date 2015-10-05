@@ -29,8 +29,8 @@ class Command(object):
         self.log = {}
         self.results = {}
         self.warnings = []
-        self.args = args
-        self.options = {}
+        self.args = args # static options, from a file
+        self.options = {} # dynamic options, passed from
         self.exitcode = None
 
     def __del__(self):
@@ -637,11 +637,11 @@ class OutputFilesFormat(Command):
         with open(strips_json_file, 'r') as strips_file_check:
             if json.loads(strips_file_check.read()) and os.stat(strips_json_file) > 0:
                 self.log['strips_file'] = 'Completed!'
-                self.results['json_products'].append(self.args[3])
+                self.results['json_products'].append(self.args[2])
         with open(rolls_json_file, 'r') as rolls_file_check:
             if json.loads(rolls_file_check.read()) and os.stat(rolls_json_file) > 0:
                 self.log['rolls_file'] = 'Completed!'
-                self.results['json_products'].append(self.args[4])
+                self.results['json_products'].append(self.args[3])
         complete = True
         self.results['results_folder'] = results_folder
         self.results['run'] = rnum
@@ -724,11 +724,12 @@ class CopyFilesOnRemoteLocation(Command):
         destination = self.args['destination_root'] + runfolder
         print destination
         if not self.connection_established:
+
             try:
                 self.open_connection()
             except Exception as exc:
                 print exc.message
-        self.create_dir_on_remotehost(destination)
+        #self.create_dir_on_remotehost(destination)
         self.results = {}
         self.results['files'] = {}
         if not self.connection_established:
@@ -757,8 +758,11 @@ class CopyFilesOnRemoteLocation(Command):
         try:
             self.sftp.chdir(dirname)
         except IOError:
-            self.sftp.mkdir(dirname)
-            self.sftp.chdir(dirname)
+            try:
+                self.sftp.mkdir(dirname)
+                self.sftp.chdir(dirname)
+            except IOError as e:
+                print e.message
 
 
 class OldToNewDataConverter(Command):
