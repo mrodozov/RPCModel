@@ -51,6 +51,7 @@ const double & ExStrip::getRate(){
 
 void ExStrip::setRate(const double & rate_){
   this->rate = rate_;
+  if (rate_ != rate_) this->rate = 0; // if the result is nan, sometimes the histogram exists but has no values for rate
 }
 
 const double& ExStrip::getMaxRate(){

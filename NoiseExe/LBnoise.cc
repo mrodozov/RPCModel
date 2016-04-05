@@ -12,15 +12,11 @@ void LBNoiseF(int _argc, char * _argv[]){
   
   float rateThr = 30000.;  // 30 kHz threshold for dangerous noisy strips
   //  float rateThr = 3000.;  // 3 kHz threshold for noisy strips
-  bool debug;
-  if (_argc > 5){
-  int debg = atoi(_argv[5]);
-  debug  = debg;
+  bool debug = false;
+  bool strips = false;
   
-  }
-  else { debug = false ; }
-  
-  bool strips = false;    // set "true" to fill in histos at the level of single strips 
+  if (_argc > 6)  debug  = atoi(_argv[6]);
+  if (_argc > 5) strips = atoi(_argv[5]);    // set "true" to fill in histos at the level of single strips 
   
   LBName lbnames(_argv[2],_argv[3]);
   std::string resultsDirectory = _argv[4];

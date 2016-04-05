@@ -21,7 +21,7 @@
 #include "core/ExtendedRoll.h"
 #include "core/Chip.h"
 #include "Applications.h"
-#include "ROOT/ROOT.h"
+//#include "ROOT/ROOT.h"
 #include "ROOT/tdrStyle.h"
 #include "ServiceClasses/Service.h"
 
@@ -275,6 +275,8 @@ void GetSingleDoubleGapRatios(string MapOfSingleGapRolls, string regex, string D
     // voila ;)
     
 }
+
+
 
 void extractAverageRatesFromRootFilesForListOfFiles(const std::string& runlist, const std::string& pathToRateResources,const string & suffix ,const string & pathTo_TM_Resources,const std::string& areaFileString ,const std::string& outputPath,const int & singleStripCutValue) {
     DataObject area;
@@ -962,7 +964,7 @@ void plotEcap_RateVsPhi(string rateFile, bool subtractIntrinsic, string fileWith
     int divider = 1;
     TCanvas *c1 = new TCanvas("c1","multigraph",10,10,1200,700);
     c1->SetFillColor(0);
-    TH1F *hr = c1->DrawFrame(0,0,6.282,15);
+    TH1F *hr = c1->DrawFrame(0,0,6.282,48);
     //TH1F *hr = c1->DrawFrame(0,0,6.282,1.2);
     hr->SetXTitle("  #phi (rad) ");
     hr->GetXaxis()->SetTitleSize(hr->GetXaxis()->GetTitleSize()*1.5);
@@ -972,14 +974,14 @@ void plotEcap_RateVsPhi(string rateFile, bool subtractIntrinsic, string fileWith
     hr->GetXaxis()->SetLabelFont(42);
     hr->GetYaxis()->SetLabelFont(42);
     hr->SetYTitle("Rate (Hz/cm^{2})");
-    
     hr->SetFillColor(0);
+    
     TLegend * leg;
     //leg->SetTextSize(leg->GetTextSize()*1.2);
     leg = new TLegend(0.127019,0.573407,0.312775,0.896122);
     TPaveText * pt,* pt2,* secondText,* rateText;
-    pt = new TPaveText(0.494983,0.778932,0.648829,0.845697,"NDC"); // NDC sets coords
-    pt2 = new TPaveText(0.490803,0.707715,0.898829,0.789318,"NDC");
+    pt = new TPaveText(0.0994983,0.924332,0.253344,0.989614,"NDC"); // NDC sets coords
+    pt2 = new TPaveText(0.492475,0.81454,0.899666,0.897626,"NDC");
     pt->SetTextFont(42);
     pt2->SetTextFont(42);
     secondText = new TPaveText(0.704112,0.904432,0.906021,0.975069,"NDC");
@@ -1052,7 +1054,8 @@ void plotEcap_RateVsPhi(string rateFile, bool subtractIntrinsic, string fileWith
         for (int ii = 0 ; ii < 37 ; ii++) {
             endcapPhi[ii] = (ii*6.28/36);
             //cout << endcapPhi[i] << " " << count<< endl;
-            cout << arrayOfRates[ii] << endl;
+            //cout  << ii << " " << arrayOfRates[ii] << endl;
+	    arrayOfRates[ii] = 0;
             ex[ii]=0;
             ey[ii]=0;
             sg_array[ii] = -5;
@@ -1134,6 +1137,13 @@ void plotEcap_RateVsPhi(string rateFile, bool subtractIntrinsic, string fileWith
         //cout << arrayOfRates[36] << endl;
         TGraphErrors * graph = new TGraphErrors(37,endcapPhi,arrayOfRates,ex,ey);
         TGraphErrors * graphSG = new TGraphErrors(37,endcapPhi,sg_array,ex,ey);
+	
+	
+	for (int iii = 0 ; iii < 37 ; iii++){
+	  cout << query->getEcapMapForRecord(i+1).histoName << " " << iii+1 << " " << arrayOfRates[iii] << endl;
+	}
+	
+	
         graph->SetMarkerColor(query->getEcapMapForRecord(i+1).Color); // () black  2 red 4 blue 6 fucsia 8 green 9 violet
         graph->SetMarkerStyle(query->getEcapMapForRecord(i+1).Marker); // 20 circle 21 square 29 star 22/23 triangle
         graph->SetMarkerSize(query->getEcapMapForRecord(i+1).MarkerSize);
@@ -1146,22 +1156,22 @@ void plotEcap_RateVsPhi(string rateFile, bool subtractIntrinsic, string fileWith
         graphSG->SetLineColor(0);
         graphSG->SetLineStyle(0);
         graph->Draw("LP");
-        graphSG->Draw("LP");
+//         graphSG->Draw("LP");
         leg->AddEntry(graph,query->getEcapMapForRecord(i+1).histoName.c_str(),"p");
     }
 //   leg->AddEntry();
-    TGraphErrors * emptyGraph = new TGraphErrors();
-    emptyGraph->SetMarkerColor(kRed);
-    emptyGraph->SetMarkerStyle(20);
-    emptyGraph->SetMarkerSize(1.6);
-    leg->AddEntry(emptyGraph,"SG mode","lp");
+//     TGraphErrors * emptyGraph = new TGraphErrors();
+//     emptyGraph->SetMarkerColor(kRed);
+//     emptyGraph->SetMarkerStyle(20);
+//     emptyGraph->SetMarkerSize(1.6);
+//     leg->AddEntry(emptyGraph,"SG mode","lp");
     
     setTDRStyle();
     c1->SetFillColor(0);
     leg->SetFillColor(0);
     leg->SetBorderSize(0);
     leg->Draw();
-    pt->AddText("#sqrt{s} = 8 TeV");
+    pt->AddText("#sqrt{s} = 13 TeV");
     pt->Draw();
     pt->SetTextFont(leg->GetTextFont());
     pt->SetTextSize(leg->GetTextSize());
@@ -1172,8 +1182,8 @@ void plotEcap_RateVsPhi(string rateFile, bool subtractIntrinsic, string fileWith
     pt2->SetFillColor(0);
     pt2->AddText(query->getRateVsPhiText().c_str());
     pt2->Draw();
-    secondText->SetTextSize(secondText->GetTextSize()*1.25);
-    secondText->Draw();
+    //secondText->SetTextSize(secondText->GetTextSize()*1.25);
+    //secondText->Draw();
     //rateText->Draw();
     c1->SaveAs((query->getCanvasTitle()+".root").c_str());
     //c1->SaveAs(("/home/rodozov/Desktop/RumiTeX/pictures/DISK2PHIASSYM.png").c_str());
@@ -1204,11 +1214,12 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer_and
     secondText->SetFillColor(0);
     secondText->SetBorderSize(0);
     secondText->SetTextSize(0.05);
+    
     secondText->AddText("CMS Preliminary");
     pt->SetFillColor(0); // text is black on white
     pt->SetBorderSize(0); //no shade
     pt->SetTextSize(0.05);
-    pt->AddText("#sqrt{s} = 8 TeV");
+    pt->AddText("#sqrt{s} = 13 TeV");
     /*   */
     // fill the intrinsic map
     
@@ -1227,7 +1238,7 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer_and
     for (int i = 0 ; i < lumiFile.getLenght() ; i++) {
         if (lumiFile.getElementAsInt(i+1,2) > min_lumi_sections && (exclusionsList.find(lumiFile.getElement(i+1,1)) == exclusionsList.end())) {// more than 100 lumisections
 	    currentLumi = (lumiFile.getElementAsDouble(i+1,3)/lumiFile.getElementAsDouble(i+1,2))/23.31;
-	    cout << lumiFile.getElement(i+1,1) << " " << currentLumi << endl;
+	    //cout << lumiFile.getElement(i+1,1) << " " << currentLumi << endl;
 	    
             run_lumi_map[lumiFile.getElement(i+1,1)] = currentLumi;
 	    if(currentLumi > biggestOn_X) biggestOn_X = currentLumi;
@@ -1252,7 +1263,8 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer_and
         }
     }
     
-    biggestOn_X += 300;
+    //biggestOn_X = 6000;
+    biggestOn_X += 500;
     
     TLegend * leg;
     leg = new TLegend(0.135095,0.58678,0.352423,0.886329);
@@ -1275,8 +1287,9 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer_and
             current_rate = 0;
             for (run_iterator = run_rollRate_map_iter->second.begin();run_iterator != run_rollRate_map_iter->second.end();run_iterator++) {
                 if (run_iterator->first.find(query->getOnlineRollMapForRecord(i+1).regex) != string::npos && run_iterator->second < cutThreshold) {
-                    current_rate +=run_iterator->second;
-                    counter ++;
+		  
+                  current_rate +=run_iterator->second;
+                  counter ++;
                 }
             }
             if (current_rate/counter > biggestOn_Y) biggestOn_Y = (current_rate/counter);  
@@ -1297,15 +1310,15 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer_and
         double current_rate,current_luminosity_;
         
 	// first find the biggest value on Y axis to assign the Y 
-	TH2F * hist = new TH2F(query->getOnlineRollMapForRecord(i+1).histoName.c_str(),"",1000,0,biggestOn_X,1000,0,biggestOn_Y);
+	TH2F * hist = new TH2F(query->getOnlineRollMapForRecord(i+1).histoName.c_str(),"",1000,0,biggestOn_X,10000,0,biggestOn_Y);
 	
 	for (run_rollRate_map_iter = run_rollRate_map.begin();run_rollRate_map_iter != run_rollRate_map.end();run_rollRate_map_iter++) {
             counter = 0;
             current_rate = 0;
             for (run_iterator = run_rollRate_map_iter->second.begin();run_iterator != run_rollRate_map_iter->second.end();run_iterator++) {
-                if (run_iterator->first.find(query->getOnlineRollMapForRecord(i+1).regex) != string::npos && run_iterator->second < cutThreshold) {
+                if (run_iterator->first.find(query->getOnlineRollMapForRecord(i+1).regex) != string::npos && run_iterator->first.find("RE+1_1") == string::npos && run_iterator->first.find("RE-4_3_13") == string::npos && run_iterator->second < cutThreshold) {
 		  if (debugOUTPUT){
-		    cout << " run " << run_rollRate_map_iter->first << " Roll " << run_iterator->first << endl;
+		    //cout << " run " << run_rollRate_map_iter->first << " Roll " << run_iterator->first << endl;
 		  }
                     current_rate +=run_iterator->second;
                     counter ++;
@@ -1339,7 +1352,7 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer_and
         hist->SetMarkerColor(query->getOnlineRollMapForRecord(i+1).Color);
         hist->SetStats(false);
 	// to be removed after fit
-	TF1 * func = new TF1((query->getOnlineRollMapForRecord(i+1).histoName+"_function").c_str(),"[0]+x*[1]",0,10000);
+	TF1 * func = new TF1((query->getOnlineRollMapForRecord(i+1).histoName+"_function").c_str(),"[0]+x*[1]",0,50000);
 	
 	
         if (i+1 == 1) {
@@ -1350,13 +1363,17 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer_and
 	    hist->GetXaxis()->SetTitleOffset(hist->GetXaxis()->GetTitleOffset()*0.8);
 	    hist->GetYaxis()->SetTitleOffset(hist->GetYaxis()->GetTitleOffset()*0.8);
             hist->Draw();
+// 	    hist->SetName("twelve");
+// 	    hist->SaveAs("2012.root");
         }
         else {
             hist->Draw("same");
+// 	    hist->SetName("twelve");
+// 	    hist->SaveAs("2012.root");
         }
-        
-        //hist->Fit(func,"R");
-	//cout << hist->GetName() << " " << func->GetMaximum() << endl;
+        cout << "Correlation factor " << hist->GetCorrelationFactor() << endl;
+         hist->Fit(func);
+	cout << hist->GetName() << " " << func->GetMaximum() << endl;
 	if(query->getOnlineRollMapForRecord(i+1).histoName != ""){
         leg->AddEntry(hist,query->getOnlineRollMapForRecord(i+1).histoName.c_str(),"p");
 	}
@@ -1392,7 +1409,7 @@ void print_online_dbfiles(string rootContainer,string outputContainer ,DataObjec
     run_lumi_map[lumiFile.getElement(i+1,1)] = (lumiFile.getElementAsDouble(i+1,3)/lumiFile.getElementAsDouble(i+1,2))/23.31;
     //}
   }
-
+  
   DataObject RList(RollList,1);
     string singleRollName;
     for (int i=1;i <= RList.getLenght();i++) {
@@ -1403,6 +1420,8 @@ void print_online_dbfiles(string rootContainer,string outputContainer ,DataObjec
         aroll->setStripsAreaFromSource_cmsswResource(area);
         mapOfRolls[RList.getElement(i,1)] = aroll;
     }
+    
+    
 
 
     for (run_lumi_map_iter = run_lumi_map.begin();run_lumi_map_iter != run_lumi_map.end();run_lumi_map_iter++) {
@@ -2409,7 +2428,7 @@ void getHistogramOfExtrapolatedRollIntrinsicRateValues(string fileWithIntrinsicR
 
 }
 
-void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,string shortEcapIDS,string runList,string ListOfRolls,bool correctionToBeApplied,int correctionInPercents,int BarrelMax,int EcapMax) {
+void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,string shortEcapIDS,string runList,string ListOfRolls,bool correctionToBeApplied,int correctionInPercents,int BarrelMax,int EcapMax, string CenterOfMassEmergy) {
 
 //   TFile * rootFile = new TFile(fileName.c_str(),"READ","in");
     string currentName,currentFile,singleRollName,lastRunNum;
@@ -2423,7 +2442,7 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
     DataObject ListRolls(ListOfRolls);
     ExRoll * aRoll;
     int divider = 1;//2;
-
+    
     
     map<string,int> RollName_incrementalCount;
     map<string,double> RollName_RateSum;
@@ -2444,23 +2463,26 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
     }
     wheel_contour->SetLineColor(kBlack);
     wheel_contour->SetLineWidth(2);
-    
+
     
      /*
-     * Piet masks
      * 
     */
     
 //     cout << "marks" << endl;
-     
+    
     TH1F * WP2_histo_masked = new TH1F( "WP2_histo_masked", "WP2_histo_masked", 12, 0.5,12.5);
+    TH1F * WP1_histo_masked_hist2 = new TH1F( "WP1_histo_masked_", "WP2_histo_masked", 12, 0.5,12.5);
+    TH1F * WP1_histo_masked_hist3 = new TH1F( "WP1_histo_masked__", "WP2_histo_masked", 12, 0.5,12.5);
+    //TH1F * WP1_histo_masked_hist3 = new TH1F( "WP1_histo_masked_3", "WP2_histo_masked", 12, 0.5,12.5);
     TH1F * WP1_histo_masked = new TH1F( "WP1_histo_masked", "WP1_histo_masked", 12, 0.5,12.5);
     TH1F * WP0_histo_masked = new TH1F( "WP0_histo_masked", "WP0_histo_masked", 12, 0.5,12.5);
     TH1F * WP0_his_2_masked = new TH1F( "WP0_his_2_masked", "WP0_his_2_masked", 12, 0.5,12.5);
     TH1F * WM1_histo_masked = new TH1F( "WM1_histo_masked", "WM1_histo_masked", 12, 0.5,12.5);
     TH1F * WM1_his_2_masked = new TH1F( "WM1_his_2_masked", "WM1_his_2_masked", 12, 0.5,12.5);
     TH1F * WM2_histo_masked = new TH1F( "WM2_histo_masked", "WM2_histo_masked", 12, 0.5,12.5);
-
+    TH1F * WM2_histo_masked_h2 = new TH1F( "WM2_histo_masked_h2", "WM2_histo_masked", 12, 0.5,12.5);
+    
     TH1F * EN3_histo_masked = new TH1F( "EN3_histo_masked", "EN3_histo_masked", 36, 0.5,36.5);
     TH1F * EN2_histo_masked = new TH1F( "EN2_histo_masked", "EN2_histo_masked", 36, 0.5,36.5);
     TH1F * EN1_histo_masked = new TH1F( "EN1_histo_masked", "EN1_histo_masked", 36, 0.5,36.5);
@@ -2469,35 +2491,50 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
     TH1F * EP3_histo_masked = new TH1F( "EP3_histo_masked", "EP3_histo_masked", 36, 0.5,36.5);
     TH1F * EP4_histo_masked = new TH1F( "EP4_histo_masked", "EP3_histo_masked", 36, 0.5,36.5);
     TH1F * EN4_histo_masked = new TH1F( "EN4_histo_masked", "EP3_histo_masked", 36, 0.5,36.5);
-
-    WP2_histo_masked->SetBinContent(4,5);  WP2_histo_masked->SetBinError(4,1.0);  WP2_histo_masked->SetFillColor(kGray+1);
+    TH1F * EP1_histo_masked_h2 = new TH1F( "EP1_histo_masked_h2", "EP1_histo_masked", 36, 0.5,36.5);
+    //WP2_histo_masked->SetBinContent(8,);  WP2_histo_masked->SetBinError(8,0.5);  WP2_histo_masked->SetFillColor(kGray+1);
     
     // W=2/S01/RB4-/Bwd & W=2/S01/RB4-/Fwd
     // WP2_histo_sgmode->SetBinContent(1,14.5); WP2_histo_sgmode->SetBinError(1,1.0); WP2_histo_sgmode->SetFillColor(kGray+1+3); WP2_histo_sgmode->SetFillStyle(3004);
     
-    WP0_histo_masked->SetBinContent(5,5.5);    WP0_histo_masked->SetBinError(5,0.5);  WP0_histo_masked->SetFillColor(kGray);
-    WP0_histo_masked->SetBinContent(11,4.5);   WP0_histo_masked->SetBinError(11,0.5); WP0_histo_masked->SetFillColor(kGray);
-    WP0_his_2_masked->SetBinContent(11,6.5);   WP0_his_2_masked->SetBinError(11,0.5); WP0_his_2_masked->SetFillColor(kGray);
-    WP0_histo_masked->SetBinContent(12,8); WP0_histo_masked->SetBinError(12,1.0); WP0_histo_masked->SetFillColor(kGray);
-    WM1_histo_masked->SetBinContent(4,3);  WM1_histo_masked->SetBinError(4,1.0);  WM1_histo_masked->SetFillColor(kGray);
-    WM1_his_2_masked->SetBinContent(4,6.5);    WM1_his_2_masked->SetBinError(4,0.5);  WM1_his_2_masked->SetFillColor(kGray);
-    WM1_histo_masked->SetBinContent(5,10); WM1_histo_masked->SetBinError(5,1.0);  WM1_histo_masked->SetFillColor(kGray);
-    WM1_histo_masked->SetBinContent(11,11.5);  WM1_histo_masked->SetBinError(11,0.5); WM1_histo_masked->SetFillColor(kGray);
-    WM1_histo_masked->SetBinContent(12,16);WM1_histo_masked->SetBinError(12,1.0); WM1_histo_masked->SetFillColor(kGray);
+    
     WM2_histo_masked->SetBinContent(5,4.5);    WM2_histo_masked->SetBinError(5,0.5);  WM2_histo_masked->SetFillColor(kGray);
     WM2_histo_masked->SetBinContent(12,3); WM2_histo_masked->SetBinError(12,1.0); WM2_histo_masked->SetFillColor(kGray);
+    WM2_histo_masked_h2->SetBinContent(5,16); WM2_histo_masked_h2->SetBinError(5,1.0); WM2_histo_masked_h2->SetFillColor(kGray);
+    
+    WM1_histo_masked->SetBinContent(4,2.5);  WM1_histo_masked->SetBinError(4,0.5);  WM1_histo_masked->SetFillColor(kGray);
+    //WM1_his_2_masked->SetBinContent(4,6.5);    WM1_his_2_masked->SetBinError(4,0.5);  WM1_his_2_masked->SetFillColor(kGray);
+    
+    WM1_histo_masked->SetBinContent(7,7.5);  WM1_histo_masked->SetBinError(7,0.5); WM1_histo_masked->SetFillColor(kGray);
+    WM1_histo_masked->SetBinContent(8,16);WM1_histo_masked->SetBinError(8,1); WM1_histo_masked->SetFillColor(kGray);
+    //WM1_histo_masked->SetBinContent(10,);WM1_histo_masked->SetBinError(10,); WM1_histo_masked->SetFillColor(kGray);
+    
+    WP0_histo_masked->SetBinContent(7,14.5);  WP0_histo_masked->SetBinError(7,0.5);  WP0_histo_masked->SetFillColor(kGray);
+    
+    WP1_histo_masked->SetBinContent(4,20);  WP1_histo_masked->SetBinError(4,1);  WP1_histo_masked->SetFillColor(kGray);
+    WP1_histo_masked_hist3->SetBinContent(4,14);  WP1_histo_masked_hist3->SetBinError(4,1);  WP1_histo_masked_hist3->SetFillColor(kGray);
+    WP1_histo_masked_hist2->SetBinContent(4,2.5);  WP1_histo_masked_hist2->SetBinError(4,0.5);  WP1_histo_masked_hist2->SetFillColor(kGray);
+    //WP1_histo_masked_hist3->SetBinContent(4,2.5);  WP1_histo_masked_hist3->SetBinError(4,0.5);  WP1_histo_masked_hist3->SetFillColor(kGray);
 
-    EN1_histo_masked->SetBinContent(4,4.5);    EN1_histo_masked->SetBinError(4,1.5);  EN1_histo_masked->SetFillColor(kGray);
-    EN1_histo_masked->SetBinContent(10,4.5);   EN1_histo_masked->SetBinError(10,1.5); EN1_histo_masked->SetFillColor(kGray);
-    EN1_histo_masked->SetBinContent(32,5); EN1_histo_masked->SetBinError(32,1.0); EN1_histo_masked->SetFillColor(kGray);
-    EN3_histo_masked->SetBinContent(28,4.5);   EN3_histo_masked->SetBinError(28,0.5); EN3_histo_masked->SetFillColor(kGray);
-    EP1_histo_masked->SetBinContent(11,1.5);   EP1_histo_masked->SetBinError(11,1.5); EP1_histo_masked->SetFillColor(kGray);
-    EP1_histo_masked->SetBinContent(14,4.5);   EP1_histo_masked->SetBinError(14,1.5); EP1_histo_masked->SetFillColor(kGray);
-    EP1_histo_masked->SetBinContent(15,1.5);   EP1_histo_masked->SetBinError(15,1.5); EP1_histo_masked->SetFillColor(kGray);
-    EP1_histo_masked->SetBinContent(25,2.5); EP1_histo_masked->SetBinError(25,0.5); EP1_histo_masked->SetFillColor(kGray);
+    WP2_histo_masked->SetBinContent(8,7.5);  WP2_histo_masked->SetBinError(8,0.5);  WP2_histo_masked->SetFillColor(kGray);
+    
+    //EN1_histo_masked->SetBinContent(4,4.5);    EN1_histo_masked->SetBinError(4,1.5);  EN1_histo_masked->SetFillColor(kGray);
+    EN1_histo_masked->SetBinContent(10,5.5);   EN1_histo_masked->SetBinError(10,0.5); EN1_histo_masked->SetFillColor(kGray);    
+    
+    EP1_histo_masked->SetBinContent(25,4);   EP1_histo_masked->SetBinError(25,2); EP1_histo_masked->SetFillColor(kGray);
+    //EP1_histo_masked_h2->SetBinContent(25,4.5);   EP1_histo_masked_h2->SetBinError(25,1.5); EP1_histo_masked_h2->SetFillColor(kGray);
     EP1_histo_masked->SetBinContent(29,1.5);   EP1_histo_masked->SetBinError(29,0.5); EP1_histo_masked->SetFillColor(kGray);
+    EP1_histo_masked->SetBinContent(35,1.5);   EP1_histo_masked->SetBinError(35,1.5); EP1_histo_masked->SetFillColor(kGray);    
+    EP1_histo_masked->SetBinContent(36,1.5); EP1_histo_masked->SetBinError(36,1.5); EP1_histo_masked->SetFillColor(kGray);
+
+    //EP1_histo_masked->SetBinContent(29,1.5);   EP1_histo_masked->SetBinError(29,0.5); EP1_histo_masked->SetFillColor(kGray);       
     
     
+    EN3_histo_masked->SetBinContent(35,3);   EN3_histo_masked->SetBinError(35,3); EN3_histo_masked->SetFillColor(kGray);      
+    //EN1_histo_masked->SetBinContent(32,5); EN1_histo_masked->SetBinError(32,1.0); EN1_histo_masked->SetFillColor(kGray);
+    
+    EP2_histo_masked->SetBinContent(29,5.5);   EP2_histo_masked->SetBinError(29,0.5); EP2_histo_masked->SetFillColor(kGray);    
+
     
     /*
      * End of efficiency taken masks
@@ -2528,29 +2565,42 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
     
     // end of map
     
-    // Map of masked because of high value
+    // Map of masked because of high rates
     
-    
-    
-    map <string,TH1F*> mapOfMasks_extremenoise ;
+    map <string,TH1F*> mapOfMasks_extremenoise;
     TH1F * WM1_histo_masked_en = new TH1F( "WM1_histo_masked_en", "WM1_histo_masked", 12, 0.5,12.5);
+    TH1F * WP1_histo_masked_en = new TH1F( "WP1_histo_masked_en", "WP1_histo_masked", 12, 0.5,12.5);
     TH1F * WM2_histo_masked_en = new TH1F( "WM2_histo_masked_en", "WM1_histo_masked", 12, 0.5,12.5);
     TH1F * WP2_histo_masked_en = new TH1F( "WP2_histo_masked_en", "WM1_histo_masked", 12, 0.5,12.5);
     TH1F * EN2_histo_masked_en = new TH1F( "EN2_histo_masked_en", "EN2_histo_masked", 36, 0.5,36.5);
+    TH1F * EN1_histo_masked_en = new TH1F( "EN1_histo_masked_en", "EN2_histo_masked", 36, 0.5,36.5);
+    TH1F * EP2_histo_masked_en = new TH1F( "EP2_histo_masked_en", "EN2_histo_masked", 36, 0.5,36.5);
     
+    WP1_histo_masked_en->SetFillColor(kBlack);
+    //WP1_histo_masked->SetBinContent(1,6); WP1_histo_masked_en->SetBinError(1,0.5);// WP1_histo_masked_en->SetFillColor(kBlack);
+    
+    /*
     WM1_histo_masked_en->SetBinContent(6,14);  WM1_histo_masked_en->SetBinError(6,1.0);  WM1_histo_masked_en->SetFillColor(kBlack);
     //WM2_histo_masked_en->SetBinContent(3,13.5);  WM2_histo_masked_en->SetBinError(3,0.5);  WM2_histo_masked_en->SetFillColor(kBlack);
+    //WP1_histo_masked->SetBinContent(1,5); WP1_histo_masked_en->SetBinError(1,0.5);// WP1_histo_masked_en->SetFillColor(kBlack);
+    WP1_histo_masked_en->SetBinContent(4,4.5); WP1_histo_masked_en->SetBinError(4,0.5);// WP1_histo_masked_en->SetFillColor(kBlack);
+    WP1_histo_masked_en->SetBinContent(6,8);WP1_histo_masked_en->SetBinError(6,1); //WP1_histo_masked_en->SetFillColor(kBlack);
     WP2_histo_masked_en->SetBinContent(12,14);  WP2_histo_masked_en->SetBinError(12,1.0);  WP2_histo_masked_en->SetFillColor(kBlack);
     EN2_histo_masked_en->SetBinContent(6,1.5); EN2_histo_masked_en->SetBinError(6,0.5); EN2_histo_masked_en->SetFillColor(kBlack);
     EN2_histo_masked_en->SetBinContent(29,0.5); EN2_histo_masked_en->SetBinError(29,0.5); EN2_histo_masked_en->SetFillColor(kBlack);
+    EN1_histo_masked_en->SetBinContent(16,5.5); EN1_histo_masked_en->SetBinError(16,0.5); EN1_histo_masked_en->SetFillColor(kBlack);
+    EP2_histo_masked_en->SetBinContent(19,4.5) ; EP2_histo_masked_en->SetBinError(19,0.5); EP2_histo_masked_en->SetFillColor(kBlack);
+    */
     
     mapOfMasks_extremenoise["W-1"] = WM1_histo_masked_en;
+    mapOfMasks_extremenoise["W1"] = WP1_histo_masked_en;
     //mapOfMasks_extremenoise["W-2"] = WM2_histo_masked_en;
     mapOfMasks_extremenoise["W2"] = WP2_histo_masked_en;
     mapOfMasks_extremenoise["RE-2"] = EN2_histo_masked_en;
+    mapOfMasks_extremenoise["RE-1"] = EN1_histo_masked_en;
+    mapOfMasks_extremenoise["RE2"] = EP2_histo_masked_en;
     
-    // end of map
-    
+    // end of map    
     // Map of canvases
     
     TCanvas * WP2_canvas = new TCanvas( "WP2_canvas", "WP2_canvas",800,600);
@@ -2558,7 +2608,6 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
     TCanvas * WP0_canvas = new TCanvas( "WP0_canvas", "WP0_canvas",800,600);
     TCanvas * WM1_canvas = new TCanvas( "WM1_canvas", "WM1_canvas",800,600);
     TCanvas * WM2_canvas = new TCanvas( "WM2_canvas", "WM2_canvas",800,600);
-
     TCanvas * EN3_canvas = new TCanvas( "EN3_canvas", "EN3_canvas", 800,600);
     TCanvas * EN2_canvas = new TCanvas( "EN2_canvas", "EN2_canvas", 800,600);
     TCanvas * EN1_canvas = new TCanvas( "EN1_canvas", "EN1_canvas", 800,600);
@@ -2631,7 +2680,7 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
                     for (int i=1;i <= aRoll->getClones();i++) {
 			cout << aRoll->getFullOnlineRollID() << endl;
 
-                        if (aRoll->getAvgRatePSCWithoutCorrectionsForClone(i) < 20) {
+                        if (aRoll->getAvgRatePSCWithoutCorrectionsForClone(i) < 200) {
 
                             if (RollName_incrementalCount.find(aRoll->getRollIDofCloneWithNewIdentifiers(i)) == RollName_incrementalCount.end() ) {
                                 RollName_incrementalCount[aRoll->getRollIDofCloneWithNewIdentifiers(i)] = 1;
@@ -2680,18 +2729,19 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
     TH2F * DM4Endcap = new TH2F("EM4","Disk-4",36,0.5,36.5,6,0,6);
 
     // add the histos to the map
-
-    allHistograms["W-1"]= WM1histo;
+    
     allHistograms["W-2"]= WM2histo;
+    allHistograms["W-1"]= WM1histo;
     allHistograms["W0"]= W0histo;
     allHistograms["W1"]= WP1histo;
     allHistograms["W2"]= WP2histo;
-    allHistograms["RE3"] = DP3Endcap;
-    allHistograms["RE2"] = DP2Endcap;
+    
     allHistograms["RE1"] = DP1Endcap;
-    allHistograms["RE-3"] = DM3Endcap;
-    allHistograms["RE-2"] = DM2Endcap;
     allHistograms["RE-1"] = DM1Endcap;
+    allHistograms["RE2"] = DP2Endcap;
+    allHistograms["RE-2"] = DM2Endcap;
+    allHistograms["RE3"] = DP3Endcap;
+    allHistograms["RE-3"] = DM3Endcap;
     allHistograms["RE4"] = DP4Endcap;
     allHistograms["RE-4"] = DM4Endcap;
   
@@ -2788,16 +2838,18 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
     cout << " mark1 " << endl;
     //allHistograms.find("W0")->second->SetBinContent(1,1,20);
     TCanvas * canvasTest = new TCanvas("can0","can0",1300,700);
-    TCanvas * canvasBarrel = new TCanvas("can1","can1",1300,700);
-    TCanvas * canvasEndcap = new TCanvas("can2","can2",1300,1300);
+    TCanvas * canvasBarrel = new TCanvas("can1","can1",1912,401);
+    TCanvas * canvasEndcap = new TCanvas("can2","can2",690,1027);
+    
+    //CenterOfMassEmergy = "#sqrt{s} = " + CenterOfMassEmergy + " TeV";
     
     // approval definitions
     TPaveText* text = new TPaveText(0.223663, 0.908299, 0.615908, 0.968894, "NDC"); //(0.368779, 0.916955, 0.715578, 0.980436, "NDC")
-    text->AddText("CMS Preliminary");
+    //text->AddText("CMS Preliminary");
     text->SetBorderSize(0);
     text->SetFillColor(0);
     TPaveText* secondText = new TPaveText(0.00455419, 0.908299, 0.226037, 0.968894, "NDC");
-    secondText->AddText("#sqrt{s} = 8 TeV");
+    //secondText->AddText(CenterOfMassEmergy.c_str());
     secondText->SetBorderSize(0);
     secondText->SetFillColor(0);
     TPaveText * rateText = new TPaveText(0.763289, 0.908299, 0.990109, 0.968894, "NDC");
@@ -2808,8 +2860,8 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
     //
     text->SetTextSize(secondText->GetTextSize());
     
-    canvasBarrel->Divide(3,2);
-    canvasEndcap->Divide(3,3);
+    canvasBarrel->Divide(5,1);
+    canvasEndcap->Divide(2,4);
     canvasBarrel->SetFillColor(0);
     canvasEndcap->SetFillColor(0);
     int counterBarrel =0 , counterEcap = 0;
@@ -2822,7 +2874,7 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
     detectoroff->SetFillColor(0);
     detectoroff->SetTextSize(0.025);
     detectoroff->SetBorderSize(0);
-    detectoroff->AddEntry(WM1_histo_masked,"Det Unit Off","f");
+    //detectoroff->AddEntry(WM1_histo_masked,"Det Unit Off","f");
     
     TLegend * detectormasked;
     detectormasked = new TLegend(0.591058,0.954037,0.822591,0.997364);
@@ -2830,10 +2882,27 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
     detectormasked->SetTextSize(0.025);
     detectormasked->SetBorderSize(0);
     //detectormasked->SetB
-    detectormasked->AddEntry(WM1_histo_masked_en,"Det Unit overflow","f");
+    //detectormasked->AddEntry(WM1_histo_masked_en,"Det Unit overflow","f");
     cout << " mark2 " << endl;
     
+    map <string,int> nameOrderMap;
+    
+    nameOrderMap["W-2"] = 1;
+    nameOrderMap["W-1"] = 2;
+    nameOrderMap["W0"] = 3;
+    nameOrderMap["W1"] = 4;
+    nameOrderMap["W2"] = 5;
+    nameOrderMap["RE1"] = 1;
+    nameOrderMap["RE-1"] = 2;
+    nameOrderMap["RE2"] = 3;
+    nameOrderMap["RE-2"] = 4;
+    nameOrderMap["RE3"] = 5;
+    nameOrderMap["RE-3"] = 6;
+    nameOrderMap["RE4"] = 7;
+    nameOrderMap["RE-4"] = 8;
+    
     for (map<string,TH2F*>::iterator itr = allHistograms.begin();itr != allHistograms.end();itr++) {
+    
       itr->second->SetStats(false);
       itr->second->GetXaxis()->SetTitle("Sector");
       itr->second->GetYaxis()->SetTitleOffset(4);
@@ -2842,18 +2911,18 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
       TPaveText * titleText = new TPaveText(0.044226, 0.906466, 0.941032, 0.950426, "NDC");//(0.211782, 0.922726, 0.345346, 0.983322, "NDC");
       titleText->SetFillColor(0);
       titleText->SetBorderSize(0);
-      string textForTitle = "#sqrt{s} = 13 TeV ";
-      textForTitle += "      CMS Preliminary      ";
+      string textForTitle;// = CenterOfMassEmergy;
+      //textForTitle += "      CMS Preliminary      ";
       textForTitle += itr->second->GetTitle();
       titleText->AddText(textForTitle.c_str());
-      titleText->SetTextSize(text->GetTextSize());
+      titleText->SetTextSize(0.08);
       itr->second->SetTitle("");
       itr->second->GetYaxis()->SetLabelSize(itr->second->GetYaxis()->GetLabelSize()*1.2);
       
       if (itr->first.find("W") != string::npos) {
             ++counterBarrel;
-            canvasBarrel->cd(counterBarrel)->SetFillColor(kWhite);
-	    canvasBarrel->cd(counterBarrel)->SetFrameFillColor(kWhite);
+            canvasBarrel->cd(nameOrderMap.find(itr->first)->second)->SetFillColor(kWhite);
+	    canvasBarrel->cd(nameOrderMap.find(itr->first)->second)->SetFrameFillColor(kWhite);
 // 	    canvasBarrel->cd(counterBarrel)->set
 // 	    mapCanvases.find(itr->first)->second->cd();
 	    
@@ -2862,7 +2931,7 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
 	    itr->second->GetXaxis()->SetTitleSize(itr->second->GetXaxis()->GetTitleSize()*1.2);
 	    itr->second->GetXaxis()->SetTitleOffset(itr->second->GetXaxis()->GetTitleOffset()*0.8);
 	    
-	     itr->second->GetZaxis()->SetTitleSize(itr->second->GetZaxis()->GetTitleSize()*1.3);
+	    itr->second->GetZaxis()->SetTitleSize(itr->second->GetZaxis()->GetTitleSize()*1.3);
 	    itr->second->GetZaxis()->SetTitle("Rate (Hz/cm^{2})");
 	    //itr->second->Set
 	    itr->second->GetZaxis()->SetTitleOffset(0.45);
@@ -2884,6 +2953,10 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
 	    
 	    if (itr->first == "W-1") { WM1_his_2_masked->SetMarkerColor(kGray+1); WM1_his_2_masked->Draw("SameE2"); }
 	    if (itr->first == "W0") { WP0_his_2_masked->SetMarkerColor(kGray+1); WP0_his_2_masked->Draw("SameE2"); }
+	    if (itr->first == "W-2") { WM2_histo_masked_h2->Draw("SameE2"); }
+	    if (itr->first == "W1") { 
+	      WP1_histo_masked_hist3->Draw("SameE2"); }
+	    if (itr->first == "RE1") { EP1_histo_masked_h2->Draw("SameE2");}
 	    if (mapOfMasks_extremenoise.find(itr->first) != mapOfMasks_extremenoise.end()  ){ mapOfMasks_extremenoise.find(itr->first)->second->Draw("SameE2"); }
 	    //text->Draw();
 	    //secondText->Draw();
@@ -2898,8 +2971,8 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
         else {
             ++counterEcap;
 	    mapCanvases.find(itr->first)->second->cd();
-            canvasEndcap->cd(counterEcap)->SetFillColor(0);
-	    canvasEndcap->cd(counterEcap)->SetFrameFillColor(0);
+            canvasEndcap->cd(nameOrderMap.find(itr->first)->second)->SetFillColor(0);
+	    canvasEndcap->cd(nameOrderMap.find(itr->first)->second)->SetFrameFillColor(0);
 	    itr->second->SetMaximum(EcapMax);
             //itr->second->GetYaxis()->SetTitle("Layer");
 	    
@@ -3269,6 +3342,8 @@ void getCorrelationCoefficients(string RateFilesContainer, string LumiFile, stri
   for(int i=1;i <= allRollNames_.getLenght();i++){
     temp_name = allRollNames_.getElement(i,1);
     ExRoll * aRoll = new ExRoll(temp_name);
+    aRoll->allocStrips();
+    aRoll->initStrips();
     aRoll->setStripsAreaFromSource_cmsswResource(area);
     AllRolls[allRollNames_.getElement(i,1)] = aRoll;
     
@@ -3277,7 +3352,7 @@ void getCorrelationCoefficients(string RateFilesContainer, string LumiFile, stri
   
   TH1F * histoPoint;
   
-  TF1 * func = new TF1("f1","pol1",800,7000);
+  TF1 * func = new TF1("f1","pol1",0,50000);
   func->SetParName(0,"par1");
   func->SetParName(1,"par0");
   func->SetLineColor(kRed);
@@ -3383,7 +3458,7 @@ void getCorrelationCoefficients(string RateFilesContainer, string LumiFile, stri
     agraph->SetTitle(agraph->GetName());
     cout << itr->first << " par0 " << func->GetParameter(0) << " par1 " << func->GetParameter(1) << " " << agraph->GetCorrelationFactor() << endl;
     the_gamma = TMath::Gamma((func->GetNDF()-2)/2,func->GetChisquare()/2);
-    OFS <<  itr->first << " " << func->GetParameter(0) << " " << func->GetParameter(1)  << " " << func->GetChisquare() / func->GetNDF() << " " << agraph->GetCorrelationFactor() << "\n";  
+    OFS <<  itr->first << " " << func->GetParameter(0) << " " << func->GetParameter(1)  << " " << func->GetChisquare() / func->GetNDF() << " " << agraph->GetCorrelationFactor() << " " << func->GetMaximum() << "\n";  
     
       OFS.clear();
       temp_name = itr->first;
@@ -5224,33 +5299,45 @@ void drawDifferentRunDurationLumies(const string& filename){
   
 }
 
-void getCorrectedChambersRateDistribution(const string & runnum,const string & fileInput, const string & areaFile){
+void getCorrectedChambersRateDistribution(const string & runlist,const string & runsuffix, const string & areaFile, const string & outputFolder){
+  
+  
+  DataObject areaObj(areaFile);
+  DataObject rlist(runlist);
+  
+  for (int i =0 ; i < rlist.getLenght() ; i++ ){
+  
+  string runnum = rlist.getElement(i+1,1);
+  string fileInput=runsuffix+runnum+".root";
   
   TFile * input = new TFile(fileInput.c_str(),"READ");
   TH1F * h1;
   TIter nextkey( input->GetListOfKeys() );
   TKey *key;
   TObject *obj;
-  DataObject areaObj(areaFile);
   
-  TH1F * barrelRate = new TH1F ("br","br",1000,0,10);
-  TH1F * EcapRate = new TH1F ("er","er",1000,0,10);
-  TH1F * totalRate = new TH1F ("tr","tr",1000,0,10);
-  TH1F * RE4Plus = new TH1F ("re4","re4",1000,0,10);
-  TH1F * EcapPartition = new TH1F ("part","part",1000,0,10);
-  TH1F * barrelmtwo = new TH1F ("bmtwo","bmtwo",1000,0,10);
-  TH1F * barrelmone = new TH1F ("bmone","bmone",1000,0,10);
-  TH1F * barrelzero = new TH1F ("bz","bz",1000,0,10);
-  TH1F * barrelpone = new TH1F ("bpo","bpo",1000,0,10);
-  TH1F * barrelptwo = new TH1F ("bpt","bpt",1000,0,10);
-  TH1F * REp1 = new TH1F ("rep1","rep1",1000,0,1);
-  TH1F * REm1 = new TH1F ("rem1","rem1",1000,0,1);
-  TH1F * REp2 = new TH1F ("rep2","rep2",1000,0,1);
-  TH1F * REm2 = new TH1F ("rem2","rem2",1000,0,1);
-  TH1F * REp3 = new TH1F ("rep3","rep3",1000,0,1);
-  TH1F * REm3 = new TH1F ("rem3","rem3",1000,0,1);
-  TH1F * REp4 = new TH1F ("rep4","rep4",1000,0,1);
-  TH1F * REm4 = new TH1F ("rem4","rem4",1000,0,1);
+  
+  
+  TH1F * barrelRate = new TH1F ("br","br",6000,0,60);
+  TH1F * EcapRate = new TH1F ("er","er",6000,0,60);
+  TH1F * totalRate = new TH1F ("tr","tr",6000,0,60);
+  TH1F * RE4Plus = new TH1F ("re4","re4",6000,0,60);
+  TH1F * EcapPartition = new TH1F ("part","part",6000,0,60);
+  TH1F * barrelmtwo = new TH1F ("bmtwo","bmtwo",6000,0,60);
+  TH1F * barrelmone = new TH1F ("bmone","bmone",6000,0,60);
+  TH1F * barrelzero = new TH1F ("bz","bz",6000,0,60);
+  TH1F * barrelpone = new TH1F ("bpo","bpo",6000,0,60);
+  TH1F * barrelptwo = new TH1F ("bpt","bpt",6000,0,60);
+  TH1F * REp1 = new TH1F ("rep1","rep1",6000,0,60);
+  TH1F * REm1 = new TH1F ("rem1","rem1",6000,0,60);
+  TH1F * REp2 = new TH1F ("rep2","rep2",6000,0,60);
+  TH1F * REm2 = new TH1F ("rem2","rem2",6000,0,60);
+  TH1F * REp3 = new TH1F ("rep3","rep3",6000,0,60);
+  TH1F * REm3 = new TH1F ("rem3","rem3",6000,0,60);
+  TH1F * REp4 = new TH1F ("rep4","rep4",6000,0,60);
+  TH1F * REm4 = new TH1F ("rem4","rem4",6000,0,60);
+  
+  
   
   while ((key = (TKey*)nextkey()) != NULL) {
     
@@ -5277,12 +5364,14 @@ void getCorrectedChambersRateDistribution(const string & runnum,const string & f
       //cout << aRoll->getFullOnlineRollID() << " ";// << aRoll->getAvgRatePSCWithoutCorrections() << " ";
       aRoll->removeNoisyStripsForAllClonesWithPercentValue(100);
       for (int i = 0 ; i < 96 ; i++){
-	if( aRoll->getStrip(i+1)->getRate() > 500 ) aRoll->getStrip(i+1)->setRate(0);
+	if( aRoll->getStrip(i+1)->getRate() > 500 ) { 
+	  aRoll->getStrip(i+1)->setRate(0);
+	}
       }
       
       //cout << aRoll->getAvgRatePSCWithoutCorrections() << endl ;
       double correctedRate = aRoll->getAvgRatePSCWithoutCorrections() ;
-      double correctedPartRate;
+      double correctedPartRate = 0;
       
       if (rollName.find(runnum) != string::npos){
 	for (int part = 0 ; part < aRoll->getClones() ; part++){
@@ -5326,24 +5415,47 @@ void getCorrectedChambersRateDistribution(const string & runnum,const string & f
     }
   }
   
-  totalRate->SaveAs(("total_"+runnum+"_corrected.root").c_str());
-  EcapRate->SaveAs(("ecap_"+runnum+"_corrected.root").c_str());
-  barrelRate->SaveAs(("barrel_"+runnum+"_corrected.root").c_str());
+  totalRate->SaveAs((outputFolder+"total_"+runnum+"_corrected.root").c_str());
+  EcapRate->SaveAs((outputFolder+"ecap_"+runnum+"_corrected.root").c_str());
+  barrelRate->SaveAs((outputFolder+"barrel_"+runnum+"_corrected.root").c_str());
   //EcapPartition->SaveAs((chamberSuffix+"_dontuseanymore.root").c_str());
   
-  barrelzero->SaveAs(("W0_"+runnum+".root").c_str());
-  barrelmtwo->SaveAs(("W-2_"+runnum+".root").c_str());
-  barrelmone->SaveAs(("W-1_"+runnum+".root").c_str());
-  barrelpone->SaveAs(("W+1_"+runnum+".root").c_str());
-  barrelptwo->SaveAs(("W+2_"+runnum+".root").c_str());
-  REm1->SaveAs(("RE-1_"+runnum+".root").c_str());
-  REm2->SaveAs(("RE-2_"+runnum+".root").c_str());
-  REm3->SaveAs(("RE-3_"+runnum+".root").c_str());
-  REm4->SaveAs(("RE-4_"+runnum+".root").c_str());
-  REp1->SaveAs(("RE+1_"+runnum+".root").c_str());
-  REp2->SaveAs(("RE+2_"+runnum+".root").c_str());
-  REp3->SaveAs(("RE+3_"+runnum+".root").c_str());
-  REp4->SaveAs(("RE+4_"+runnum+".root").c_str());
+  /*
+  barrelzero->SaveAs((outputFolder+"W0_"+runnum+".root").c_str());
+  barrelmtwo->SaveAs((outputFolder+"W-2_"+runnum+".root").c_str());
+  barrelmone->SaveAs((outputFolder+"W-1_"+runnum+".root").c_str());
+  barrelpone->SaveAs((outputFolder+"W+1_"+runnum+".root").c_str());
+  barrelptwo->SaveAs((outputFolder+"W+2_"+runnum+".root").c_str());
+  REm1->SaveAs((outputFolder+"RE-1_"+runnum+".root").c_str());
+  REm2->SaveAs((outputFolder+"RE-2_"+runnum+".root").c_str());
+  REm3->SaveAs((outputFolder+"RE-3_"+runnum+".root").c_str());
+  REm4->SaveAs((outputFolder+"RE-4_"+runnum+".root").c_str());
+  REp1->SaveAs((outputFolder+"RE+1_"+runnum+".root").c_str());
+  REp2->SaveAs((outputFolder+"RE+2_"+runnum+".root").c_str());
+  REp3->SaveAs((outputFolder+"RE+3_"+runnum+".root").c_str());
+  REp4->SaveAs((outputFolder+"RE+4_"+runnum+".root").c_str());
+  */ 
+  
+  delete totalRate;
+  delete EcapRate;
+  delete barrelRate;
+  delete barrelzero;
+  delete barrelmtwo;
+  delete barrelmone;
+  delete barrelpone;
+  delete barrelptwo;
+  delete REm1;
+  delete REm2;
+  delete REm3;
+  delete REm4;
+  delete REp1;
+  delete REp2;
+  delete REp3;
+  delete REp4;
+  
+  input->Close("R");
+  
+  }
 
 }
 
@@ -5415,27 +5527,36 @@ void printTowerRE4(const string & towerRooFile){
   rfile->Delete();
 }
 
-void DeadMaskedInactivePlot(const string & inputFile){
+void DeadMaskedInactivePlot(const string & runlist_input_file,const string & runs_dates_file ,const int & labelModulo, const string & xAxisTitle,const string & dataFolder){
+  
+  TPaveText * ptext = new TPaveText(0.406627,0.914685,0.608434,0.986014,"NDC");
+  ptext->SetFillColor(0);
+  ptext->SetBorderSize(0);
+  ptext->SetTextSize(0.08);
+  ptext->AddText("CMS Preliminary");
+  ptext->SetTextFont(42);
+  
+  DataObject runlist(runlist_input_file);
+  DataObject runs_dates_map(runs_dates_file);
   
   
-  DataObject runlist(inputFile);
-  int numberOfRuns = runlist.getLenght();
-  TH1F * historyPlotDead = new TH1F("d","Masked",numberOfRuns,0,numberOfRuns);
-  TH1F * historyPlotMasked = new TH1F("m","Dead",numberOfRuns,0,numberOfRuns);
-  TH1F * historyPlotInactive = new TH1F("i","Inactive",numberOfRuns,0,numberOfRuns);
-  TCanvas * canvas = new TCanvas("c","c",1200,700);
+  
+  vector<double> vmasked,vdead,vinactive;
+  vector<string> vdates;
   
   int bincounter = 0;
-  
-  int totalNumberOfStrips = 132352;
+  //int totalNumberOfStrips = 132352;
+  int totalNumberOfStrips = 118272;
   
   for (int line = 0 ; line < runlist.getLenght() ; line++){
     
     int runnum = runlist.getElementAsInt(line+1,1);
-    cout << runnum << endl;
+    if (runnum > 210000 ) totalNumberOfStrips = 132352;
+    //cout << runnum << endl;
+    
     string runasstring = "run"+runlist.getElement(line+1,1);
-    string fileWithDead = runasstring+"/AllDead.txt";
-    string fileWithMasked = runasstring+"/AllMasked.txt";
+    string fileWithDead = dataFolder+runasstring+"/AllDead.txt";
+    string fileWithMasked = dataFolder+runasstring+"/AllMasked.txt";
     DataObject * deadStripsObject = new DataObject(fileWithDead);
     DataObject * maskedStripsObject = new DataObject(fileWithMasked);
     
@@ -5443,51 +5564,91 @@ void DeadMaskedInactivePlot(const string & inputFile){
     int dead = maskedStripsObject->getLenght();
     int allinactive = mskd+dead;
     
+    
+    
     double inactivefraction = double(allinactive*100)  / double(totalNumberOfStrips);
     double deadfraction = double(dead*100)  / double(totalNumberOfStrips);
     double maskedfraction = double(mskd*100)  / double(totalNumberOfStrips);
     
-    historyPlotMasked->SetBinContent(bincounter+1,maskedfraction);
-    historyPlotDead->SetBinContent(bincounter+1,deadfraction);
-    historyPlotInactive->SetBinContent(bincounter+1,inactivefraction);
-    historyPlotInactive->GetXaxis()->SetBinLabel(bincounter+1,runasstring.c_str());
+    cout << runnum << " masked " << maskedfraction << " dead " << deadfraction << " inactive " << inactivefraction << " " << dead << endl;
     
-    bincounter++;
+    if (maskedfraction < 4.5 && deadfraction > 0.5 && inactivefraction < 5){
+      
+      vmasked.push_back(maskedfraction);
+      vdead.push_back(deadfraction);
+      vinactive.push_back(inactivefraction);
+      vdates.push_back(runs_dates_map.getVectorOfValuesForKey(runlist.getElement(line+1,1)).at(0));
+      
+    }
+    
+//     historyPlotMasked->SetBinContent(bincounter+1,maskedfraction);
+//     historyPlotDead->SetBinContent(bincounter+1,deadfraction);
+//     historyPlotInactive->SetBinContent(bincounter+1,inactivefraction);
+//     if ( ! ((bincounter+1) % labelModulo) ){
+//       historyPlotInactive->GetXaxis()->SetBinLabel(bincounter+1, runs_dates_map.getVectorOfValuesForKey(runlist.getElement(line+1,1)).at(0).c_str());
+//     }
+//     bincounter++;
     delete deadStripsObject;
     delete maskedStripsObject;
   }
+  
+  int numberOfRuns = vmasked.size();
+  
+  TH1F * historyPlotDead = new TH1F("d","Masked",numberOfRuns,0,numberOfRuns);
+  TH1F * historyPlotMasked = new TH1F("m","Dead",numberOfRuns,0,numberOfRuns);
+  TH1F * historyPlotInactive = new TH1F("i","Inactive",numberOfRuns,0,numberOfRuns);
+  TCanvas * canvas = new TCanvas("c","c",1200,700);
+  
+  for (int i = 0 ; i < numberOfRuns ; i++){
+    
+    
+    historyPlotMasked->SetBinContent(i+1,vmasked.at(i));
+    historyPlotDead->SetBinContent(i+1,vdead.at(i));
+    historyPlotInactive->SetBinContent(i+1,vinactive.at(i));
+    if ( ! ((i+1) % labelModulo) ){
+      historyPlotInactive->GetXaxis()->SetBinLabel(i+1, vdates.at(i).c_str());
+    }
+    
+  }
+  
   
   TLegend * leg;
   leg = new TLegend(0.673275,0.679851,0.921439,0.84349);
   leg->SetFillColor(0);
   leg->SetTextSize(0.04);
   leg->SetBorderSize(0);
+    
+  leg->AddEntry(historyPlotInactive,"Total");
   leg->AddEntry(historyPlotMasked,"Masked");
   leg->AddEntry(historyPlotDead,"Inactive");
-  leg->AddEntry(historyPlotInactive,"Total");
+  historyPlotInactive->SetLineWidth(1);
+  historyPlotMasked->SetLineWidth(1);
+  historyPlotDead->SetLineWidth(1);
   
-  historyPlotInactive->GetXaxis()->SetTitle("Run number");
+  historyPlotInactive->GetXaxis()->SetTitle(xAxisTitle.c_str());
   historyPlotInactive->GetYaxis()->SetTitle("Inactive channels in %");
   historyPlotInactive->GetYaxis()->SetRangeUser(0,5);
+  historyPlotInactive->GetXaxis()->SetTitleOffset(2);
   
-  historyPlotInactive->SetLineColor(kRed);
-  historyPlotDead->SetLineColor(kBlue);
-  historyPlotMasked->SetLineColor(kGreen); 
+  historyPlotInactive->SetLineColor(kBlue);
+  historyPlotDead->SetLineColor(kRed);
+  historyPlotMasked->SetLineColor(kTeal+4); 
+  
   
   canvas->cd();
   historyPlotInactive->Draw();
   historyPlotMasked->Draw("same");
   historyPlotDead->Draw("same");
   leg->Draw();
+  ptext->Draw();
   
   canvas->SaveAs("dmi.root");
-  
   
 }
 
 
 void WriteIDsMap(const string & inputRolls,const string & RawIDsFile,const string & areaFile, const string & towerFile, const string & chipsMapFile,const string & outputFile){
-  
+  // prints out json like string representing useful rpc roll-to-someID map
   DataObject input(inputRolls);
   DataObject raws(RawIDsFile);
   DataObject area(areaFile);
@@ -5536,7 +5697,45 @@ void WriteIDsMap(const string & inputRolls,const string & RawIDsFile,const strin
   cout <<  "}" << endl;
 }
 
-
+void WriteNoiseScanResults(string rootFile, int effHV, int runnumber, string outputFile, string area){
+  
+  
+  DataObject areafile(area);
+  ofstream output;
+  //output.open(outputFile.c_str());
+  TH1F * h1;
+  TKey *key;
+  TObject *obj;
+  string chamberName;
+  string delimiter = " ";
+  
+  TFile * rFile = new TFile(rootFile.c_str(),"read","in");
+  TIter nextkey( rFile->GetListOfKeys() );
+  if(rFile->IsOpen()){
+      while (key = (TKey*)nextkey() ) {
+	h1 = (TH1F*)key->ReadObj();
+	chamberName = h1->GetName();
+	if( chamberName.substr(0,1) == "W" ||  chamberName.substr(0,2) == "RE" ) {
+	  
+	  ExRoll * aroll = new ExRoll(chamberName);
+	  aroll->allocStrips();	
+	  aroll->initStrips();
+	  aroll->setStripsAreaFromSource_cmsswResource(areafile);
+	  aroll->setStripsRateFromTH1Source(h1);
+	  
+	  for (int i = 0 ; i < aroll->getClones() ; i++){
+	    cout << aroll->getRollIDofClone_withEtaPartSeparated(i+1) << delimiter;
+	    cout << effHV << delimiter;
+	    cout << aroll->getAvgRatePSCWithoutCorrectionsForClone(i+1) << endl;
+	  }
+	  
+	  //cout << h1->GetName() << endl;
+	  delete aroll;
+	}
+      }
+  }
+  
+}
 
 // endof QueryObject methods
 

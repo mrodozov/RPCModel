@@ -45,7 +45,6 @@ int main( int argc ,char *argv[] ){
   int cutThreshold =atoi(argv[10]);
   aQuery->setHistoXtitle("Instantaneous luminosity (10^{30} cm^{-2} s^{-1})");
   aQuery->setHistoYtitle(" Rate (Hz/cm^{2})");
-  
   aQuery->setMainTitle("RE"+orientation+ring+sector);
   string emtpyString = "";
   bool useLumiAsRateDivider = atoi(argv[11]);
@@ -67,8 +66,7 @@ int main( int argc ,char *argv[] ){
   aQuery->insertRunRangeForOnlineRecord(195634,198022,2);
   aQuery->insertRunRangeForOnlineRecord(198023,199073,3);
   aQuery->insertRunRangeForOnlineRecord(199074,208686,4);
-  */
-  
+  */  
   /*
   aQuery->setHistoXtitle("Instantaneous luminosity (10^{30} cm^{-2} s^{-1})");
   aQuery->setHistoYtitle(" Rate (Hz/cm^{2})");
@@ -104,9 +102,8 @@ int main( int argc ,char *argv[] ){
   aQuery->insertNewOnlineRecord(("W"+orientation+"_RB1in").c_str(),("W "+orientation+" RB1").c_str(),kBlue,22);
   aQuery->insertNewOnlineRecord(("W"+orientation+"_RB2in").c_str(),("W "+orientation+" RB2").c_str(),kBlack,21);
   aQuery->insertNewOnlineRecord(("W"+orientation+"_RB3").c_str(),("W "+orientation+" RB3").c_str(),kSpring-7,25);
-   */
+  */
    // ecap
-   
    //
    /*
   aQuery->insertNewOnlineRecord(("RE"+orientation+"2_2_"+sector).c_str(),("RE D"+orientation+"2 R2 ").c_str(),kRed,22);
@@ -114,24 +111,22 @@ int main( int argc ,char *argv[] ){
   aQuery->insertNewOnlineRecord(("RE"+orientation+"3_3_"+sector).c_str(),("RE D"+orientation+"3 R3 ").c_str(),kBlack,21);
   aQuery->insertNewOnlineRecord(("RE"+orientation+"2_3_"+sector).c_str(),("RE D"+orientation+"2 R3 ").c_str(),kSpring-7,25);
   */
-  // by disks
-  
+  // by single disk
   /*
-  aQuery->insertNewOnlineRecord(("RE+"+orientation+"_2_"+sector).c_str(),("RE D+"+orientation+" R2 ").c_str(),kRed,22);
+  aQuery->insertNewOnlineRecord(("RE+"+orientation+"_2_"+sector).c_str(),("RE D+"+orientation+" R2 - 2015").c_str(),kRed,22);
   aQuery->insertNewOnlineRecord(("RE-"+orientation+"_2_"+sector).c_str(),("RE D-"+orientation+" R2 ").c_str(),kBlue,22);
   aQuery->insertNewOnlineRecord(("RE+"+orientation+"_3_"+sector).c_str(),("RE D+"+orientation+" R3 ").c_str(),kBlack,21);
   aQuery->insertNewOnlineRecord(("RE-"+orientation+"_3_"+sector).c_str(),("RE D-"+orientation+" R3 ").c_str(),kSpring-7,25);
   */
-  
   // system
+
   
   aQuery->insertNewOnlineRecord("RE","Endcap",kBlack,21);
-  aQuery->insertNewOnlineRecord("R","Barrel+Endcap",kCyan,kFullTriangleUp);
+  aQuery->insertNewOnlineRecord("R","System average",kGreen+3,kFullTriangleUp);
   aQuery->insertNewOnlineRecord("W","Barrel",kRed,kFullCircle);
   
   
   // system , HV ranges 2012
-  
   /*
   aQuery->insertNewOnlineRecord((orientation).c_str(),(" < 195633"+emtpyString).c_str(),kRed,22);
   aQuery->insertNewOnlineRecord((orientation).c_str(),(" [195634 198022] "+emtpyString).c_str(),kBlue,22);
@@ -143,8 +138,30 @@ int main( int argc ,char *argv[] ){
   aQuery->insertRunRangeForOnlineRecord(199074,208686,4);
   */
   
+  // by wheels barrel
+  //aQuery->insertNewOnlineRecord(("W"+orientation).c_str(),("W "+orientation).c_str(),kRed,22);
+  
+  /*
+  aQuery->insertNewOnlineRecord(("RE"+orientation+"1"+sector).c_str(),("RE "+orientation+" 1 ").c_str(),kRed,22);
+  aQuery->insertNewOnlineRecord(("RE"+orientation+"2"+sector).c_str(),("RE "+orientation+" 2 ").c_str(),kBlue,22);
+  aQuery->insertNewOnlineRecord(("RE"+orientation+"3"+sector).c_str(),("RE "+orientation+" 3 ").c_str(),kBlack,21);
+  aQuery->insertNewOnlineRecord(("RE"+orientation+"4"+sector).c_str(),("RE "+orientation+" 4 ").c_str(),kSpring-7,25);
+  */
+  
+  // by plus/minus disk
+  
+  //aQuery->insertNewOnlineRecord(("RE"+orientation+"+"+sector).c_str(),("RE "+orientation+"+ "+sector).c_str(),kBlack,21);
+  //aQuery->insertNewOnlineRecord(("RE"+orientation+"-"+sector).c_str(),("RE "+orientation+"- "+sector).c_str(),kRed,25);
+  
+  /*
+  aQuery->insertNewOnlineRecord("W+2","W+2",kBlue,kOpenTriangleDown);
+  aQuery->insertNewOnlineRecord("W-2","W-2",kViolet-7,kOpenCircle);
+  aQuery->insertNewOnlineRecord("W+1","W+1",kRed,kFullSquare);
+  aQuery->insertNewOnlineRecord("W-1","W-1",kSpring-7,kFullCircle);
+  aQuery->insertNewOnlineRecord("W0","W0",kBlack,kFullTriangleUp);
+  */
+  
   
   plotRateVsLumi_using_the_database_rollLevel_online(DataFolder,Lumi,IntrinsicOnlineFile,area,0,cutThreshold,aQuery,exluded,useLumiAsRateDivider,debugOUTPUT);
-  
   
 }

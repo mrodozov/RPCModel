@@ -529,6 +529,7 @@ double ExRoll::getMaxRateValue(){
 }
 
 void ExRoll::setStripsRatesFromTH1FObject(TH1F * RateHistogram){
+  
   for (int i=0; i < 96; i++){ // dangerous, but 
     this->getStrip(i+1)->setRate(RateHistogram->GetBinContent(i+1));
   }

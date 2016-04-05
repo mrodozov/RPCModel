@@ -4,8 +4,8 @@ ROOTINC = $(shell root-config --cflags)
 ROOTLIBS = $(shell root-config --glibs)
 LIBJSON = -ljson_linux_jsoncpp
 COMPILE_AS_Cpp0X = $(-std=c++0x)
-MYSQLLIBS = $(shell mysql_config --libs)
-MYSQLINC = $(shell mysql_config --include)
+#MYSQLLIBS = $(shell mysql_config --libs)
+#MYSQLINC = $(shell mysql_config --include)
 
 all : RateLumiEcapOffline RateVsLumi_Online CurrentApplication Print_offline_db_text_files GetEcapPlusMinusRatios Print_online_db_text_files GetRatioOfChambersForTwoRuns RateVsPhi_online CalculateLumiForRunWithFitCoefficientRefference RecoverLumiForEachRunWithCoeffAndRateFiles
 #all : RateVsLumi_Online
@@ -191,7 +191,10 @@ runp: printRunProperties.o DataObject.o Run.o ExtendedRoll.o ExtendedStrip.o Chi
 # general clean and install
 
 clean:
-	rm *.o *~ main_func/*~ core/*~ Extensions/*~ *.lnxapp
+	find ./ -maxdepth 10 -type f -iname '*.o' -delete;
+	find ./ -maxdepth 10 -type f -iname '*~' -delete
+	find ./ -maxdepth 10 -type f -iname '*.lnxapp' -delete
+
 install:
 	mv *.lnxapp ../executables_and_scripts
 

@@ -91,7 +91,6 @@ bool universalRollFilter(string barrel_or_ecap
 ,bool usedForOffline
 );
 
-
 void plotRateVsLumi_using_the_database_files_stripLevel(DataObject & LumiFile,string filesCont,string outCont,string IntrinsicFile,bool WriteNewIntrinsic);
 
 void plotEcap_RateVsPhi(string rateFile,bool subtractIntrinsic,string fileWithIntrinsic,DataObject & area,double cutValueSingleStrip,string SGmapFile,DataObject & LumiFile,QueryObject * query);
@@ -127,7 +126,7 @@ void correctionCheck(string RollName,string AreaFile,string RootFileRateSource ,
 
 void getHistogramOfExtrapolatedRollIntrinsicRateValues(string fileWithIntrinsicRates,string histogramName);
 
-void draw2DbackgroundPlot(string folder,string areaFile,string shortBarrelIDS,string shortEcapIDS,string runList,string ListOfRolls,bool correctionToBeApplied,int correctionInPercents,int barrelMax,int ecapMax);
+void draw2DbackgroundPlot(string folder,string areaFile,string shortBarrelIDS,string shortEcapIDS,string runList,string ListOfRolls,bool correctionToBeApplied,int correctionInPercents,int barrelMax,int ecapMax, string CenterOfMassEnergy);
 
 void draw2DbackgroundPlot_online(string file,string area,string listOfRolls,string runNumber,string plus_minus_sign,string ForBpart,int percentageCorrection,bool applyCorrection);
 
@@ -172,15 +171,17 @@ bool IsCorruptedFile(string theFile); // return true if the file is corrupted an
 
 void drawDifferentRunDurationLumies(const string & filename);
 
-void getCorrectedChambersRateDistribution(const string & chamberSuffix,const string &inputFile, const string & areaFile );
+void getCorrectedChambersRateDistribution(const string & chamberSuffix,const string &inputFile, const string & areaFile ,const string & outputFolder);
 
 void addZeroSuffixForlbMap(const string & filename); // 
 
 void printTowerRE4(const string & towerRooFile);
 
-void DeadMaskedInactivePlot(const string & runfolder);
+void DeadMaskedInactivePlot(const string & runlist,const string & runs_dates_map ,const int & labelModulo, const string & xAxisTitle,const string & dataFolder);
 
 void WriteIDsMap(const string & inputRolls,const string & RawIDsFile,const string & areaFile, const string & towerFile, const string & chipsMapFile,const string & output);
+
+void WriteNoiseScanResults(string rootFile, int effHV, int runnumber, string outputFile, string area);
 
 //
 
