@@ -181,7 +181,9 @@ void DeadMaskedInactivePlot(const string & runlist,const string & runs_dates_map
 
 void WriteIDsMap(const string & inputRolls,const string & RawIDsFile,const string & areaFile, const string & towerFile, const string & chipsMapFile,const string & output);
 
-void WriteNoiseScanResults(string rootFile, int effHV, int runnumber, string outputFile, string area);
+void WriteNoiseScanResults(string rootFile, int appliedHVBarrel, int appliedHVendcap, int runnumber, string outputFile, string area);
+
+void PrintDBIDsvsNewIDs(string inputFile,string dataFile);
 
 //
 

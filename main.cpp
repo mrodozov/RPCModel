@@ -57,7 +57,7 @@ int main( int argc ,char *argv[] ){
   */
   
   
-  
+  /*
   string root_file=argv[1],out_put_rolls_db_file=argv[2],out_put_strips_db_file=argv[3],error_file=argv[10],Roll_list=argv[11];                                                                                
   DataObject Mskd;                                                                                                                                                                                             
   DataObject Dead;                                                                                                                                                                                             
@@ -75,7 +75,7 @@ int main( int argc ,char *argv[] ){
   
   WriteRollsAndStripsFilesForDB_usingRootFile(root_file,out_put_rolls_db_file,out_put_strips_db_file,error_file,Mskd,Dead,ToMask,ToUnmask,Areas,RawIDObj,Roll_list);                                          
   
-  
+  */
   
   //cout << "Translating rolls with dead and masked strips only for efficiency studies ..." << endl;                                                                                                           
   //string efficiency_input = argv[10],efficiency_output = argv[11];                                                                                                                                           
@@ -161,12 +161,13 @@ int main( int argc ,char *argv[] ){
   getCorrelationCoefficients( RateFilesContainer,  LumiFile,  areaFile, AllRollNames, percentsOfCut, SaveHistograms , outputFolder);
   */
   
-  /*
-  string rootFile = argv[1], outputFile = argv[4],  area = argv[5];
-  int effHV = atoi(argv[2]), runnumber = atoi(argv[3]);
   
-  WriteNoiseScanResults(rootFile,effHV,runnumber,outputFile,area);
-  */
+//   string rootFile = argv[1], outputFile = argv[4],  area = argv[5];
+//   int effHV = atoi(argv[2]), runnumber = atoi(argv[3]);
+  
+//   WriteNoiseScanResults(rootFile,effHV,runnumber,outputFile,area);
+
+  PrintDBIDsvsNewIDs(argv[1],argv[2]);
   
  return 0;
  

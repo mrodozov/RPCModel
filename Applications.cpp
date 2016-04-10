@@ -5697,7 +5697,7 @@ void WriteIDsMap(const string & inputRolls,const string & RawIDsFile,const strin
   cout <<  "}" << endl;
 }
 
-void WriteNoiseScanResults(string rootFile, int effHV, int runnumber, string outputFile, string area){
+void WriteNoiseScanResults(string rootFile, int appliedHVBarrel, int appliedHVendcap, int runnumber, string outputFile, string area){
   
   
   DataObject areafile(area);
@@ -5724,8 +5724,14 @@ void WriteNoiseScanResults(string rootFile, int effHV, int runnumber, string out
 	  aroll->setStripsRateFromTH1Source(h1);
 	  
 	  for (int i = 0 ; i < aroll->getClones() ; i++){
+	    cout << aroll->getRollIDofCloneWithNewIdentifiers(i+1) << delimiter;
 	    cout << aroll->getRollIDofClone_withEtaPartSeparated(i+1) << delimiter;
-	    cout << effHV << delimiter;
+	    if (aroll->isInBarrel()){
+	      cout << appliedHVBarrel << delimiter;
+	    }
+	    else {
+	      cout << appliedHVendcap << delimiter;
+	    }
 	    cout << aroll->getAvgRatePSCWithoutCorrectionsForClone(i+1) << endl;
 	  }
 	  
@@ -5736,6 +5742,41 @@ void WriteNoiseScanResults(string rootFile, int effHV, int runnumber, string out
   }
   
 }
+
+void PrintDBIDsvsNewIDs(string inputFile, string dataFile)
+{
+  
+  map<string, string> db_newids;
+  
+  DataObject chamberIDs(inputFile);
+  DataObject d_file(dataFile);
+  
+  for (int i = 0 ; i < chamberIDs.getLenght() ; i++){
+    
+    string name = chamberIDs.getElement(i+1,1);
+    ExRoll * aRoll = new ExRoll(name);
+    aRoll->allocStrips();
+    aRoll->initStrips();
+    for (int j = 0 ; j < aRoll->getClones() ; j++){
+      
+      string db_id = aRoll->getRollIDofClone_withEtaPartSeparated(j+1);
+      string new_id = aRoll->getRollIDofCloneWithNewIdentifiers(j+1);
+      db_newids[db_id] = new_id;
+    }
+    delete aRoll;
+  }
+  
+  for (int i = 0 ; i < d_file.getLenght() ; i++){
+    
+    string db_id = d_file.getElement(i+1,1) + " " + d_file.getElement(i+1,2);
+    cout << db_newids.find(db_id)->second << " " << d_file.getElement(i+1,3) << " " << d_file.getElement(i+1,4) << endl;
+    
+    
+  }
+  
+
+}
+
 
 // endof QueryObject methods
 
