@@ -167,7 +167,7 @@ void print_all_the_strips_for_runlist(string folder,string newTitle,string runli
 
 void getInstLum(string filename);
 
-bool IsCorruptedFile(string theFile); // return true if the file is corrupted and returns true if it is
+int IsCorruptedFile(string theFile); // return true if the file is corrupted and returns true if it is
 
 void drawDifferentRunDurationLumies(const string & filename);
 

@@ -2,10 +2,10 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <cstdarg>
 #include <utility>
 
 using namespace std;
-
 
 
 vector<string> explode(string del, string str)
@@ -44,13 +44,14 @@ return final;
 }
 
 
-void MergeRateHistograms(string folder,string fileList){
+void MergeRateHistograms(string folder, vector<string> files){
   
   TFile * total = new TFile((folder+"total.root").c_str(),"RECREATE");
   
-  vector<string> v = explode(" ",fileList.c_str());
-  for (int i = 0 ; i < v.size() ; i++){
-    string rfile = folder + v.at(i);
+  string aFile;
+  
+  for (int i = 0 ; i < files.size() ; i++){
+    string rfile = folder+files.at(i);
     TFile * rootFile = new TFile(rfile.c_str(), "READ","in");
     TH1F * h1;
     TIter nextkey( rootFile->GetListOfKeys() );
@@ -82,7 +83,13 @@ void MergeRateHistograms(string folder,string fileList){
 
 int main(int argc,char * argv[]){
   
-  MergeRateHistograms(argv[1],argv[2]);
+  vector<string> files;
+  for (int i = 2 ; i < argc ; i++ ){
+    files.push_back(argv[i]);
+    //cout << i+1 << endl;
+  }
+  //cout << argc << endl;
+  MergeRateHistograms(argv[1],files);
   
   return 0;
 }

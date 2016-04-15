@@ -15,8 +15,9 @@ using namespace std;
 
 int main( int argc ,char *argv[] ){
   
-  //string inputFile = argv[1];
-  //int exit_code = IsCorruptedFile(inputFile);
+  string inputFile = argv[1];
+  int exit_code = IsCorruptedFile(inputFile);
+  return exit_code;
   //exit(exit_code);
   
   /*
@@ -74,8 +75,8 @@ int main( int argc ,char *argv[] ){
   cout << "Translating roll and strip files for DB please wait ..." << endl;
   
   WriteRollsAndStripsFilesForDB_usingRootFile(root_file,out_put_rolls_db_file,out_put_strips_db_file,error_file,Mskd,Dead,ToMask,ToUnmask,Areas,RawIDObj,Roll_list);                                          
-  
   */
+  
   
   //cout << "Translating rolls with dead and masked strips only for efficiency studies ..." << endl;                                                                                                           
   //string efficiency_input = argv[10],efficiency_output = argv[11];                                                                                                                                           
@@ -167,8 +168,8 @@ int main( int argc ,char *argv[] ){
   
 //   WriteNoiseScanResults(rootFile,effHV,runnumber,outputFile,area);
 
-  PrintDBIDsvsNewIDs(argv[1],argv[2]);
+  // PrintDBIDsvsNewIDs(argv[1],argv[2]);
   
- return 0;
+  //return 0;
  
 }

@@ -15,7 +15,7 @@
 #include <assert.h>
 #include <math.h>
 #include <map>
-#include <boost/concept_check.hpp>
+//#include <boost/concept_check.hpp>
 #include "core/DataObject.h"
 #include "core/ExtendedStrip.h"
 #include "core/ExtendedRoll.h"
@@ -5243,8 +5243,8 @@ void getInstLum(string filename){
   
 }
 
-bool IsCorruptedFile(string theFile){
-  bool exit_code=false;
+int IsCorruptedFile(string theFile){
+  int exit_code=0;
   
   TFile * myFile = new TFile(theFile.c_str(),"READ","in");
   if(myFile->IsZombie()){
