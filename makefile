@@ -2,8 +2,9 @@
 
 ROOTINC = $(shell root-config --cflags) 
 ROOTLIBS = $(shell root-config --glibs)
+ROOFITLIBS = -l RooFitCore -l RooFit -l RooStats
 LIBJSON = -ljson_linux_jsoncpp
-COMPILE_AS_Cpp0X = $(-std=c++0x)
+COMPILE_AS_Cpp0X = $(-std=c++14)
 #MYSQLLIBS = $(shell mysql_config --libs)
 #MYSQLINC = $(shell mysql_config --include)
 
@@ -37,7 +38,7 @@ ExtendedRoll.o: core/ExtendedRoll.cpp Roll.o ExtendedStrip.o DataObject.o
 	g++ -c core/ExtendedRoll.cpp $(ROOTINC)
 
 Applications.o : Applications.cpp Service.o ExtendedRoll.o
-	g++ -c Applications.cpp $(ROOTINC)
+	g++ -c Applications.cpp $(ROOTINC) -std=c++14
 
 Service.o : ServiceClasses/Service.cpp
 	g++ -c ServiceClasses/Service.cpp $(ROOTINC)
@@ -114,26 +115,26 @@ Acquisition.o: Extensions/Acquisition.cpp
 # current app is the one in main.cpp
 
 CurrentApplication : main.o $(objects)
-	g++ -o CurrentApplication.lnxapp main.o $(objects) $(ROOTLIBS)  $(COMPILE_AS_Cpp0X) 
+	g++ -o CurrentApplication.lnxapp main.o $(objects) $(ROOTLIBS) $(ROOFITLIBS) -std=c++14 
 
 RateLumiEcapOffline : main_offline_ecap_ratelumi.o $(objects)
-	g++ -o RateLumiEcapOffline.lnxapp main_offline_ecap_ratelumi.o $(objects) $(ROOTLIBS)  $(COMPILE_AS_Cpp0X)
+	g++ -o RateLumiEcapOffline.lnxapp main_offline_ecap_ratelumi.o $(objects) $(ROOTLIBS) -std=c++14
 
 RateVsLumi_Online : main_ratevslumi_online.o $(objects)
-	g++ -o RateVsLumi_Online.lnxapp main_ratevslumi_online.o $(objects) $(ROOTLIBS)  $(COMPILE_AS_Cpp0X)
+	g++ -o RateVsLumi_Online.lnxapp main_ratevslumi_online.o $(objects) $(ROOTLIBS) -std=c++14
 
 RateVsPhi_online : main_rateVsPhi_online.o $(objects)
 	g++ -o RateVsPhi_Online.lnxapp main_rateVsPhi_online.o $(objects) $(ROOTLIBS) 
 
 Print_offline_db_text_files : main_print_offline_db_files.o $(objects)
-	g++ -o PrintOfflineRollTextFiles.lnxapp main_print_offline_db_files.o $(objects) $(ROOTLIBS)  $(COMPILE_AS_Cpp0X)
+	g++ -o PrintOfflineRollTextFiles.lnxapp main_print_offline_db_files.o $(objects) $(ROOTLIBS) -std=c++14
 
 Print_online_db_text_files : main_print_online_db_files.o $(objects)
-	g++ -o PrintOnlineRollTextFiles.lnxapp main_print_online_db_files.o $(objects) $(ROOTLIBS)  $(COMPILE_AS_Cpp0X)
+	g++ -o PrintOnlineRollTextFiles.lnxapp main_print_online_db_files.o $(objects) $(ROOTLIBS)  -std=c++14
 
 GetEcapPlusMinusRatios : $(objects)
 	g++ -c main_func/main_Ecap_assym.cpp $(ROOTINC)
-	g++ -o GetEcapPlusMinusRatios.lnxapp main_Ecap_assym.o $(objects) $(ROOTLIBS)  $(COMPILE_AS_Cpp0X)
+	g++ -o GetEcapPlusMinusRatios.lnxapp main_Ecap_assym.o $(objects) $(ROOTLIBS) -std=c++14
 
 GetRatioOfChambersForTwoRuns : $(objects)
 	g++ -c main_func/main_chambersRatiosTwoRuns.cpp $(ROOTINC)

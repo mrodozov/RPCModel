@@ -13,17 +13,18 @@
 #include <stdlib.h>
 #include <typeinfo>
 #include <math.h>
-//#include <mysql/mysql.h>
+#include <mysql/mysql.h>
 #include "../core/DataObject.h"
 #include "../core/ExtendedStrip.h"
 #include "../core/ExtendedRoll.h"
 #include "../core/Chip.h"
 #include "../Applications.h"
-#include "../ROOT/ROOT.h"
 #include "../ServiceClasses/Service.h"
-#include "../ServiceClasses/JSON/json/json.h"
-#include "../ServiceClasses/DBconnector.h"
+//#include "../ServiceClasses/DBconnector.h"
+#include "../ROOT/ROOT.h"
+//#include "../ServiceClasses/JSON/json/json.h"
 
+//using namespace std;
 using namespace std;
 
 int main( int argc ,char *argv[] ){

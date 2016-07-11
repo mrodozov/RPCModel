@@ -36,7 +36,7 @@ int main( int argc ,char *argv[] ){
   
   QueryObject * aQuery = new QueryObject;
   string DataFolder = argv[1]; // folder with text files
-  DataObject Lumi(argv[2],3); // 2 rows 
+  DataObject Lumi(argv[2],3); // 3 rows, run lumi and ls  
   string IntrinsicOnlineFile = argv[3]; // 
   DataObject area(argv[4],2); //
   aQuery->setCanvasTitle(argv[5]);
@@ -119,12 +119,12 @@ int main( int argc ,char *argv[] ){
   aQuery->insertNewOnlineRecord(("RE-"+orientation+"_3_"+sector).c_str(),("RE D-"+orientation+" R3 ").c_str(),kSpring-7,25);
   */
   // system
-
   
+  /*
   aQuery->insertNewOnlineRecord("RE","Endcap",kBlack,21);
   aQuery->insertNewOnlineRecord("R","System average",kGreen+3,kFullTriangleUp);
   aQuery->insertNewOnlineRecord("W","Barrel",kRed,kFullCircle);
-  
+  */
   
   // system , HV ranges 2012
   /*
@@ -153,13 +153,15 @@ int main( int argc ,char *argv[] ){
   //aQuery->insertNewOnlineRecord(("RE"+orientation+"+"+sector).c_str(),("RE "+orientation+"+ "+sector).c_str(),kBlack,21);
   //aQuery->insertNewOnlineRecord(("RE"+orientation+"-"+sector).c_str(),("RE "+orientation+"- "+sector).c_str(),kRed,25);
   
-  /*
-  aQuery->insertNewOnlineRecord("W+2","W+2",kBlue,kOpenTriangleDown);
-  aQuery->insertNewOnlineRecord("W-2","W-2",kViolet-7,kOpenCircle);
-  aQuery->insertNewOnlineRecord("W+1","W+1",kRed,kFullSquare);
-  aQuery->insertNewOnlineRecord("W-1","W-1",kSpring-7,kFullCircle);
-  aQuery->insertNewOnlineRecord("W0","W0",kBlack,kFullTriangleUp);
-  */
+  //aQuery->insertNewOnlineRecord("RB1","RB1",kBlack,21);
+  //aQuery->insertNewOnlineRecord("RB2","RB2",kRed,25);
+  
+  
+  aQuery->insertNewOnlineRecord(orientation,orientation,kBlue,kOpenTriangleDown);
+  //aQuery->insertNewOnlineRecord("W-2_RB4_4","W-2",kViolet-7,kOpenCircle);
+  //aQuery->insertNewOnlineRecord("W+1_RB4_4","W+1",kRed,kFullSquare);
+  //aQuery->insertNewOnlineRecord("W-1_RB4_4","W-1",kSpring-7,kFullCircle);
+  //aQuery->insertNewOnlineRecord("W0_RB4_4","W0",kBlack,kFullTriangleUp);
   
   
   plotRateVsLumi_using_the_database_rollLevel_online(DataFolder,Lumi,IntrinsicOnlineFile,area,0,cutThreshold,aQuery,exluded,useLumiAsRateDivider,debugOUTPUT);

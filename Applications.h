@@ -167,7 +167,7 @@ void print_all_the_strips_for_runlist(string folder,string newTitle,string runli
 
 void getInstLum(string filename);
 
-bool IsCorruptedFile(string theFile); // return true if the file is corrupted and returns true if it is
+int IsCorruptedFile(string theFile); // return true if the file is corrupted and returns true if it is
 
 void drawDifferentRunDurationLumies(const string & filename);
 
@@ -184,6 +184,10 @@ void WriteIDsMap(const string & inputRolls,const string & RawIDsFile,const strin
 void WriteNoiseScanResults(string rootFile, int appliedHVBarrel, int appliedHVendcap, int runnumber, string outputFile, string area);
 
 void PrintDBIDsvsNewIDs(string inputFile,string dataFile);
+
+void WriteRateVsLumiPerRollFile(string & LumiFile, string & rootFilesFolder, string & area, string & outputFile, string & rollNamesAdditionalSuffix);
+
+void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputFile, string & outputFile); // firstID, secondID, resultID
 
 //
 

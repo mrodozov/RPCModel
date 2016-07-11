@@ -9,11 +9,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <typeinfo>
-//#include <mysql/mysql.h>
+#include <mysql/mysql.h>
 
 using namespace std;
 
-//MYSQL * MysqlConnection (string server,string user,string password,string database);
+MYSQL * MysqlConnection (string server,string user,string password,string database);
 
 // experimental
 

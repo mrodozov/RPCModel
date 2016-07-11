@@ -10,10 +10,14 @@
 #include "core/ExtendedRoll.h"
 #include "Applications.h"
 #include "ROOT/ROOT.h"
+#include "RooPlot.h"
+#include "RooRealVar.h"
+#include "RooGaussian.h"
 
 using namespace std;
 
 int main( int argc ,char *argv[] ){
+  
   
   //string inputFile = argv[1];
   //int exit_code = IsCorruptedFile(inputFile);
@@ -85,8 +89,8 @@ int main( int argc ,char *argv[] ){
  //string inputRolls=argv[1], raw=argv[2], area=argv[3], tower=argv[4], chips=argv[5], output=argv[6];
  //WriteIDsMap(inputRolls,raw,area,tower,chips,output);
  
- 
  /*
+ 
  string folder=argv[1];
  string areaFile = argv[2];
  string shortBarrelIDS = argv[3];
@@ -95,25 +99,12 @@ int main( int argc ,char *argv[] ){
  string ListOfRolls = argv[6];
  bool correctionToBeApplied = atoi(argv[7]);
  int correctionInPercents = atoi(argv[8]);
- int barrelMax= atoi(argv[9]);
- int ecapMax = atoi(argv[10]);	
+ double barrelMax= atof(argv[9]);
+ double ecapMax = atof(argv[10]);	
  string CenterOfMassE = argv[11]; 
  //cout << "blabla" << endl;
  
  draw2DbackgroundPlot( folder, areaFile, shortBarrelIDS, shortEcapIDS, runList, ListOfRolls, correctionToBeApplied, correctionInPercents, barrelMax, ecapMax,CenterOfMassE);
- 
- */
- 
- /*
- string rootContainer = argv[1];
- string outputContainer = argv[2];
- DataObject lumiFile(argv[3]);
- DataObject area(argv[4]);
- string RollList = argv[5];
- bool corrections = atoi(argv[6]);
- int correctionInPercents = atoi(argv[7]);
- 
- print_online_dbfiles(rootContainer,outputContainer ,lumiFile,area,RollList,corrections, correctionInPercents);
  
  */
  
@@ -152,6 +143,7 @@ int main( int argc ,char *argv[] ){
 			 );	 
  
  */
+  
   /*
   string RateFilesContainer = argv[1], LumiFile = argv[2], areaFile=argv[3], AllRollNames=argv[4];
   int percentsOfCut=atoi(argv[5]);
@@ -162,12 +154,33 @@ int main( int argc ,char *argv[] ){
   */
   
   
-//   string rootFile = argv[1], outputFile = argv[4],  area = argv[5];
-//   int effHV = atoi(argv[2]), runnumber = atoi(argv[3]);
-  
-//   WriteNoiseScanResults(rootFile,effHV,runnumber,outputFile,area);
+//    string rootFile = argv[1], outputFile = argv[4],  area = argv[5];
+//    int HVbarrel = atoi(argv[2]), HVendcap = atoi(argv[3]);
+//    
+//    WriteNoiseScanResults(rootFile,HVbarrel,HVendcap,outputFile,area);
 
-  PrintDBIDsvsNewIDs(argv[1],argv[2]);
+  //PrintDBIDsvsNewIDs(argv[1],argv[2]);
+  /*
+  RooRealVar x("x","x",-10,10) ;
+  RooRealVar mean("mean","Mean of Gaussian",0,-10,10) ;
+  RooRealVar sigma("sigma","Width of Gaussian",3,-10,10) ; 
+  RooGaussian gauss("gauss","gauss(x,mean,sigma)",x,mean,sigma) ; 
+  RooPlot * aplot = x.frame();
+  
+  gauss.plotOn(aplot);
+  aplot->SaveAs("frame.root");
+  */
+  
+  /*
+  string LumiFile = argv[1],
+  rootFilesFolder = argv[2], area = argv[3], outputFile = argv[4], suffix = argv[5];  
+  WriteRateVsLumiPerRollFile(LumiFile,rootFilesFolder,area,outputFile,suffix);
+  */
+  
+  string ids_file = argv[1],
+  input = argv[2], output = argv[3];//, outputFile = argv[4], suffix = argv[5];
+  SlopeRatiosComparisonForPairsOfIDs(ids_file,input,output);
+  
   
  return 0;
  

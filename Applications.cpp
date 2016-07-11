@@ -15,7 +15,7 @@
 #include <assert.h>
 #include <math.h>
 #include <map>
-#include <boost/concept_check.hpp>
+//#include <boost/concept_check.hpp>
 #include "core/DataObject.h"
 #include "core/ExtendedStrip.h"
 #include "core/ExtendedRoll.h"
@@ -5243,8 +5243,8 @@ void getInstLum(string filename){
   
 }
 
-bool IsCorruptedFile(string theFile){
-  bool exit_code=false;
+int IsCorruptedFile(string theFile){
+  int exit_code=0;
   
   TFile * myFile = new TFile(theFile.c_str(),"READ","in");
   if(myFile->IsZombie()){
@@ -5769,13 +5769,181 @@ void PrintDBIDsvsNewIDs(string inputFile, string dataFile)
   for (int i = 0 ; i < d_file.getLenght() ; i++){
     
     string db_id = d_file.getElement(i+1,1) + " " + d_file.getElement(i+1,2);
-    cout << db_newids.find(db_id)->second << " " << d_file.getElement(i+1,3) << " " << d_file.getElement(i+1,4) << endl;
+    cout << db_newids.find(db_id)->second << " " << d_file.getElement(i+1,3) << " " << d_file.getElement(i+1,4) << endl;    
+    
+  }
+  
+}
+
+
+void WriteRateVsLumiPerRollFile(string& LumiFile, string& rootFilesFolder, string& area, string& outputFile, string& rollNamesAdditionalSuffix){
+  
+  map<string,double> run_lumi_map;
+  DataObject LumiDO(LumiFile);
+  DataObject areaDO(area);
+  double biggestOn_X=0;
+  double biggestOn_Y=0;
+  map<string, map<double, double> > rollID_LumiToRateMap;
+  map<string, double> rollID_highestRateValue;
+  
+  for (int i = 0 ; i < LumiDO.getLenght() ; i++) {
+    string run_num = LumiDO.getElement(i+1,1);
+    double currentLumi = (LumiDO.getElementAsDouble(i+1,3)/LumiDO.getElementAsDouble(i+1,2))/23.31;    
+    run_lumi_map[run_num] = currentLumi;
+    if(currentLumi > biggestOn_X) biggestOn_X = currentLumi;
+    cout << "reading run " + run_num << endl;
+    TFile * rFile = new TFile((rootFilesFolder+"total_"+run_num+".root").c_str(),"READ");
+    if (! rFile->IsOpen()) continue; 
+    
+    TIter nextkey( rFile->GetListOfKeys() );
+    TKey *key;
+    TObject *obj;
+    
+    //cout << "while loop ..." << endl;
+    
+    while (key = (TKey*)nextkey()) {
+      
+      obj=key->ReadObj();
+      string chName = obj->GetName();
+      
+      if( ! ( chName.substr(0,1) == "W" ||  chName.substr(0,2) == "RE" ) ) continue;
+      TH1F * chamberHisto = dynamic_cast<TH1F*>(obj);
+      ExRoll * aroll = new ExRoll(chamberHisto->GetName());
+      aroll->allocStrips();
+      aroll->initStrips();
+      aroll->setStripsAreaFromSource_cmsswResource(areaDO);
+      aroll->setStripsRatesFromTH1FObject(chamberHisto);
+      
+      //aroll->removeNoisyStripsForAllClonesWithPercentValue(100);
+      
+      for(int c = 0; c < aroll->getClones(); c++){
+	string rollName = aroll->getRollIDofCloneWithConstructionDBidentifiers(c+1);
+	if(rollID_LumiToRateMap.find(rollName) == rollID_LumiToRateMap.end()) { 
+	  map<double, double> LumiToRateMap;
+	  rollID_LumiToRateMap[rollName] = LumiToRateMap ; 
+	  rollID_highestRateValue[rollName] = 0;
+	}
+	
+	double rateInRoll = aroll->getAvgRatePSCWithoutCorrectionsForClone(c+1);
+	
+	rollID_LumiToRateMap[rollName][currentLumi] = rateInRoll;
+	if ( rateInRoll >  rollID_highestRateValue.at(rollName)) rollID_highestRateValue[rollName] = rateInRoll;
+	
+      }
+      
+      delete aroll;
+      
+    }
+    
+    rFile->Close("R");
+    rFile->Delete();
+  }
+  
+  TFile * slopesFile = new TFile(outputFile.c_str(),"UPDATE");
+  slopesFile->cd();
+  
+  for(map<string, map<double, double> >::iterator rID_lToRateMapIter = rollID_LumiToRateMap.begin(); rID_lToRateMapIter != rollID_LumiToRateMap.end() ; rID_lToRateMapIter++){
+    
+    string rollName = rID_lToRateMapIter->first;
+    TH2F * rollRateVsLumi = new TH2F((rollName+rollNamesAdditionalSuffix).c_str(),rollName.c_str(),1000,0,biggestOn_X+300,1000,0,rollID_highestRateValue.at(rollName)+3);
+    for(map<double, double>::iterator lumiRateIter = rID_lToRateMapIter->second.begin(); lumiRateIter != rID_lToRateMapIter->second.end(); lumiRateIter++){
+      rollRateVsLumi->Fill(lumiRateIter->first, lumiRateIter->second); 
+    }
+    //TF1 * f1 = new TF1("f1","[0]*pol1",0,biggestOn_X);
+    rollRateVsLumi->SetMarkerStyle(kFullCircle);
+    //rollRateVsLumi->Fit(f1,"R");
+    rollRateVsLumi->Write();
+    rollRateVsLumi->Delete();
+    
+    //cout << rollName+"_15 " << rollName+"_16 " << rollName << endl;
+  }
+  
+  slopesFile->Close();
+  
+}
+
+void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFile, string & outputRootFile){
+  
+  DataObject IDs(IDs_file);  
+  TFile * inputRoot = new TFile(inputRootFile.c_str(),"READ");
+  
+  vector<string> endcapParts; 
+  endcapParts.push_back("RE+4");endcapParts.push_back("RE+3");endcapParts.push_back("RE+2");endcapParts.push_back("RE+1");
+  endcapParts.push_back("RE-4");endcapParts.push_back("RE-3");endcapParts.push_back("RE-2");endcapParts.push_back("RE-1");
+  map<string, vector<double> > endcapPartsMap;
+  
+  for (string & rName : endcapParts){
+    vector<double> ratiosDistrVector;
+    endcapPartsMap[rName] = ratiosDistrVector;
+    //endcapPartsMap[rName] = new TH1F (rName.c_str(),rName.c_str(),200,0,2);
+  }
+  
+  cout << "started" << endl;
+  
+  
+  for (int i = 0 ; i < IDs.getLenght() ;  i++){
+    
+    string firstID = IDs.getElement(i+1,1), secondId = IDs.getElement(i+1,2), resultID = IDs.getElement(i+1,3);
+    
+    TH2F * first = dynamic_cast<TH2F*> (inputRoot->Get(firstID.c_str())), * second = dynamic_cast <TH2F*>( inputRoot->Get(secondId.c_str()));
+    
+    double min16 = second->GetXaxis()->GetXmin();
+    double max16 = second->GetXaxis()->GetXmax();
+    double min15= first->GetXaxis()->GetXmin();
+    double max15 = first->GetXaxis()->GetXmax();
+    
+    double biggestOn_X = (max16 > max15) ? max16 : max15;    
+    
+    TF1 * f1 = new TF1("f","[0]*pol1",min15,max15);
+    TF1 * f2 = new TF1("f2","[0]*pol1",min16,max16);
+    
+    first->Fit(f1,"RQ");
+    second->Fit(f2,"RQ");    
+    
+    double height16 = f2->Eval(biggestOn_X), height15 = f1->Eval(biggestOn_X);
+    double cr1 = first->GetCorrelationFactor(), cr2 = second->GetCorrelationFactor();
+    
+    first->Delete();
+    second->Delete();
+    f1->Delete();
+    f2->Delete();
+    
+    //if (cr1 < 0.9 || cr2 < 0.9) continue;
+    
+    cout << max15 << " " << max16 << " " << resultID << " " << height16 / height15 << endl;
+    
+    for (string & ecapp : endcapParts){
+      
+      if(resultID.find(ecapp) != string::npos) {endcapPartsMap.at(ecapp).push_back(height16 / height15) ;}
+      
+    }    
+    
+  }
+  
+  inputRoot->Close();
+  
+  
+  for (map<string, vector<double> >::iterator iter = endcapPartsMap.begin() ; iter != endcapPartsMap.end() ; iter++){
+    
+    string finalName = iter->first + "_ratios.root";
+    
+    TH1F * hist = new TH1F(iter->first.c_str(),iter->first.c_str(),200,0,2);
+    
+    for (double & val : iter->second){
+      hist->Fill(val);
+    }
+    
+    //iter->second->SaveAs(finalName.c_str());
+    hist->SaveAs(finalName.c_str());
     
     
   }
   
-
+  
+  
 }
+
+
 
 
 // endof QueryObject methods
