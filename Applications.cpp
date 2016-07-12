@@ -2638,30 +2638,30 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
     for (int i=1;i<=ListRolls.getLenght();i++) {
         singleRollName = ListRolls.getElement(i,1);
 // 	cout << "lol" << endl;
-	cout << singleRollName << endl;
+	//cout << singleRollName << endl;
         ExRoll * a_roll = new ExRoll(singleRollName);
 	a_roll->allocStrips();
 	a_roll->initStrips();
         a_roll->setStripsAreaFromSource_cmsswResource(area);
 	
-	cout << a_roll->getRollIDofClone(1) << endl;
-	cout <<  a_roll->getFullOnlineRollID() << endl;;
+	//cout << a_roll->getRollIDofClone(1) << endl;
+	//cout <<  a_roll->getFullOnlineRollID() << endl;;
         AllRolls[singleRollName] = a_roll;
     }
-    cout << " 1 " << endl;
+    //cout << " 1 " << endl;
     // its a map of all rolls as objects , and then only their strip rate is changed in the loop over the runs ;)
     
     for (int k = 1; k <= listOfRootFiles.getLenght() ; k++) {
       
         currentFile = listOfRootFiles.getElement(k,1);
 	
-        cout << currentFile << endl;
+        //cout << currentFile << endl;
 	
         currentFile = folder+"total_"+currentFile+".root";
 	
         TFile * rootFile = new TFile(currentFile.c_str(),"READ","in");
 	
-	cout << " file is open " << endl;
+	//cout << " file is open " << endl;
 	
         if (rootFile->IsOpen()) {
             TIter nextkey( rootFile->GetListOfKeys());
@@ -2678,7 +2678,7 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
                     RollNamesOnly[currentName] = currentName;
 		    
                     for (int i=1;i <= aRoll->getClones();i++) {
-			cout << aRoll->getFullOnlineRollID() << endl;
+			//cout << aRoll->getFullOnlineRollID() << endl;
 
                         if (aRoll->getAvgRatePSCWithoutCorrectionsForClone(i) < 200) {
 
@@ -2712,7 +2712,7 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
 
     }
     
-    cout << "is out" << endl;
+    //cout << "is out" << endl;
     
     TH2F * WM1histo = new TH2F("WM1","W-1",12,0.5,12.5,21,0,21);
     TH2F * WM2histo = new TH2F("WM2","W-2",12,0.5,12.5,21,0,21);
@@ -2773,7 +2773,7 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
         allHistograms.find("RE-1")->second->GetYaxis()->SetBinLabel(shortEcap.getElementAsInt(i,2),shortEcap.getElement(i,1).c_str());
     }
     
-    cout << "map filled" << endl;
+    //cout << "map filled" << endl;
     
     gStyle->Reset();
     gStyle->SetPalette(1);
@@ -2811,7 +2811,7 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
                 allHistograms.find(MainPart.c_str())->second->SetBinContent(bufferX,bufferY,valueToInsert1);
                 
                 //cout <<  aRoll->getRollIDofCloneWithNewIdentifiers(i)<< " "<< MainPart << " " << aRoll->getShortFullIDofClone(i) << " " << aRoll->getSector()<< " "<< aRoll->getAvgRatePSCWithoutCorrectionsForClone(i) << " "<< valueToInsert1 << " BMAX " << BarrelMax << endl;
-		
+		cout << aRoll->getRollIDofCloneWithNewIdentifiers(i) << " " << bufferX << " " << bufferY << endl;
             }
             
             if (aRoll->isInEndcap()) {
@@ -2826,6 +2826,7 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
 		  
  		} 
                 allHistograms.find(MainPart)->second->SetBinContent(bufferX,bufferY,valueToInsert2);
+		cout << aRoll->getRollIDofCloneWithNewIdentifiers(i) << " " << bufferX << " " << bufferY << endl;
 // 	cout << aRoll->getRollIDofCloneWithNewIdentifiers(i) << " " << aRoll->getAvgRatePSCWithoutCorrectionsForClone(i) << endl;
 
 // 	cout << bufferX << " " << bufferY << " " << aRoll->getShortFullIDofClone(i) << " " << MainPart << endl;
@@ -2835,7 +2836,7 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
         //delete aRoll;
 
     }
-    cout << " mark1 " << endl;
+    //cout << " mark1 " << endl;
     //allHistograms.find("W0")->second->SetBinContent(1,1,20);
     TCanvas * canvasTest = new TCanvas("can0","can0",1300,700);
     TCanvas * canvasBarrel = new TCanvas("can1","can1",1912,401);
@@ -2883,7 +2884,7 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
     detectormasked->SetBorderSize(0);
     //detectormasked->SetB
     //detectormasked->AddEntry(WM1_histo_masked_en,"Det Unit overflow","f");
-    cout << " mark2 " << endl;
+    //cout << " mark2 " << endl;
     
     map <string,int> nameOrderMap;
     
@@ -2989,7 +2990,7 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
 	    itr->second->GetYaxis()->SetTitleOffset(1.1);
 	    for (unsigned binnum = 1 ; binnum < itr->second->GetXaxis()->GetNbins() ; binnum++){
 	      int moduloOfDivision = (binnum) % 2;
-	      cout << moduloOfDivision << endl;
+// 	      cout << moduloOfDivision << endl;
 	      if ( moduloOfDivision  != 0 ){
 		//itr->second->GetXaxis()->SetBinLabel(binnum,"");
 	      }
@@ -3024,17 +3025,17 @@ void draw2DbackgroundPlot(string folder,string areaFile ,string shortBarrelIDS,s
         
         
     }
-    cout << " mark3 " << endl;    
+    //cout << " mark3 " << endl;    
     
     lastRunNum = listOfRootFiles.getElement(listOfRootFiles.getLenght(),1);
     canvasBarrel->cd(6)->SetFillColor(kWhite);
     canvasBarrel->cd(6)->SetFrameFillColor(kWhite);
     canvasBarrel->SaveAs(("Barrel_"+lastRunNum+".root").c_str());
     canvasEndcap->SaveAs(("Endcap_"+lastRunNum+".root").c_str());
-    canvasBarrel->SaveAs(("Barrel_"+lastRunNum+".png").c_str());
-    canvasEndcap->SaveAs(("Endcap_"+lastRunNum+".png").c_str());
-    canvasBarrel->SaveAs(("Barrel_"+lastRunNum+".eps").c_str());
-    canvasEndcap->SaveAs(("Endcap_"+lastRunNum+".eps").c_str());
+//     canvasBarrel->SaveAs(("Barrel_"+lastRunNum+".png").c_str());
+//     canvasEndcap->SaveAs(("Endcap_"+lastRunNum+".png").c_str());
+//     canvasBarrel->SaveAs(("Barrel_"+lastRunNum+".eps").c_str());
+//     canvasEndcap->SaveAs(("Endcap_"+lastRunNum+".eps").c_str());
     
     
     
@@ -5798,9 +5799,7 @@ void WriteRateVsLumiPerRollFile(string& LumiFile, string& rootFilesFolder, strin
     TIter nextkey( rFile->GetListOfKeys() );
     TKey *key;
     TObject *obj;
-    
-    //cout << "while loop ..." << endl;
-    
+        
     while (key = (TKey*)nextkey()) {
       
       obj=key->ReadObj();
@@ -5845,101 +5844,184 @@ void WriteRateVsLumiPerRollFile(string& LumiFile, string& rootFilesFolder, strin
   for(map<string, map<double, double> >::iterator rID_lToRateMapIter = rollID_LumiToRateMap.begin(); rID_lToRateMapIter != rollID_LumiToRateMap.end() ; rID_lToRateMapIter++){
     
     string rollName = rID_lToRateMapIter->first;
-    TH2F * rollRateVsLumi = new TH2F((rollName+rollNamesAdditionalSuffix).c_str(),rollName.c_str(),1000,0,biggestOn_X+300,1000,0,rollID_highestRateValue.at(rollName)+3);
-    for(map<double, double>::iterator lumiRateIter = rID_lToRateMapIter->second.begin(); lumiRateIter != rID_lToRateMapIter->second.end(); lumiRateIter++){
-      rollRateVsLumi->Fill(lumiRateIter->first, lumiRateIter->second); 
-    }
-    //TF1 * f1 = new TF1("f1","[0]*pol1",0,biggestOn_X);
-    rollRateVsLumi->SetMarkerStyle(kFullCircle);
-    //rollRateVsLumi->Fit(f1,"R");
-    rollRateVsLumi->Write();
-    rollRateVsLumi->Delete();
+    int mapsize = rID_lToRateMapIter->second.size();
     
-    //cout << rollName+"_15 " << rollName+"_16 " << rollName << endl;
+    double x[mapsize], y[mapsize];
+    int cou = 0;
+    for(map<double, double>::iterator lumiRateIter = rID_lToRateMapIter->second.begin(); lumiRateIter != rID_lToRateMapIter->second.end(); lumiRateIter++){
+      x[cou] = lumiRateIter->first;
+      y[cou] = lumiRateIter->second;
+      cou++;
+    }
+    
+    TGraph * graphrollratevslumi = new TGraph(mapsize,x,y);
+    graphrollratevslumi->SetMarkerStyle(kFullCircle);
+    graphrollratevslumi->SetName((rollName+rollNamesAdditionalSuffix).c_str());
+    graphrollratevslumi->SetTitle(rollName.c_str());
+    graphrollratevslumi->Write();
+    graphrollratevslumi->Delete();
   }
   
   slopesFile->Close();
   
 }
 
-void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFile, string & outputRootFile){
+void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFile, string & outputRootFile, string & twoDmap, string & ShortB, string & ShortE){
   
   DataObject IDs(IDs_file);  
-  TFile * inputRoot = new TFile(inputRootFile.c_str(),"READ");
+  DataObject twoDmapDO(twoDmap);
+  DataObject BarrelLabels(ShortB);
+  DataObject EcapLabels(ShortE);
+
   
-  vector<string> endcapParts; 
-  endcapParts.push_back("RE+4");endcapParts.push_back("RE+3");endcapParts.push_back("RE+2");endcapParts.push_back("RE+1");
-  endcapParts.push_back("RE-4");endcapParts.push_back("RE-3");endcapParts.push_back("RE-2");endcapParts.push_back("RE-1");
-  map<string, vector<double> > endcapPartsMap;
-  
-  for (string & rName : endcapParts){
-    vector<double> ratiosDistrVector;
-    endcapPartsMap[rName] = ratiosDistrVector;
-    //endcapPartsMap[rName] = new TH1F (rName.c_str(),rName.c_str(),200,0,2);
+  map<string, vector<double>> mapRollToCoordinates;
+  for(int ii = 0 ; ii < twoDmapDO.getLenght() ; ii++){
+    vector<double> coords;
+    coords.push_back(twoDmapDO.getElementAsInt(ii+1,2));
+    coords.push_back(twoDmapDO.getElementAsInt(ii+1,3));
+    mapRollToCoordinates[twoDmapDO.getElement(ii+1,1)] = coords;
   }
   
-  cout << "started" << endl;
+  TFile * inputRoot = new TFile(inputRootFile.c_str(),"READ");
+  
+  vector<string> detectorParts; 
+  detectorParts.push_back("RE+4");detectorParts.push_back("RE+3");detectorParts.push_back("RE+2");detectorParts.push_back("RE+1");
+  detectorParts.push_back("RE-4");detectorParts.push_back("RE-3");detectorParts.push_back("RE-2");detectorParts.push_back("RE-1");
+  detectorParts.push_back("RE+4_R2");detectorParts.push_back("RE+4_R3");detectorParts.push_back("RE-4_R2");detectorParts.push_back("RE-4_R3");
+  detectorParts.push_back("RE+3_R2");detectorParts.push_back("RE+3_R3");detectorParts.push_back("RE-3_R2");detectorParts.push_back("RE-3_R3");
+  detectorParts.push_back("RE+2_R2");detectorParts.push_back("RE+2_R3");detectorParts.push_back("RE-2_R2");detectorParts.push_back("RE-2_R3");
+  detectorParts.push_back("RE+1_R2");detectorParts.push_back("RE+1_R3");detectorParts.push_back("RE-1_R2");detectorParts.push_back("RE-1_R3");
+  detectorParts.push_back("W-2");detectorParts.push_back("W-1");detectorParts.push_back("W0");detectorParts.push_back("W+1");detectorParts.push_back("W+2");
+  map<string, vector<double> > detectorPartsMap;
+  map<string, vector<double> > detectorPartsMap_HL_LHC;
+  
+  
+  for (string & rName : detectorParts){
+    vector<double> ratiosDistrVector;
+    detectorPartsMap[rName] = ratiosDistrVector;
+    detectorPartsMap_HL_LHC[rName] = ratiosDistrVector;
+    
+  }
   
   
   for (int i = 0 ; i < IDs.getLenght() ;  i++){
     
     string firstID = IDs.getElement(i+1,1), secondId = IDs.getElement(i+1,2), resultID = IDs.getElement(i+1,3);
     
-    TH2F * first = dynamic_cast<TH2F*> (inputRoot->Get(firstID.c_str())), * second = dynamic_cast <TH2F*>( inputRoot->Get(secondId.c_str()));
+    TGraph * first = dynamic_cast<TGraph*> (inputRoot->Get(firstID.c_str())), * second = dynamic_cast <TGraph*>( inputRoot->Get(secondId.c_str()));
     
-    double min16 = second->GetXaxis()->GetXmin();
-    double max16 = second->GetXaxis()->GetXmax();
-    double min15= first->GetXaxis()->GetXmin();
-    double max15 = first->GetXaxis()->GetXmax();
+    
+    double min16 = TMath::MinElement(second->GetN(),second->GetX());
+    double max16 = TMath::MaxElement(second->GetN(),second->GetX()); 
+    double min15 = TMath::MinElement(first->GetN(),first->GetX());
+    double max15 = TMath::MaxElement(first->GetN(),first->GetX());
     
     double biggestOn_X = (max16 > max15) ? max16 : max15;    
     
-    TF1 * f1 = new TF1("f","[0]*pol1",min15,max15);
-    TF1 * f2 = new TF1("f2","[0]*pol1",min16,max16);
+    TF1 * f1 = new TF1("f","[0]+x*[1]",0,max15);
+    TF1 * f2 = new TF1("f2","[0]+x*[1]",0,max16);
     
     first->Fit(f1,"RQ");
     second->Fit(f2,"RQ");    
     
     double height16 = f2->Eval(biggestOn_X), height15 = f1->Eval(biggestOn_X);
-    double cr1 = first->GetCorrelationFactor(), cr2 = second->GetCorrelationFactor();
+    double height16_HL = f2->Eval(50000), height15_HL = f1->Eval(50000);
+    double cf1 = first->GetCorrelationFactor(), cf2 = second->GetCorrelationFactor();
+    
+    mapRollToCoordinates.at(resultID).push_back(0);
     
     first->Delete();
     second->Delete();
     f1->Delete();
     f2->Delete();
     
-    //if (cr1 < 0.9 || cr2 < 0.9) continue;
+    //if ( cf1 < 0.7 ) continue;    
     
-    cout << max15 << " " << max16 << " " << resultID << " " << height16 / height15 << endl;
+    mapRollToCoordinates.at(resultID).at(2) = height16/height15 ;
     
-    for (string & ecapp : endcapParts){
+       
+    //cout << max15 << " " << max16 << " " << resultID << " " << height16 / height15 << " " << height16_HL/ height15_HL << " " << cf1 << " " << cf2  << endl;
+    
+    for (string & ecapp : detectorParts){
       
-      if(resultID.find(ecapp) != string::npos) {endcapPartsMap.at(ecapp).push_back(height16 / height15) ;}
-      
-    }    
-    
+      if(resultID.find(ecapp) != string::npos) {
+	
+	detectorPartsMap.at(ecapp).push_back(height16 / height15) ;
+	detectorPartsMap_HL_LHC.at(ecapp).push_back(height16_HL / height15_HL) ;
+
+      }            
+    }        
   }
   
   inputRoot->Close();
   
   
-  for (map<string, vector<double> >::iterator iter = endcapPartsMap.begin() ; iter != endcapPartsMap.end() ; iter++){
+  for (string & rName : detectorParts){
+    
+    TH2F * hist_ptr;
+    
+    if (  rName.size() == 4){ 
+      hist_ptr = new TH2F((rName+"_2D").c_str(),rName.c_str(),36,0.5,36.5,6,0,6);
+      
+      for (int ei=1 ; ei <= EcapLabels.getLenght();ei++) {
+	hist_ptr->GetYaxis()->SetBinLabel(EcapLabels.getElementAsInt(ei,2),EcapLabels.getElement(ei,1).c_str());
+      }
+    }
+    else if( 4  >  rName.size() ){      
+      hist_ptr = new TH2F((rName+"_2D").c_str(),rName.c_str(),12,0.5,12.5,21,0,21);
+      int labelToSkip = (rName.find("W0") || rName.find("W+1") || rName.find("W-1")) ? 8 : 7;
+      for (int bi=1 ; bi <= BarrelLabels.getLenght();bi++) {
+	if ( bi == labelToSkip ) continue;
+	hist_ptr->GetYaxis()->SetBinLabel(BarrelLabels.getElementAsInt(bi,2),BarrelLabels.getElement(bi,1).c_str());
+      }
+      
+    }
+    
+    else continue;
+    
+    hist_ptr->GetXaxis()->SetTitle("Sector");
+    hist_ptr->GetZaxis()->SetTitle("2016/2015 extrapolated rate ratio");
+    hist_ptr->SetStats(false);
+    
+    
+    for (map<string, vector<double> >::iterator twodim_itr = mapRollToCoordinates.begin(); twodim_itr != mapRollToCoordinates.end() ; twodim_itr++){
+      //cout << twodim_itr->first << endl;
+      if(twodim_itr->first.find(rName) ){
+	vector<double> coordinates = twodim_itr->second;
+	hist_ptr->SetBinContent(coordinates.at(0),coordinates.at(1),coordinates.at(2));
+	cout << coordinates.at(0) << " " << coordinates.at(1)<< " " << coordinates.at(2) << endl;
+      }        
+    }
+    
+    TCanvas * canvas = new TCanvas( (rName+"_canvas").c_str() , "can",1200,700);
+    canvas->cd();
+    hist_ptr->Draw("COLZ");
+    hist_ptr->SetMinimum(0.6);
+    hist_ptr->SetMaximum(2);
+    canvas->SaveAs((rName+"_2D.root").c_str());
+    hist_ptr->Delete();
+    canvas->Delete();
+  }  
+  
+  for (map<string, vector<double> >::iterator iter = detectorPartsMap.begin() ; iter != detectorPartsMap.end() ; iter++){
     
     string finalName = iter->first + "_ratios.root";
     
     TH1F * hist = new TH1F(iter->first.c_str(),iter->first.c_str(),200,0,2);
-    
+    TH1F * hist_hl = new TH1F((iter->first+"_HL").c_str(),iter->first.c_str(),200,0,2);
     for (double & val : iter->second){
-      hist->Fill(val);
+      hist->Fill(val);      
     }
     
-    //iter->second->SaveAs(finalName.c_str());
+    for (double & vall : detectorPartsMap_HL_LHC.at(iter->first) ){
+      hist_hl->Fill(vall);
+    }
+    
+    hist->GetXaxis()->SetTitle("2016/2015 extrapolated rate ratios");
+    hist->GetYaxis()->SetTitle("Number of rolls");
     hist->SaveAs(finalName.c_str());
     
-    
-  }
-  
-  
+  }  
   
 }
 

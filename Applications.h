@@ -187,7 +187,7 @@ void PrintDBIDsvsNewIDs(string inputFile,string dataFile);
 
 void WriteRateVsLumiPerRollFile(string & LumiFile, string & rootFilesFolder, string & area, string & outputFile, string & rollNamesAdditionalSuffix);
 
-void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputFile, string & outputFile); // firstID, secondID, resultID
+void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputFile, string & outputFile, string & twoDMap,string & ShortB, string & ShortE); // firstID, secondID, resultID
 
 //
 

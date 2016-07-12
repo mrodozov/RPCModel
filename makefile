@@ -4,11 +4,11 @@ ROOTINC = $(shell root-config --cflags)
 ROOTLIBS = $(shell root-config --glibs)
 ROOFITLIBS = -l RooFitCore -l RooFit -l RooStats
 LIBJSON = -ljson_linux_jsoncpp
-COMPILE_AS_Cpp0X = $(-std=c++14)
+CC = g++ -std=c++14
 #MYSQLLIBS = $(shell mysql_config --libs)
 #MYSQLINC = $(shell mysql_config --include)
 
-all : RateLumiEcapOffline RateVsLumi_Online CurrentApplication Print_offline_db_text_files GetEcapPlusMinusRatios Print_online_db_text_files GetRatioOfChambersForTwoRuns RateVsPhi_online CalculateLumiForRunWithFitCoefficientRefference RecoverLumiForEachRunWithCoeffAndRateFiles
+all : RateLumiEcapOffline RateVsLumi_Online CurrentApplication Print_offline_db_text_files GetEcapPlusMinusRatios Print_online_db_text_files GetRatioOfChambersForTwoRuns RateVsPhi_online CalculateLumiForRunWithFitCoefficientRefference RecoverLumiForEachRunWithCoeffAndRateFiles 2DBK
 #all : RateVsLumi_Online
 
 objects = Strip.o DataObject.o Roll.o ExtendedStrip.o ExtendedRoll.o Chip.o Service.o DBconnector.o Applications.o NoiseAnalyzer.o
@@ -17,96 +17,96 @@ extensionsObjects = Acquisition.o Crawler.o Run.o
 # Mircho objects (main core objects)
 
 main.o : main.cpp ExtendedStrip.o ExtendedRoll.o Service.o DBconnector.o Applications.o 
-	g++ -c -Wall main.cpp $(ROOTINC)
+	$(CC) -c -Wall main.cpp $(ROOTINC)
 
 Chip.o : core/Chip.cpp ExtendedRoll.o
-	g++ -c -Wall core/Chip.cpp $(ROOTINC)
+	$(CC) -c -Wall core/Chip.cpp $(ROOTINC)
 
 DataObject.o: core/DataObject.cpp
-	g++ -c core/DataObject.cpp
+	$(CC) -c core/DataObject.cpp
 
 Strip.o: core/Strip.cpp
-	g++ -c core/Strip.cpp
+	$(CC) -c core/Strip.cpp
 
 Roll.o : core/Roll.cpp Strip.o DataObject.o
-	g++ -c core/Roll.cpp $(ROOTINC)
+	$(CC) -c core/Roll.cpp $(ROOTINC)
 
 ExtendedStrip.o: core/ExtendedStrip.cpp Strip.o
-	g++ -c core/ExtendedStrip.cpp $(ROOTINC) 
+	$(CC) -c core/ExtendedStrip.cpp $(ROOTINC) 
 
 ExtendedRoll.o: core/ExtendedRoll.cpp Roll.o ExtendedStrip.o DataObject.o
-	g++ -c core/ExtendedRoll.cpp $(ROOTINC)
+	$(CC) -c core/ExtendedRoll.cpp $(ROOTINC)
 
 Applications.o : Applications.cpp Service.o ExtendedRoll.o
-	g++ -c Applications.cpp $(ROOTINC) -std=c++14
+	$(CC) -c Applications.cpp $(ROOTINC)
 
 Service.o : ServiceClasses/Service.cpp
-	g++ -c ServiceClasses/Service.cpp $(ROOTINC)
+	$(CC) -c ServiceClasses/Service.cpp $(ROOTINC)
 
 DBconnector.o : ServiceClasses/DBconnector.cpp
-	g++ -c ServiceClasses/DBconnector.cpp $(MYSQLINC)
+	$(CC) -c ServiceClasses/DBconnector.cpp $(MYSQLINC)
 
 main_ratevslumi_online.o : main_func/main_ratevslumi_online.cpp
-	g++ -c main_func/main_ratevslumi_online.cpp $(ROOTINC)
+	$(CC) -c main_func/main_ratevslumi_online.cpp $(ROOTINC)
 
 main_offline_ecap_ratelumi.o : main_func/main_offline_ecap_ratelumi.cpp
-	g++ -c main_func/main_offline_ecap_ratelumi.cpp $(ROOTINC)
+	$(CC) -c main_func/main_offline_ecap_ratelumi.cpp $(ROOTINC)
 
 main_print_offline_db_files.o : main_func/main_print_offline_db_files.cpp
-	g++ -c main_func/main_print_offline_db_files.cpp $(ROOTINC)
+	$(CC) -c main_func/main_print_offline_db_files.cpp $(ROOTINC)
 
 main_print_online_db_files.o : main_func/main_print_online_db_files.cpp
-	g++ -c main_func/main_print_online_db_files.cpp $(ROOTINC)
+	$(CC) -c main_func/main_print_online_db_files.cpp $(ROOTINC)
 
 main_rateVsPhi_online.o : main_func/main_rateVsPhi_online.cpp
-	g++ -c main_func/main_rateVsPhi_online.cpp $(ROOTINC)
+	$(CC) -c main_func/main_rateVsPhi_online.cpp $(ROOTINC)
 
 # Michele objects (extensions objects)
 
 printRunProperties.o: main_func/printRunProperties.cpp
-	g++ -c main_func/printRunProperties.cpp $(ROOTINC)
+	$(CC) -c main_func/printRunProperties.cpp $(ROOTINC)
 
 mainNoise.o: main_func/mainNoise.cpp
-	g++ -c main_func/mainNoise.cpp $(ROOTINC)
+	$(CC) -c main_func/mainNoise.cpp $(ROOTINC)
 
 studyAsimmetry.o: main_func/studyAsimmetry.cpp
-	g++ -c main_func/studyAsimmetry.cpp $(ROOTINC)
+	$(CC) -c main_func/studyAsimmetry.cpp $(ROOTINC)
 
 NoiseAnalyzer.o: Extensions/NoiseAnalyzer.cpp Extensions/NoiseAnalyzer.h
-	g++ -c Extensions/NoiseAnalyzer.cpp $(ROOTINC) $(FLAGS)
+	$(CC) -c Extensions/NoiseAnalyzer.cpp $(ROOTINC) $(FLAGS)
 
 Crawler.o: Extensions/Crawler.cpp
-	g++ -c Extensions/Crawler.cpp $(ROOTINC)
+	$(CC) -c Extensions/Crawler.cpp $(ROOTINC)
 
 mainCrawler.o: main_func/mainCrawler.cpp
-	g++ -c main_func/mainCrawler.cpp $(ROOTINC) $(FLAGS)
+	$(CC) -c main_func/mainCrawler.cpp $(ROOTINC) $(FLAGS)
 
 producePlot.o: main_func/producePlot.cpp
-	g++ -c main_func/producePlot.cpp $(ROOTINC) $(FLAGS)
+	$(CC) -c main_func/producePlot.cpp $(ROOTINC) $(FLAGS)
 
 plotOnPhi.o: main_func/plotOnPhi.cpp
-	g++ -c main_func/plotOnPhi.cpp $(ROOTINC) $(FLAGS)
+	$(CC) -c main_func/plotOnPhi.cpp $(ROOTINC) $(FLAGS)
 
 plotOnPhiVaryZ.o: main_func/plotOnPhiVaryZ.cpp
-	g++ -c main_func/plotOnPhiVaryZ.cpp $(ROOTINC) $(FLAGS)
+	$(CC) -c main_func/plotOnPhiVaryZ.cpp $(ROOTINC) $(FLAGS)
 
 importFromTextResources.o: main_func/importFromTextResources.cpp
-	g++ -c main_func/importFromTextResources.cpp $(ROOTINC) $(FLAGS)
+	$(CC) -c main_func/importFromTextResources.cpp $(ROOTINC) $(FLAGS)
 
 readContainerFromDO.o: main_func/readContainerFromDO.cpp
-	g++ -c main_func/readContainerFromDO.cpp $(ROOTINC) $(FLAGS)
+	$(CC) -c main_func/readContainerFromDO.cpp $(ROOTINC) $(FLAGS)
 
 readContainer.o: main_func/readContainer.cpp
-	g++ -c main_func/readContainer.cpp $(ROOTINC) $(FLAGS)
+	$(CC) -c main_func/readContainer.cpp $(ROOTINC) $(FLAGS)
 
 fillContainer.o: main_func/fillContainer.cpp
-	g++ -c main_func/fillContainer.cpp  $(ROOTINC) $(FLAGS)
+	$(CC) -c main_func/fillContainer.cpp  $(ROOTINC) $(FLAGS)
 
 Run.o: Extensions/Run.cpp
-	g++ -c Extensions/Run.cpp $(ROOTINC) $(FLAGS)
+	$(CC) -c Extensions/Run.cpp $(ROOTINC) $(FLAGS)
 
 Acquisition.o: Extensions/Acquisition.cpp
-	g++ -c Extensions/Acquisition.cpp $(ROOTINC) $(LIBJSON) $(FLAGS)
+	$(CC) -c Extensions/Acquisition.cpp $(ROOTINC) $(LIBJSON) $(FLAGS)
 
 # here the applications goes
 
@@ -115,79 +115,84 @@ Acquisition.o: Extensions/Acquisition.cpp
 # current app is the one in main.cpp
 
 CurrentApplication : main.o $(objects)
-	g++ -o CurrentApplication.lnxapp main.o $(objects) $(ROOTLIBS) $(ROOFITLIBS) -std=c++14 
+#	 $(CC) -o CurrentApplication.lnxapp main.o $(objects) $(ROOTLIBS) $(ROOFITLIBS) 
+	$(CC) -o CurrentApplication.lnxapp main.o $(objects) $(ROOTLIBS)
 
 RateLumiEcapOffline : main_offline_ecap_ratelumi.o $(objects)
-	g++ -o RateLumiEcapOffline.lnxapp main_offline_ecap_ratelumi.o $(objects) $(ROOTLIBS) -std=c++14
+	$(CC) -o RateLumiEcapOffline.lnxapp main_offline_ecap_ratelumi.o $(objects) $(ROOTLIBS)
 
 RateVsLumi_Online : main_ratevslumi_online.o $(objects)
-	g++ -o RateVsLumi_Online.lnxapp main_ratevslumi_online.o $(objects) $(ROOTLIBS) -std=c++14
+	$(CC) -o RateVsLumi_Online.lnxapp main_ratevslumi_online.o $(objects) $(ROOTLIBS)
+	
 
+2DBK :  main_func/main_2dBK.cpp $(objects)
+	$(CC) main_func/main_2dBK.cpp -o 2dbk.lnxpapp $(objects) $(ROOTINC) $(ROOTLIBS)
+	
 RateVsPhi_online : main_rateVsPhi_online.o $(objects)
-	g++ -o RateVsPhi_Online.lnxapp main_rateVsPhi_online.o $(objects) $(ROOTLIBS) 
+	$(CC) -o RateVsPhi_Online.lnxapp main_rateVsPhi_online.o $(objects) $(ROOTLIBS) 
 
 Print_offline_db_text_files : main_print_offline_db_files.o $(objects)
-	g++ -o PrintOfflineRollTextFiles.lnxapp main_print_offline_db_files.o $(objects) $(ROOTLIBS) -std=c++14
+	$(CC) -o PrintOfflineRollTextFiles.lnxapp main_print_offline_db_files.o $(objects) $(ROOTLIBS)
 
 Print_online_db_text_files : main_print_online_db_files.o $(objects)
-	g++ -o PrintOnlineRollTextFiles.lnxapp main_print_online_db_files.o $(objects) $(ROOTLIBS)  -std=c++14
+	$(CC) -o PrintOnlineRollTextFiles.lnxapp main_print_online_db_files.o $(objects) $(ROOTLIBS) 
 
 GetEcapPlusMinusRatios : $(objects)
-	g++ -c main_func/main_Ecap_assym.cpp $(ROOTINC)
-	g++ -o GetEcapPlusMinusRatios.lnxapp main_Ecap_assym.o $(objects) $(ROOTLIBS) -std=c++14
+	$(CC) -c main_func/main_Ecap_assym.cpp $(ROOTINC)
+	$(CC) -o GetEcapPlusMinusRatios.lnxapp main_Ecap_assym.o $(objects) $(ROOTLIBS)
 
 GetRatioOfChambersForTwoRuns : $(objects)
-	g++ -c main_func/main_chambersRatiosTwoRuns.cpp $(ROOTINC)
-	g++ -o GetRatioOfChambersForTwoRuns.lnxapp main_chambersRatiosTwoRuns.o $(objects) $(ROOTLIBS)  
+	$(CC) -c main_func/main_chambersRatiosTwoRuns.cpp $(ROOTINC)
+	$(CC) -o GetRatioOfChambersForTwoRuns.lnxapp main_chambersRatiosTwoRuns.o $(objects) $(ROOTLIBS)  
 
 CalculateLumiForRunWithFitCoefficientRefference : $(objects)
-	g++ -c main_func/main_calculateLumiForRunWithFitCoefficientRefference.cpp $(ROOTINC)
-	g++ -o CalculateLumiForRun.lnxapp main_calculateLumiForRunWithFitCoefficientRefference.o $(objects) $(ROOTLIBS) 
+	$(CC) -c main_func/main_calculateLumiForRunWithFitCoefficientRefference.cpp $(ROOTINC)
+	$(CC) -o CalculateLumiForRun.lnxapp main_calculateLumiForRunWithFitCoefficientRefference.o $(objects) $(ROOTLIBS) 
 
 RecoverLumiForEachRunWithCoeffAndRateFiles : $(objects)
-	g++ -c main_func/main_recoverLumiForEachRunWithCoeffAndRateFiles.cpp $(ROOTINC)
-	g++ -o RecoverLumiForRuns.lnxapp main_recoverLumiForEachRunWithCoeffAndRateFiles.o $(objects) $(ROOTLIBS) 
+	$(CC) -c main_func/main_recoverLumiForEachRunWithCoeffAndRateFiles.cpp $(ROOTINC)
+	$(CC) -o RecoverLumiForRuns.lnxapp main_recoverLumiForEachRunWithCoeffAndRateFiles.o $(objects) $(ROOTLIBS) 
 
 # Michele applications
 
 fill:
-	g++ core/Roll.cpp Extensions/Run.cpp Extensions/Acquisition.cpp core/Strip.cpp core/DataObject.cpp core/ExtendedRoll.cpp core/ExtendedStrip.cpp main_func/fillContainer.cpp Chip.o NoiseAnalyzer.o $(ROOTINC) $(FLAGS) -o Fill $(ROOTLIBS) $(LIBJSON)
+	$(CC) core/Roll.cpp Extensions/Run.cpp Extensions/Acquisition.cpp core/Strip.cpp core/DataObject.cpp core/ExtendedRoll.cpp core/ExtendedStrip.cpp main_func/fillContainer.cpp Chip.o NoiseAnalyzer.o $(ROOTINC) $(FLAGS) -o Fill $(ROOTLIBS) $(LIBJSON)
 
 Fill:  Roll.o Run.o Strip.o DataObject.o Chip.o ExtendedRoll.o ExtendedStrip.o Service.o Applications.o fillContainer.o Acquisition.o NoiseAnalyzer.o
-	g++ -o Fill fillContainer.o Roll.o Run.o Strip.o DataObject.o Chip.o ExtendedRoll.o ExtendedStrip.o Service.o Applications.o Acquisition.o NoiseAnalyzer.o $(ROOTLIBS) $(LIBJSON) $(FLAGS)
+	$(CC) -o Fill fillContainer.o Roll.o Run.o Strip.o DataObject.o Chip.o ExtendedRoll.o ExtendedStrip.o Service.o Applications.o Acquisition.o NoiseAnalyzer.o $(ROOTLIBS) $(LIBJSON) $(FLAGS)
 
 Read: Roll.o Run.o Strip.o DataObject.o ExtendedRoll.o Chip.o ExtendedStrip.o Service.o Applications.o fillContainer.o Acquisition.o readContainer.o NoiseAnalyzer.o
-	g++ -o Read readContainer.o Roll.o Run.o Strip.o DataObject.o Chip.o ExtendedRoll.o ExtendedStrip.o Service.o Applications.o Acquisition.o NoiseAnalyzer.o $(ROOTLIBS) $(LIBJSON) $(FLAGS)
+	$(CC) -o Read readContainer.o Roll.o Run.o Strip.o DataObject.o Chip.o ExtendedRoll.o ExtendedStrip.o Service.o Applications.o Acquisition.o NoiseAnalyzer.o $(ROOTLIBS) $(LIBJSON) $(FLAGS)
 
 ReadFromDO: Roll.o Run.o Strip.o DataObject.o Chip.o  ExtendedRoll.o ExtendedStrip.o Service.o Applications.o fillContainer.o Acquisition.o NoiseAnalyzer.o readContainerFromDO.o
-	g++ -o ReadDO readContainerFromDO.o Roll.o Run.o Strip.o DataObject.o Chip.o  ExtendedRoll.o ExtendedStrip.o Service.o Applications.o Acquisition.o NoiseAnalyzer.o $(ROOTLIBS) $(LIBJSON) $(FLAGS)
+	$(CC) -o ReadDO readContainerFromDO.o Roll.o Run.o Strip.o DataObject.o Chip.o  ExtendedRoll.o ExtendedStrip.o Service.o Applications.o Acquisition.o NoiseAnalyzer.o $(ROOTLIBS) $(LIBJSON) $(FLAGS)
 
 lumi: Roll.o Run.o Strip.o DataObject.o Chip.o  ExtendedRoll.o ExtendedStrip.o Service.o Applications.o producePlot.o Acquisition.o NoiseAnalyzer.o
-	g++ -o lumi producePlot.o Roll.o Run.o Strip.o DataObject.o Chip.o  ExtendedRoll.o ExtendedStrip.o Service.o Applications.o  Acquisition.o NoiseAnalyzer.o $(ROOTLIBS) $(LIBJSON) $(FLAGS)
+	$(CC) -o lumi producePlot.o Roll.o Run.o Strip.o DataObject.o Chip.o  ExtendedRoll.o ExtendedStrip.o Service.o Applications.o  Acquisition.o NoiseAnalyzer.o $(ROOTLIBS) $(LIBJSON) $(FLAGS)
 
 import: Roll.o Run.o Strip.o DataObject.o Chip.o ExtendedRoll.o ExtendedStrip.o importFromTextResources.o Acquisition.o NoiseAnalyzer.o
-	g++ -o import importFromTextResources.o Roll.o Run.o Strip.o DataObject.o  ExtendedRoll.o ExtendedStrip.o Chip.o NoiseAnalyzer.o Acquisition.o $(ROOTLIBS) $(LIBJSON) $(FLAGS)
+	$(CC) -o import importFromTextResources.o Roll.o Run.o Strip.o DataObject.o  ExtendedRoll.o ExtendedStrip.o Chip.o NoiseAnalyzer.o Acquisition.o $(ROOTLIBS) $(LIBJSON) $(FLAGS)
 
 pplot: Roll.o Run.o Strip.o DataObject.o Chip.o  ExtendedRoll.o ExtendedStrip.o Service.o Applications.o producePlot.o Acquisition.o NoiseAnalyzer.o
-	g++ -o plot producePlot.o Roll.o Run.o Strip.o DataObject.o Chip.o  ExtendedRoll.o ExtendedStrip.o Service.o Applications.o  Acquisition.o NoiseAnalyzer.o $(ROOTLIBS) $(LIBJSON) $(FLAGS)
+	$(CC) -o plot producePlot.o Roll.o Run.o Strip.o DataObject.o Chip.o  ExtendedRoll.o ExtendedStrip.o Service.o Applications.o  Acquisition.o NoiseAnalyzer.o $(ROOTLIBS) $(LIBJSON) $(FLAGS)
 
 asim: Roll.o Run.o Strip.o DataObject.o Chip.o  ExtendedRoll.o ExtendedStrip.o Service.o Applications.o studyAsimmetry.o Acquisition.o NoiseAnalyzer.o
-	g++ -o asym studyAsimmetry.o Roll.o Run.o Strip.o DataObject.o Chip.o  ExtendedRoll.o ExtendedStrip.o Service.o Applications.o Acquisition.o NoiseAnalyzer.o $(ROOTLIBS) $(LIBJSON) $(FLAGS)
+	$(CC) -o asym studyAsimmetry.o Roll.o Run.o Strip.o DataObject.o Chip.o  ExtendedRoll.o ExtendedStrip.o Service.o Applications.o Acquisition.o NoiseAnalyzer.o $(ROOTLIBS) $(LIBJSON) $(FLAGS)
 
 pphiz: plotOnPhiVaryZ.o Roll.o Run.o Strip.o DataObject.o Chip.o  ExtendedRoll.o ExtendedStrip.o  Acquisition.o NoiseAnalyzer.o
-	g++ -o pphiz plotOnPhiVaryZ.o Roll.o Run.o Strip.o DataObject.o  Chip.o ExtendedRoll.o ExtendedStrip.o  Acquisition.o NoiseAnalyzer.o $(ROOTLIBS) $(LIBJSON) $(FLAGS)
+	$(CC) -o pphiz plotOnPhiVaryZ.o Roll.o Run.o Strip.o DataObject.o  Chip.o ExtendedRoll.o ExtendedStrip.o  Acquisition.o NoiseAnalyzer.o $(ROOTLIBS) $(LIBJSON) $(FLAGS)
 
 noise: mainNoise.o NoiseAnalyzer.o Roll.o Run.o Strip.o DataObject.o Chip.o ExtendedRoll.o ExtendedStrip.o Acquisition.o 
-	g++ -o noise mainNoise.o NoiseAnalyzer.o Roll.o Run.o Strip.o DataObject.o Chip.o ExtendedRoll.o ExtendedStrip.o Acquisition.o  $(ROOTLIBS) $(LIBJSON) $(FLAGS)
+	$(CC) -o noise mainNoise.o NoiseAnalyzer.o Roll.o Run.o Strip.o DataObject.o Chip.o ExtendedRoll.o ExtendedStrip.o Acquisition.o  $(ROOTLIBS) $(LIBJSON) $(FLAGS)
 
 pphi: plotOnPhi.o Roll.o Run.o Strip.o DataObject.o Chip.o ExtendedRoll.o ExtendedStrip.o Acquisition.o NoiseAnalyzer.o
-	g++ -o pphi plotOnPhi.o Roll.o Run.o Strip.o DataObject.o Chip.o ExtendedRoll.o ExtendedStrip.o Acquisition.o NoiseAnalyzer.o $(ROOTLIBS) $(LIBJSON) $(FLAGS)
+	$(CC) -o pphi plotOnPhi.o Roll.o Run.o Strip.o DataObject.o Chip.o ExtendedRoll.o ExtendedStrip.o Acquisition.o NoiseAnalyzer.o $(ROOTLIBS) $(LIBJSON) $(FLAGS)
 
 crawler: Crawler.o mainCrawler.o DataObject.o
-	g++ -o crawl Crawler.o mainCrawler.o DataObject.o  $(ROOTLIBS)
+	$(CC) -o crawl Crawler.o mainCrawler.o DataObject.o  $(ROOTLIBS)
 
 runp: printRunProperties.o DataObject.o Run.o ExtendedRoll.o ExtendedStrip.o Chip.o Strip.o Roll.o Acquisition.o NoiseAnalyzer.o
-	g++ -o runp printRunProperties.o DataObject.o Run.o Chip.o ExtendedRoll.o ExtendedStrip.o Strip.o Roll.o Acquisition.o NoiseAnalyzer.o $(ROOTLIBS) $(LIBJSON)
+	$(CC) -o runp printRunProperties.o DataObject.o Run.o Chip.o ExtendedRoll.o ExtendedStrip.o Strip.o Roll.o Acquisition.o NoiseAnalyzer.o $(ROOTLIBS) $(LIBJSON)
 
 # general clean and install
 

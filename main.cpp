@@ -94,24 +94,6 @@ int main( int argc ,char *argv[] ){
  //string inputRolls=argv[1], raw=argv[2], area=argv[3], tower=argv[4], chips=argv[5], output=argv[6];
  //WriteIDsMap(inputRolls,raw,area,tower,chips,output);
  
- /*
- 
- string folder=argv[1];
- string areaFile = argv[2];
- string shortBarrelIDS = argv[3];
- string shortEcapIDS = argv[4];
- string runList = argv[5];
- string ListOfRolls = argv[6];
- bool correctionToBeApplied = atoi(argv[7]);
- int correctionInPercents = atoi(argv[8]);
- double barrelMax= atof(argv[9]);
- double ecapMax = atof(argv[10]);	
- string CenterOfMassE = argv[11]; 
- //cout << "blabla" << endl;
- 
- draw2DbackgroundPlot( folder, areaFile, shortBarrelIDS, shortEcapIDS, runList, ListOfRolls, correctionToBeApplied, correctionInPercents, barrelMax, ecapMax,CenterOfMassE);
- 
- */
  
  
   /*
@@ -183,8 +165,9 @@ int main( int argc ,char *argv[] ){
   */
   
   string ids_file = argv[1],
-  input = argv[2], output = argv[3];//, outputFile = argv[4], suffix = argv[5];
-  SlopeRatiosComparisonForPairsOfIDs(ids_file,input,output);
+  input = argv[2], output = argv[3], twoDmapFile = argv[4] , ShortB =argv[5] ,ShortE=argv[6];
+  ;//, outputFile = argv[4], suffix = argv[5];
+  SlopeRatiosComparisonForPairsOfIDs(ids_file,input,output,twoDmapFile,  ShortB,  ShortE);
   
   
   //return 0;
