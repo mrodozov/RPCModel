@@ -12,6 +12,12 @@
 #include "DataObject.h"
 #include "ChipInterface.h"
 #include "Chip.h"
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/foreach.hpp>
+#include <boost/lexical_cast.hpp>
+
+using namespace boost::property_tree;
 
 class ExRoll : public Roll {
   
@@ -88,6 +94,7 @@ public:
   void setStripsRateFromRootFileSource(const TFile & RatesObject); // obsolete and deprecated, this method search for single object in the entire file, then it cloeses the file. In the better implementation, the TH1F object is passed directly by reference as argument 
   void setTowerNameFromMap(map<string,string> towerMap); //
   void setLBnameFromMap(map<string,string> RollName_LBname_Map);
+  void setStripsRateFromJSONsource(const ptree & JSONobj);
   
   // virtual ExRoll * cloneObject() const { return new ExRoll(*this); } // return copy of the existing object, doesnt work this way !
   

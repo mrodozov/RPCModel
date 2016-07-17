@@ -13,6 +13,7 @@
 #include "RooPlot.h"
 #include "RooRealVar.h"
 #include "RooGaussian.h"
+#include <streambuf>
 
 using namespace std;
 
@@ -163,13 +164,71 @@ int main( int argc ,char *argv[] ){
   rootFilesFolder = argv[2], area = argv[3], outputFile = argv[4], suffix = argv[5];  
   WriteRateVsLumiPerRollFile(LumiFile,rootFilesFolder,area,outputFile,suffix);
   */
-  
+  /*
   string ids_file = argv[1],
   input = argv[2], output = argv[3], twoDmapFile = argv[4] , ShortB =argv[5] ,ShortE=argv[6];
   ;//, outputFile = argv[4], suffix = argv[5];
+  
+  
   SlopeRatiosComparisonForPairsOfIDs(ids_file,input,output,twoDmapFile,  ShortB,  ShortE);
+  */
   
   
-  //return 0;
+
+  string datafolder = argv[1], rollName = argv[2];
+  string area_file = argv[3];
+  string LumiFile = argv[4];
+  DataObject Lumi(LumiFile);
+  DataObject rollNames(rollName);
+  DataObject area(area_file);
+  
+  
+  for (int i = 0 ; i < Lumi.getLenght() ; i++){
+    
+    string run = Lumi.getElement(i+1,1);
+    string jfile = datafolder+"run"+run+"/output_strips.json";
+    cout << jfile << endl;
+    
+    ifstream ss(jfile);
+    ptree JSONfile;
+    
+    boost::property_tree::read_json(ss, JSONfile); // loads really slow
+    ptree rate = JSONfile.get_child("rates");
+  
+    
+    
+    for (int j = 0 ; j < rollNames.getLenght() ; j++){
+    
+      string r_name = rollNames.getElement(j+1 , 1);
+    
+      ExRoll * aroll = new ExRoll(r_name);
+      aroll->allocStrips();
+      aroll->initStrips();
+      aroll->setStripsAreaFromSource_cmsswResource(area);
+      aroll->setStripsRateFromJSONsource(rate);
+      
+      cout << run << " " << aroll->getFullOnlineRollID() << " " << aroll->getAvgRatePSCWithoutCorrections() << endl;
+
+      
+      /*
+      for(int ii = 0 ; ii < aroll->getClones() ; ii++){
+	for(int j = aroll->getFirstStripNumberOfClone(ii+1) ; j <= aroll->getLastStripNumberOfClone(ii+1) ; j++){
+	  cout << j << " " << aroll->getStrip(j)->getRate() << " " << aroll->getStrip(j)->getRate()/aroll->getStripsAreaFromClone(ii+1) << endl;
+	}
+      }
+      
+      */
+      delete aroll;
+    
+    }
+    
+    
+    ss.clear();
+    ss.close();
+
+  }
+  
+  
+  return 0;
  
 }

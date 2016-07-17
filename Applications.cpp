@@ -5872,7 +5872,8 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
   DataObject twoDmapDO(twoDmap);
   DataObject BarrelLabels(ShortB);
   DataObject EcapLabels(ShortE);
-
+  
+  string resultDir = "results/";
   
   map<string, vector<double>> mapRollToCoordinates;
   for(int ii = 0 ; ii < twoDmapDO.getLenght() ; ii++){
@@ -5906,16 +5907,13 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
   
   for (int i = 0 ; i < IDs.getLenght() ;  i++){
     
-    string firstID = IDs.getElement(i+1,1), secondId = IDs.getElement(i+1,2), resultID = IDs.getElement(i+1,3);
-    
+    string firstID = IDs.getElement(i+1,1), secondId = IDs.getElement(i+1,2), resultID = IDs.getElement(i+1,3);    
     TGraph * first = dynamic_cast<TGraph*> (inputRoot->Get(firstID.c_str())), * second = dynamic_cast <TGraph*>( inputRoot->Get(secondId.c_str()));
-    
-    
+        
     double min16 = TMath::MinElement(second->GetN(),second->GetX());
     double max16 = TMath::MaxElement(second->GetN(),second->GetX()); 
     double min15 = TMath::MinElement(first->GetN(),first->GetX());
-    double max15 = TMath::MaxElement(first->GetN(),first->GetX());
-    
+    double max15 = TMath::MaxElement(first->GetN(),first->GetX());    
     double biggestOn_X = (max16 > max15) ? max16 : max15;    
     
     TF1 * f1 = new TF1("f","[0]+x*[1]",0,max15);
@@ -5928,19 +5926,17 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
     double height16_HL = f2->Eval(50000), height15_HL = f1->Eval(50000);
     double cf1 = first->GetCorrelationFactor(), cf2 = second->GetCorrelationFactor();
     
-    mapRollToCoordinates.at(resultID).push_back(0);
-    
+    mapRollToCoordinates.at(resultID).push_back(0);    
     first->Delete();
     second->Delete();
     f1->Delete();
     f2->Delete();
     
-    //if ( cf1 < 0.7 ) continue;    
+    if ( cf1 < 0.8 ) continue;    
     
     mapRollToCoordinates.at(resultID).at(2) = height16/height15 ;
     
-       
-    //cout << max15 << " " << max16 << " " << resultID << " " << height16 / height15 << " " << height16_HL/ height15_HL << " " << cf1 << " " << cf2  << endl;
+    cout << max15 << " " << max16 << " " << resultID << " " << height16 / height15 << " " << height16_HL/ height15_HL << " " << cf1 << " " << cf2  << endl;
     
     for (string & ecapp : detectorParts){
       
@@ -5953,9 +5949,8 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
     }        
   }
   
-  inputRoot->Close();
-  
-  
+  inputRoot->Close(); 
+   
   for (string & rName : detectorParts){
     
     TH2F * hist_ptr;
@@ -5966,8 +5961,9 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
       for (int ei=1 ; ei <= EcapLabels.getLenght();ei++) {
 	hist_ptr->GetYaxis()->SetBinLabel(EcapLabels.getElementAsInt(ei,2),EcapLabels.getElement(ei,1).c_str());
       }
+      
     }
-    else if( 4  >  rName.size() ){      
+    else if( rName.size() == 3 || rName.size() == 2 ){
       hist_ptr = new TH2F((rName+"_2D").c_str(),rName.c_str(),12,0.5,12.5,21,0,21);
       int labelToSkip = (rName.find("W0") || rName.find("W+1") || rName.find("W-1")) ? 8 : 7;
       for (int bi=1 ; bi <= BarrelLabels.getLenght();bi++) {
@@ -5986,26 +5982,30 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
     
     for (map<string, vector<double> >::iterator twodim_itr = mapRollToCoordinates.begin(); twodim_itr != mapRollToCoordinates.end() ; twodim_itr++){
       //cout << twodim_itr->first << endl;
-      if(twodim_itr->first.find(rName) ){
+      if(twodim_itr->first.find(rName) != string::npos ){
 	vector<double> coordinates = twodim_itr->second;
 	hist_ptr->SetBinContent(coordinates.at(0),coordinates.at(1),coordinates.at(2));
-	cout << coordinates.at(0) << " " << coordinates.at(1)<< " " << coordinates.at(2) << endl;
+	cout << rName << " " << coordinates.at(0) << " " << coordinates.at(1)<< " " << coordinates.at(2) << endl;
       }        
     }
     
     TCanvas * canvas = new TCanvas( (rName+"_canvas").c_str() , "can",1200,700);
     canvas->cd();
-    hist_ptr->Draw("COLZ");
+    
     hist_ptr->SetMinimum(0.6);
     hist_ptr->SetMaximum(2);
-    canvas->SaveAs((rName+"_2D.root").c_str());
+    hist_ptr->Draw("COLZ");
+    canvas->SaveAs((resultDir+rName+"_2D.root").c_str());
+    string picname = resultDir+ rName+"_2D.png",  macrofile = resultDir + rName+"_2d.C";
+    canvas->SaveAs( picname.c_str());
+    canvas->SaveAs(macrofile.c_str());
     hist_ptr->Delete();
-    canvas->Delete();
+    
   }  
   
   for (map<string, vector<double> >::iterator iter = detectorPartsMap.begin() ; iter != detectorPartsMap.end() ; iter++){
     
-    string finalName = iter->first + "_ratios.root";
+    string finalName = resultDir + iter->first + "_ratios.root";
     
     TH1F * hist = new TH1F(iter->first.c_str(),iter->first.c_str(),200,0,2);
     TH1F * hist_hl = new TH1F((iter->first+"_HL").c_str(),iter->first.c_str(),200,0,2);
@@ -6021,10 +6021,43 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
     hist->GetYaxis()->SetTitle("Number of rolls");
     hist->SaveAs(finalName.c_str());
     
+    string pname = resultDir + iter->first+"_ratios.png";
+    string mname = resultDir + iter->first+"_ratios.C";
+    hist->SaveAs(pname.c_str());
+    hist->SaveAs(mname.c_str());
+    
   }  
   
 }
 
+
+void PositiveNegativePartsRatio(string& IDs_file, string& inputFile){
+  
+  // RE4 extrapolated rate vs phi for the endcap + vs - 2016. Print roll ID-to-radians from rate vs phi 
+  // Ecap + 2015 vs 2016  
+  
+}
+
+void GetLumiHistogramPerLS(string& lumiFile){
+  
+  DataObject Lumi(lumiFile);
+  
+  TH1F * lumiHisto = new TH1F("","",Lumi.getLenght(),0,Lumi.getLenght());
+  
+  for (int i = 0 ; i < Lumi.getLenght() ; i++){
+    
+    double lumiNormalized = Lumi.getElementAsDouble(i+1,1);
+    lumiNormalized = lumiNormalized/23.31;
+    
+    lumiHisto->SetBinContent(i+1,lumiNormalized);
+    
+  }
+  
+  lumiHisto->GetXaxis()->SetTitle("Number of lumi section");
+  lumiHisto->GetYaxis()->SetTitle("Luminosity /ub ");
+  lumiHisto->SaveAs("DetailedLumi.root");
+
+}
 
 
 

@@ -893,5 +893,40 @@ for (int k=1; k<=96;k++)
 
 }
 
+void ExRoll::setStripsRateFromJSONsource(const ptree& JSONobj){
+  
+  if (JSONobj.find(this->getRollIDofCloneWithNewIdentifiers(1)) == JSONobj.not_found()) return; // probably there was no record
+  //cout << "searching rate" << endl;
+  
+  
+  for (int i = 0; i < this->getClones() ; i++){
+    string rollName = this->getRollIDofCloneWithNewIdentifiers(i+1);
+    vector<int> channelsVector;
+    vector<double> ratesVector;
+    
+    ptree roll_tree = JSONobj.get_child(rollName);
+    
+    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, roll_tree.get_child("channels")){
+      channelsVector.push_back(boost::lexical_cast<int>(v.second.data()));
+    }
+    
+    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, roll_tree.get_child("rates")){
+      ratesVector.push_back(boost::lexical_cast<double>(v.second.data()));
+    }
+    
+    for(int j = 0 ; j < channelsVector.size() ; j++){
+      
+      this->getStrip(channelsVector.at(j))->setRate(ratesVector.at(j)*this->getStripsAreaFromClone(i+1)); // i'm actually DENORMALIZING the rate here, which is retarded. This is because we dealt with the rate only so far
+      
+    }
+    
+  }
+  
+  //cout << "done" << endl; // good speed when searching in the json object
+  
+}
+
+
+
 
 // experimental methods - (or)

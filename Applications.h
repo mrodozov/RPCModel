@@ -189,6 +189,17 @@ void WriteRateVsLumiPerRollFile(string & LumiFile, string & rootFilesFolder, str
 
 void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputFile, string & outputFile, string & twoDMap,string & ShortB, string & ShortE); // firstID, secondID, resultID
 
-//
+void PositiveNegativePartsRatio(string & IDs_file, string & inputFile);
+
+void GetLumiHistogramPerLS(string & lumiFile);
+
+// detailed study on the rate with the details per strip. the study should show 2015-2016 comparison where for changes in the luminosity that are the same in terms of 
+// start/finish lumi values taken in 
+
+//void Detailed
+
+// Possible correction on the rate exploiting luminosity drops, and removing the time intervals hit rates from the LBcounts overal
+// Requires a dedicated function to 'recognize' the drops, and to remove determine the initial and final time stamps for a drop. 
+
 
 #endif
