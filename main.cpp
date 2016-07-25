@@ -164,16 +164,17 @@ int main( int argc ,char *argv[] ){
   rootFilesFolder = argv[2], area = argv[3], outputFile = argv[4], suffix = argv[5];  
   WriteRateVsLumiPerRollFile(LumiFile,rootFilesFolder,area,outputFile,suffix);
   */
-  /*
+  
+  
   string ids_file = argv[1],
   input = argv[2], output = argv[3], twoDmapFile = argv[4] , ShortB =argv[5] ,ShortE=argv[6];
   ;//, outputFile = argv[4], suffix = argv[5];
   
   
   SlopeRatiosComparisonForPairsOfIDs(ids_file,input,output,twoDmapFile,  ShortB,  ShortE);
-  */
   
   
+  /*
 
   string datafolder = argv[1], rollName = argv[2];
   string area_file = argv[3];
@@ -194,7 +195,7 @@ int main( int argc ,char *argv[] ){
     
     boost::property_tree::read_json(ss, JSONfile); // loads really slow
     ptree rate = JSONfile.get_child("rates");
-  
+    
     
     
     for (int j = 0 ; j < rollNames.getLenght() ; j++){
@@ -210,14 +211,14 @@ int main( int argc ,char *argv[] ){
       cout << run << " " << aroll->getFullOnlineRollID() << " " << aroll->getAvgRatePSCWithoutCorrections() << endl;
 
       
-      /*
+      
       for(int ii = 0 ; ii < aroll->getClones() ; ii++){
 	for(int j = aroll->getFirstStripNumberOfClone(ii+1) ; j <= aroll->getLastStripNumberOfClone(ii+1) ; j++){
 	  cout << j << " " << aroll->getStrip(j)->getRate() << " " << aroll->getStrip(j)->getRate()/aroll->getStripsAreaFromClone(ii+1) << endl;
 	}
       }
       
-      */
+      
       delete aroll;
     
     }
@@ -228,7 +229,7 @@ int main( int argc ,char *argv[] ){
 
   }
   
-  
-  return 0;
+  */
  
+  return 0;
 }

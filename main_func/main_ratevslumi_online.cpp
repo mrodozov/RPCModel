@@ -141,12 +141,12 @@ int main( int argc ,char *argv[] ){
   // by wheels barrel
   //aQuery->insertNewOnlineRecord(("W"+orientation).c_str(),("W "+orientation).c_str(),kRed,22);
   
-  /*
+  
   aQuery->insertNewOnlineRecord(("RE"+orientation+"1"+sector).c_str(),("RE "+orientation+" 1 ").c_str(),kRed,22);
-  aQuery->insertNewOnlineRecord(("RE"+orientation+"2"+sector).c_str(),("RE "+orientation+" 2 ").c_str(),kBlue,22);
-  aQuery->insertNewOnlineRecord(("RE"+orientation+"3"+sector).c_str(),("RE "+orientation+" 3 ").c_str(),kBlack,21);
-  aQuery->insertNewOnlineRecord(("RE"+orientation+"4"+sector).c_str(),("RE "+orientation+" 4 ").c_str(),kSpring-7,25);
-  */
+  aQuery->insertNewOnlineRecord(("RE"+orientation+"1"+sector).c_str(),("RE "+orientation+" 2 ").c_str(),kBlue,22);
+  aQuery->insertNewOnlineRecord(("RE"+orientation+"1"+sector).c_str(),("RE "+orientation+" 3 ").c_str(),kBlack,21);
+  aQuery->insertNewOnlineRecord(("RE"+orientation+"1"+sector).c_str(),("RE "+orientation+" 4 ").c_str(),kSpring-7,25);
+  
   
   // by plus/minus disk
   
@@ -157,12 +157,14 @@ int main( int argc ,char *argv[] ){
   //aQuery->insertNewOnlineRecord("RB2","RB2",kRed,25);
   
   
-  aQuery->insertNewOnlineRecord(orientation,orientation,kBlue,kOpenTriangleDown);
-  //aQuery->insertNewOnlineRecord("W-2_RB4_4","W-2",kViolet-7,kOpenCircle);
-  //aQuery->insertNewOnlineRecord("W+1_RB4_4","W+1",kRed,kFullSquare);
-  //aQuery->insertNewOnlineRecord("W-1_RB4_4","W-1",kSpring-7,kFullCircle);
-  //aQuery->insertNewOnlineRecord("W0_RB4_4","W0",kBlack,kFullTriangleUp);
-  
+  //aQuery->insertNewOnlineRecord(orientation,orientation,kBlue,kOpenTriangleDown);
+  /*
+  aQuery->insertNewOnlineRecord("W-2","W-2",kViolet-7,kOpenCircle);
+  aQuery->insertNewOnlineRecord("W+1","W+1",kRed,kFullSquare);
+  aQuery->insertNewOnlineRecord("W-1","W-1",kSpring-7,kFullCircle);
+  aQuery->insertNewOnlineRecord("W0","W0",kBlack,kFullTriangleUp);
+  aQuery->insertNewOnlineRecord("W+2","W+2",kGreen-7,kOpenDiamond);
+  */
   
   plotRateVsLumi_using_the_database_rollLevel_online(DataFolder,Lumi,IntrinsicOnlineFile,area,0,cutThreshold,aQuery,exluded,useLumiAsRateDivider,debugOUTPUT);
   

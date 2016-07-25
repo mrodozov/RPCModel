@@ -1119,6 +1119,7 @@ void plotEcap_RateVsPhi(string rateFile, bool subtractIntrinsic, string fileWith
                     }
                     
                     /** @brief end of the special condition */
+
                     arrayOfRates[j-1] = (aRoll->getAvgRatePSCWithoutCorrections()-intrinsicValue)/divider;
 
                     if (SG_MAP.find(aRoll->getFullOnlineRollID()) != SG_MAP.end() ) {
@@ -1372,7 +1373,7 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer_and
 // 	    hist->SaveAs("2012.root");
         }
         cout << "Correlation factor " << hist->GetCorrelationFactor() << endl;
-         hist->Fit(func);
+        // hist->Fit(func);
 	cout << hist->GetName() << " " << func->GetMaximum() << endl;
 	if(query->getOnlineRollMapForRecord(i+1).histoName != ""){
         leg->AddEntry(hist,query->getOnlineRollMapForRecord(i+1).histoName.c_str(),"p");
@@ -5813,7 +5814,7 @@ void WriteRateVsLumiPerRollFile(string& LumiFile, string& rootFilesFolder, strin
       aroll->setStripsAreaFromSource_cmsswResource(areaDO);
       aroll->setStripsRatesFromTH1FObject(chamberHisto);
       
-      //aroll->removeNoisyStripsForAllClonesWithPercentValue(100);
+      aroll->removeNoisyStripsForAllClonesWithPercentValue(100);
       
       for(int c = 0; c < aroll->getClones(); c++){
 	string rollName = aroll->getRollIDofCloneWithConstructionDBidentifiers(c+1);
@@ -5904,6 +5905,11 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
     
   }
   
+  vector<string> SummaryPlotNames;
+  SummaryPlotNames.push_back("RE-4");SummaryPlotNames.push_back("RE-3");SummaryPlotNames.push_back("RE-2");SummaryPlotNames.push_back("RE-1");
+  SummaryPlotNames.push_back("W-2");SummaryPlotNames.push_back("W-1");SummaryPlotNames.push_back("W0");SummaryPlotNames.push_back("W+1");SummaryPlotNames.push_back("W+2");
+  SummaryPlotNames.push_back("RE+1");SummaryPlotNames.push_back("RE+2");SummaryPlotNames.push_back("RE+3");SummaryPlotNames.push_back("RE+4");
+  
   
   for (int i = 0 ; i < IDs.getLenght() ;  i++){
     
@@ -5932,7 +5938,7 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
     f1->Delete();
     f2->Delete();
     
-    if ( cf1 < 0.8 ) continue;    
+    //if ( cf1 < 0.8 ) continue;    
     
     mapRollToCoordinates.at(resultID).at(2) = height16/height15 ;
     
@@ -5992,7 +5998,7 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
     TCanvas * canvas = new TCanvas( (rName+"_canvas").c_str() , "can",1200,700);
     canvas->cd();
     
-    hist_ptr->SetMinimum(0.6);
+    hist_ptr->SetMinimum(0);
     hist_ptr->SetMaximum(2);
     hist_ptr->Draw("COLZ");
     canvas->SaveAs((resultDir+rName+"_2D.root").c_str());
@@ -6002,6 +6008,11 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
     hist_ptr->Delete();
     
   }  
+  
+  TH1F * Summary = new TH1F ("Ratios","Ratios summary",13,0,13);
+  Summary->SetStats(false);
+  Summary->GetXaxis()->SetTitle("Detector part");
+  Summary->GetYaxis()->SetTitle("2016 rate increase wrt 2015 in %");
   
   for (map<string, vector<double> >::iterator iter = detectorPartsMap.begin() ; iter != detectorPartsMap.end() ; iter++){
     
@@ -6019,6 +6030,18 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
     
     hist->GetXaxis()->SetTitle("2016/2015 extrapolated rate ratios");
     hist->GetYaxis()->SetTitle("Number of rolls");
+    int namePos = 0;
+    for (string & partname : SummaryPlotNames){
+      namePos++;
+      if (partname == iter->first){
+	Summary->SetBinContent(namePos, ( hist->GetMean() - 1 )*100 );
+	Summary->GetXaxis()->SetBinLabel(namePos,partname.c_str());
+	Summary->SetBinError(namePos,(hist->GetRMS()/hist->GetMean())*100);
+	cout << namePos << endl;
+	break;
+      }      
+    }
+    
     hist->SaveAs(finalName.c_str());
     
     string pname = resultDir + iter->first+"_ratios.png";
@@ -6026,7 +6049,11 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
     hist->SaveAs(pname.c_str());
     hist->SaveAs(mname.c_str());
     
-  }  
+  } 
+  
+  Summary->SetStats(false);
+  Summary->SaveAs("SummaryOnRatios.root");
+  
   
 }
 

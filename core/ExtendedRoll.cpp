@@ -435,12 +435,20 @@ string ExRoll::getNextNeighbourName(){
 }
 
 double ExRoll::getAvgRatePSCWithoutCorrections(){
-  double number = 96 - getStripsWithZeroRate();
-  if (number == 0){
-    return 0;
+  double sumOfRate = 0 ;
+  double sumOfAreas = 0;
+  for (int i = 0 ; i < this->getClones() ; i++ ){
+    
+    for (int j = this->getFirstStripNumberOfClone(i+1) ; j < this->getLastStripNumberOfClone(i+1) ; j++){
+      if (this->getStrip(j)->getRate() > 0){
+	sumOfRate += this->getStrip(j)->getRate();
+	sumOfAreas += this->getStripsAreaFromClone(i+1);
+      }
+    }
+    
   }
-  else{
-  return (this->getSumOfStripRates()/((number/96)*this->getChamberFullArea()) );}
+  if (sumOfAreas == 0) return 0;
+  return sumOfRate/sumOfAreas;
   // here the var number represents a value from 0 to 1 which normalize the area amount with respect to the total number of working strips (non zero rate)
 }
 
@@ -916,7 +924,8 @@ void ExRoll::setStripsRateFromJSONsource(const ptree& JSONobj){
     
     for(int j = 0 ; j < channelsVector.size() ; j++){
       
-      this->getStrip(channelsVector.at(j))->setRate(ratesVector.at(j)*this->getStripsAreaFromClone(i+1)); // i'm actually DENORMALIZING the rate here, which is retarded. This is because we dealt with the rate only so far
+      this->getStrip(channelsVector.at(j))->setRate(ratesVector.at(j)*this->getStripsAreaFromClone(i+1)); 
+      // i'm actually DENORMALIZING the rate here, which is retarded. This is because we assigned the rate only so far, and after we normlized it on the area
       
     }
     
