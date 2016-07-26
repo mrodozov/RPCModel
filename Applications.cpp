@@ -5956,25 +5956,37 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
   }
   
   inputRoot->Close(); 
-   
+  
+  // put here the JSON with the currents ratios
+  ifstream ifs("CurrentsRatiosByRoll.json");
+  ptree JSONcurrents;
+  boost::property_tree::json_parser::read_json(ifs,JSONcurrents);
+  ifs.clear();
+  ifs.close();
+  
   for (string & rName : detectorParts){
     
     TH2F * hist_ptr;
+    TH2F * CurrentsRatios;
     
     if (  rName.size() == 4){ 
       hist_ptr = new TH2F((rName+"_2D").c_str(),rName.c_str(),36,0.5,36.5,6,0,6);
+      CurrentsRatios = new TH2F((rName+"_Currents_2D").c_str(),rName.c_str(),36,0.5,36.5,6,0,6);
       
       for (int ei=1 ; ei <= EcapLabels.getLenght();ei++) {
 	hist_ptr->GetYaxis()->SetBinLabel(EcapLabels.getElementAsInt(ei,2),EcapLabels.getElement(ei,1).c_str());
+	CurrentsRatios->GetYaxis()->SetBinLabel(EcapLabels.getElementAsInt(ei,2),EcapLabels.getElement(ei,1).c_str());
       }
       
     }
     else if( rName.size() == 3 || rName.size() == 2 ){
       hist_ptr = new TH2F((rName+"_2D").c_str(),rName.c_str(),12,0.5,12.5,21,0,21);
+      CurrentsRatios = new TH2F((rName+"_Currents_2D").c_str(),rName.c_str(),12,0.5,12.5,21,0,21);
       int labelToSkip = (rName.find("W0") || rName.find("W+1") || rName.find("W-1")) ? 8 : 7;
       for (int bi=1 ; bi <= BarrelLabels.getLenght();bi++) {
 	if ( bi == labelToSkip ) continue;
 	hist_ptr->GetYaxis()->SetBinLabel(BarrelLabels.getElementAsInt(bi,2),BarrelLabels.getElement(bi,1).c_str());
+	CurrentsRatios->GetYaxis()->SetBinLabel(BarrelLabels.getElementAsInt(bi,2),BarrelLabels.getElement(bi,1).c_str());
       }
       
     }
@@ -5985,17 +5997,29 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
     hist_ptr->GetZaxis()->SetTitle("2016/2015 extrapolated rate ratio");
     hist_ptr->SetStats(false);
     
+    CurrentsRatios->GetXaxis()->SetTitle("Sector");
+    CurrentsRatios->GetZaxis()->SetTitle("2016/2015 extrapolated currents ratio");
+    CurrentsRatios->SetStats(false);
+    
     
     for (map<string, vector<double> >::iterator twodim_itr = mapRollToCoordinates.begin(); twodim_itr != mapRollToCoordinates.end() ; twodim_itr++){
       //cout << twodim_itr->first << endl;
       if(twodim_itr->first.find(rName) != string::npos ){
 	vector<double> coordinates = twodim_itr->second;
 	hist_ptr->SetBinContent(coordinates.at(0),coordinates.at(1),coordinates.at(2));
+	
+	//double CurrentRatioValue = 0;
+	if (JSONcurrents.find(twodim_itr->first) != JSONcurrents.not_found()){
+	  double CurrentRatioValue = JSONcurrents.get<double>(twodim_itr->first);
+	  CurrentsRatios->SetBinContent(coordinates.at(0),coordinates.at(1),CurrentRatioValue);
+	}
+	
 	cout << rName << " " << coordinates.at(0) << " " << coordinates.at(1)<< " " << coordinates.at(2) << endl;
       }        
     }
     
     TCanvas * canvas = new TCanvas( (rName+"_canvas").c_str() , "can",1200,700);
+    TCanvas * canvasCurrents = new TCanvas( (rName+"_canvas_").c_str() , "can",1200,700);
     canvas->cd();
     
     hist_ptr->SetMinimum(0);
@@ -6007,6 +6031,12 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
     canvas->SaveAs(macrofile.c_str());
     hist_ptr->Delete();
     
+    canvasCurrents->cd();
+    CurrentsRatios->SetMinimum(0.5);
+    CurrentsRatios->SetMaximum(1.8);
+    CurrentsRatios->Draw("COLZ");
+    canvasCurrents->SaveAs((resultDir+rName+"_Currents_2D.root").c_str());
+    CurrentsRatios->Delete();
   }  
   
   TH1F * Summary = new TH1F ("Ratios","Ratios summary",13,0,13);
