@@ -13,9 +13,12 @@
 #include "RooPlot.h"
 #include "RooRealVar.h"
 #include "RooGaussian.h"
+#include <boost/property_tree/ptree.hpp>
 #include <streambuf>
 
 using namespace std;
+using namespace boost::property_tree::json_parser;
+
 
 int main( int argc ,char *argv[] ){
   
@@ -165,16 +168,15 @@ int main( int argc ,char *argv[] ){
   WriteRateVsLumiPerRollFile(LumiFile,rootFilesFolder,area,outputFile,suffix);
   */
   
-  
+  /*
   string ids_file = argv[1],
   input = argv[2], output = argv[3], twoDmapFile = argv[4] , ShortB =argv[5] ,ShortE=argv[6];
   ;//, outputFile = argv[4], suffix = argv[5];
   
   
   SlopeRatiosComparisonForPairsOfIDs(ids_file,input,output,twoDmapFile,  ShortB,  ShortE);
-  
-  
-  /*
+  */
+    
 
   string datafolder = argv[1], rollName = argv[2];
   string area_file = argv[3];
@@ -182,6 +184,8 @@ int main( int argc ,char *argv[] ){
   DataObject Lumi(LumiFile);
   DataObject rollNames(rollName);
   DataObject area(area_file);
+  
+  
   
   
   for (int i = 0 ; i < Lumi.getLenght() ; i++){
@@ -210,14 +214,14 @@ int main( int argc ,char *argv[] ){
       
       cout << run << " " << aroll->getFullOnlineRollID() << " " << aroll->getAvgRatePSCWithoutCorrections() << endl;
 
-      
+      /*
       
       for(int ii = 0 ; ii < aroll->getClones() ; ii++){
 	for(int j = aroll->getFirstStripNumberOfClone(ii+1) ; j <= aroll->getLastStripNumberOfClone(ii+1) ; j++){
 	  cout << j << " " << aroll->getStrip(j)->getRate() << " " << aroll->getStrip(j)->getRate()/aroll->getStripsAreaFromClone(ii+1) << endl;
 	}
       }
-      
+      */
       
       delete aroll;
     
@@ -226,10 +230,10 @@ int main( int argc ,char *argv[] ){
     
     ss.clear();
     ss.close();
-
+    
   }
   
-  */
+  
  
   return 0;
 }

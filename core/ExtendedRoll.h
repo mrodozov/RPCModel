@@ -145,7 +145,7 @@ public:
   
   // experimental methods, may try to implement them
   
-  double getRateCallBackMethod(int,double (*getRateMethod)(int)); // not implemented but try to use callbacks
+  double getRateCallBackMethod(int,double (*getRateMethod)(int)); // 
   
   /** Methods added by Michele Gabusi */
   /** Author: Michele Gabusi  mgabusi@cern.ch
