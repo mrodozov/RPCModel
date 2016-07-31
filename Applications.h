@@ -193,6 +193,16 @@ void PositiveNegativePartsRatio(string & IDs_file, string & inputFile);
 
 void GetLumiHistogramPerLS(string & lumiFile);
 
+void get2DplotsForJSONFileUsingAndJSONmap(const string & JSONdataFile,const string & JSONmapFile);
+
+
+/**
+ *  Drawing Only Functions
+ * 
+ */
+
+
+
 // detailed study on the rate with the details per strip. the study should show 2015-2016 comparison where for changes in the luminosity that are the same in terms of 
 // start/finish lumi values taken in 
 

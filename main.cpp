@@ -167,8 +167,8 @@ int main( int argc ,char *argv[] ){
   rootFilesFolder = argv[2], area = argv[3], outputFile = argv[4], suffix = argv[5];  
   WriteRateVsLumiPerRollFile(LumiFile,rootFilesFolder,area,outputFile,suffix);
   */
-  /*
   
+  /*
   string ids_file = argv[1],
   input = argv[2], output = argv[3], twoDmapFile = argv[4] , ShortB =argv[5] ,ShortE=argv[6];
   ;//, outputFile = argv[4], suffix = argv[5];
@@ -176,6 +176,16 @@ int main( int argc ,char *argv[] ){
   
   SlopeRatiosComparisonForPairsOfIDs(ids_file,input,output,twoDmapFile,  ShortB,  ShortE);
   */
+  
+  string jsonDatafile = argv[1] , jsonMapFile = argv[2];
+  
+  get2DplotsForJSONFileUsingAndJSONmap(jsonDatafile,jsonMapFile);
+  
+  
+  
+  /*
+  
+  
   
   
   string datafolder = argv[1], rollName = argv[2];
@@ -233,7 +243,7 @@ int main( int argc ,char *argv[] ){
     
   }
   
-  
+  */
  
   return 0;
 }

@@ -5869,6 +5869,10 @@ void WriteRateVsLumiPerRollFile(string& LumiFile, string& rootFilesFolder, strin
 
 void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFile, string & outputRootFile, string & twoDmap, string & ShortB, string & ShortE){
   
+  
+  ptree * mapDescription2D = new ptree;
+  
+  
   DataObject IDs(IDs_file);  
   DataObject twoDmapDO(twoDmap);
   DataObject BarrelLabels(ShortB);
@@ -5942,7 +5946,7 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
     
     mapRollToCoordinates.at(resultID).at(2) = height16/height15 ;
     
-    cout << max15 << " " << max16 << " " << resultID << " " << height16 / height15 << " " << height16_HL/ height15_HL << " " << cf1 << " " << cf2  << endl;
+    //cout << max15 << " " << max16 << " " << resultID << " " << height16 / height15 << " " << height16_HL/ height15_HL << " " << cf1 << " " << cf2  << endl;
     
     for (string & ecapp : detectorParts){
       
@@ -5979,34 +5983,52 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
   ifs.clear();
   ifs.close();
   
+  map<string, vector<string> > binlabelsmap;
+  vector < string> axyses;
+  
   for (string & rName : detectorParts){
+    
+    
+    
+    cout << rName << endl;
     
     TH2F * hist_ptr;
     TH2F * CurrentsRatios;
     
     if (  rName.size() == 4){ 
+      if (binlabelsmap.find(rName) == binlabelsmap.end()) binlabelsmap[rName] = axyses;
       hist_ptr = new TH2F((rName+"_2D").c_str(),rName.c_str(),36,0.5,36.5,6,0,6);
       CurrentsRatios = new TH2F((rName+"_Currents_2D").c_str(),rName.c_str(),36,0.5,36.5,6,0,6);
+      
+     
       
       for (int ei=1 ; ei <= EcapLabels.getLenght();ei++) {
 	hist_ptr->GetYaxis()->SetBinLabel(EcapLabels.getElementAsInt(ei,2),EcapLabels.getElement(ei,1).c_str());
 	CurrentsRatios->GetYaxis()->SetBinLabel(EcapLabels.getElementAsInt(ei,2),EcapLabels.getElement(ei,1).c_str());
+	
+	binlabelsmap.at(rName).push_back(EcapLabels.getElement(ei,1));
       }
       
     }
     else if( rName.size() == 3 || rName.size() == 2 ){
+      if (binlabelsmap.find(rName) == binlabelsmap.end()) binlabelsmap[rName] = axyses;
+      
+      
       hist_ptr = new TH2F((rName+"_2D").c_str(),rName.c_str(),12,0.5,12.5,21,0,21);
       CurrentsRatios = new TH2F((rName+"_Currents_2D").c_str(),rName.c_str(),12,0.5,12.5,21,0,21);
       int labelToSkip = (rName.find("W0") || rName.find("W+1") || rName.find("W-1")) ? 8 : 7;
       for (int bi=1 ; bi <= BarrelLabels.getLenght();bi++) {
 	if ( bi == labelToSkip ) continue;
+	binlabelsmap.at(rName).push_back(BarrelLabels.getElement(bi,1));
 	hist_ptr->GetYaxis()->SetBinLabel(BarrelLabels.getElementAsInt(bi,2),BarrelLabels.getElement(bi,1).c_str());
 	CurrentsRatios->GetYaxis()->SetBinLabel(BarrelLabels.getElementAsInt(bi,2),BarrelLabels.getElement(bi,1).c_str());
       }
       
     }
     
+    
     else continue;
+    
     
     hist_ptr->GetXaxis()->SetTitle("Sector");
     hist_ptr->GetZaxis()->SetTitle("2016/2015 extrapolated rate ratio");
@@ -6017,10 +6039,14 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
     CurrentsRatios->SetStats(false);
     
     
+    
     for (map<string, vector<double> >::iterator twodim_itr = mapRollToCoordinates.begin(); twodim_itr != mapRollToCoordinates.end() ; twodim_itr++){
       //cout << twodim_itr->first << endl;
       if(twodim_itr->first.find(rName) != string::npos ){
 	vector<double> coordinates = twodim_itr->second;
+	
+	
+	
 	hist_ptr->SetBinContent(coordinates.at(0),coordinates.at(1),coordinates.at(2));
 	
 	//double CurrentRatioValue = 0;
@@ -6057,6 +6083,15 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
     //CurrentsRatios->Delete();
   }  
   
+
+  
+  for (map<string, vector<string> >::iterator itr = binlabelsmap.begin(); itr != binlabelsmap.end(); itr++){
+    cout << itr->first << endl;
+    for ( auto & label : itr->second ) { cout << label << "," ; }
+    cout << endl;
+  }
+  
+  
   TH1F * Summary = new TH1F ("Ratios","Ratios summary",13,0,13);
   Summary->SetStats(false);
   Summary->GetXaxis()->SetTitle("Detector part");
@@ -6085,7 +6120,7 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
 	Summary->SetBinContent(namePos, ( hist->GetMean() - 1 )*100 );
 	Summary->GetXaxis()->SetBinLabel(namePos,partname.c_str());
 	Summary->SetBinError(namePos,(hist->GetRMS()/hist->GetMean())*100);
-	cout << namePos << endl;
+	//cout << namePos << endl;
 	break;
       }      
     }
@@ -6131,10 +6166,56 @@ void GetLumiHistogramPerLS(string& lumiFile){
   lumiHisto->GetXaxis()->SetTitle("Number of lumi section");
   lumiHisto->GetYaxis()->SetTitle("Luminosity /ub ");
   lumiHisto->SaveAs("DetailedLumi.root");
-
+  
 }
 
-
+void get2DplotsForJSONFileUsingAndJSONmap(const string & JSONdataFile,const string & JSONmapFile){
+  
+    ptree * JSONdata = new ptree;
+    ptree * JSONmap = new ptree;
+    ifstream ifs(JSONdataFile.c_str());
+    boost::property_tree::json_parser::read_json(ifs,*JSONdata);
+    ifs.clear();ifs.close(); ifstream ifss(JSONmapFile.c_str());
+    boost::property_tree::json_parser::read_json(ifss,*JSONmap);
+    ifss.clear();ifss.close();
+    
+    for ( ptree::iterator iter = JSONmap->begin() ; iter != JSONmap->end() ; iter++ ){
+      cout << iter->first << endl;
+      string detectorPart = iter->first;
+      vector<double> dimensions;
+      vector<string> Xlabels;
+      vector<string> Ylabels;
+      
+      BOOST_FOREACH(boost::property_tree::ptree::value_type &v, iter->second.get_child("Xlabels")) {  Xlabels.push_back(v.second.data()); }
+      BOOST_FOREACH(boost::property_tree::ptree::value_type &v, iter->second.get_child("Ylabels")) {  Ylabels.push_back(v.second.data()); }
+      BOOST_FOREACH(boost::property_tree::ptree::value_type &v, iter->second.get_child("BinsAndDimensions")) { dimensions.push_back(boost::lexical_cast<double>( v.second.data() ) ); }      
+      
+      TH2F * twoDimensionalHisto = new TH2F(detectorPart.c_str(),detectorPart.c_str(),dimensions.at(0),dimensions.at(1),dimensions.at(2),dimensions.at(3),dimensions.at(4),dimensions.at(5));
+      
+      for (int ii = 0 ; ii < Xlabels.size() ; ii++){ twoDimensionalHisto->GetXaxis()->SetBinLabel(ii+1, Xlabels.at(ii).c_str());  }
+      for (int iii = 0; iii < Ylabels.size() ; iii++){ twoDimensionalHisto->GetYaxis()->SetBinLabel(iii+1, Ylabels.at(iii).c_str());}
+      
+      BOOST_FOREACH(boost::property_tree::ptree::value_type &v, iter->second.get_child("XYcoordinates")) {  
+	
+	string rollName = v.first.data();
+	if (JSONdata->find(rollName) == JSONdata->not_found()) continue;
+	double value = JSONdata->get<double>(rollName);
+	vector<int> coordinates;
+	BOOST_FOREACH(boost::property_tree::ptree::value_type &vv, v.second.get_child("")) {  coordinates.push_back(boost::lexical_cast<double>(vv.second.data())); }
+	twoDimensionalHisto->SetBinContent(coordinates.at(0),coordinates.at(1),value);
+      }
+      
+      TCanvas * acan = new TCanvas((detectorPart+"_can").c_str(),(detectorPart+"_can").c_str(),1200,700);
+      acan->cd();
+      twoDimensionalHisto->SetStats(kFALSE);
+      twoDimensionalHisto->Draw("COLZ");
+      acan->SaveAs((detectorPart+"__2D.root").c_str());
+      twoDimensionalHisto->Delete();
+    }
+    
+    delete JSONdata;
+    delete JSONmap;
+}
 
 // endof QueryObject methods
 
