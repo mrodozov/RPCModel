@@ -1,9 +1,9 @@
 #ifndef ORACLE_CLIENT_H
 #define ORACLE_CLIENT_H
 
-#include "DataSourceInterface.h"
+#include "RPCDSDataSourceInterface.h"
 
-class OracleClient : public DataService {
+class RPCDSOracleClient : public RPCDSDataService {
   
 public:
   //virtual void process();

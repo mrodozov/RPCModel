@@ -183,9 +183,7 @@ int main( int argc ,char *argv[] ){
   string LumiFile = argv[4];
   DataObject Lumi(LumiFile);
   DataObject rollNames(rollName);
-  DataObject area(area_file);
-  
-  
+  DataObject area(area_file);  
   
   
   for (int i = 0 ; i < Lumi.getLenght() ; i++){

@@ -2,11 +2,11 @@
 #define RATE_DATA_H
 
 #include <string>
-#include "DataSourceInterface.h"
+#include "RPCDSDataSourceInterface.h"
 
 using namespace std;
 
-class RateData : public DataType {
+class RPCDSRateData : public RPCDSDataType {
   
   // one run rate
   map<string, vector<double> >  averageRatePerRoll;
@@ -26,8 +26,8 @@ public:
   virtual ptree * getJSONdataForKeyInDataAsJSON(const string & key);
   
   
-  RateData();
-  virtual ~RateData();
+  RPCDSRateData();
+  virtual ~RPCDSRateData();
     
 };
 

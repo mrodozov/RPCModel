@@ -67,17 +67,17 @@ main_rateVsPhi_online.o : main_func/main_rateVsPhi_online.cpp
 main_data_source.o : main_func/main_ds.cpp
 	$(CC) -c main_func/main_ds.cpp -o main_data_source.o $(ROOTINC)
 
-RateData.o : core/DataSourceImplementations/RateData.cpp
-	$(CC) -c core/DataSourceImplementations/RateData.cpp 
+RateData.o : core/DataSource/RPCDSRateData.cpp
+	$(CC) -c core/DataSource/RPCDSRateData.cpp -o RateData.o
 	
-CurrentData.o : core/DataSourceImplementations/CurrentData.cpp
-	$(CC) -c core/DataSourceImplementations/CurrentData.cpp
+CurrentData.o : core/DataSource/RPCDSCurrentData.cpp
+	$(CC) -c core/DataSource/RPCDSCurrentData.cpp -o CurrentData.o
 
-LocalFileClient.o : core/DataSourceImplementations/LocalFileClient.cpp 
-	$(CC) -c core/DataSourceImplementations/LocalFileClient.cpp 
+LocalFileClient.o : core/DataSource/RPCDSLocalFileClient.cpp 
+	$(CC) -c core/DataSource/RPCDSLocalFileClient.cpp -o LocalFileClient.o
 	
-DataSource.o : core/DataSourceImplementations/DataSource.cpp RateData.o CurrentData.o
-	$(CC) -c core/DataSourceImplementations/DataSource.cpp -o DataSource.o
+DataSource.o : core/DataSource/RPCDSDataSource.cpp RateData.o CurrentData.o
+	$(CC) -c core/DataSource/RPCDSDataSource.cpp -o DataSource.o
 
 # Michele objects (extensions objects)
 

@@ -2,11 +2,11 @@
 #define CURRENT_DATA_H
 
 #include <string>
-#include "DataSourceInterface.h"
+#include "RPCDSDataSourceInterface.h"
 
 using namespace std;
 
-class CurrentData : public DataType {
+class RPCDSCurrentData : public RPCDSDataType {
   
   // one run current, roll-current
   map<string, vector<double> >  averageCurrentPerRoll;
@@ -20,8 +20,8 @@ public:
   virtual ptree * getJSONdataForKeyInDataAsJSON(const string & key);
   
   
-  CurrentData();
-  virtual ~CurrentData();
+  RPCDSCurrentData();
+  virtual ~RPCDSCurrentData();
     
 };
 
