@@ -26,7 +26,9 @@ class Roll : public RollInterface{
   std::string * RollPartOfClone;
   //end of members
   
+  
 protected:
+  
   
 public:
   

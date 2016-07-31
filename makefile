@@ -14,11 +14,13 @@ all : RateLumiEcapOffline RateVsLumi_Online CurrentApplication Print_offline_db_
 
 objects = Strip.o DataObject.o Roll.o ExtendedStrip.o ExtendedRoll.o Chip.o Service.o DBconnector.o Applications.o NoiseAnalyzer.o
 extensionsObjects = Acquisition.o Crawler.o Run.o
+ds_objects = LocalFileClient.o CurrentData.o RateData.o DataSource.o
 
 # Mircho objects (main core objects)
 
 main.o : main.cpp ExtendedStrip.o ExtendedRoll.o Service.o DBconnector.o Applications.o 
 	$(CC) -c -Wall main.cpp $(ROOTINC)
+	
 
 Chip.o : core/Chip.cpp ExtendedRoll.o
 	$(CC) -c -Wall core/Chip.cpp $(ROOTINC)
@@ -62,13 +64,28 @@ main_print_online_db_files.o : main_func/main_print_online_db_files.cpp
 main_rateVsPhi_online.o : main_func/main_rateVsPhi_online.cpp
 	$(CC) -c main_func/main_rateVsPhi_online.cpp $(ROOTINC)
 
+main_data_source.o : main_func/main_ds.cpp
+	$(CC) -c main_func/main_ds.cpp -o main_data_source.o $(ROOTINC)
+
+RateData.o : core/DataSourceImplementations/RateData.cpp
+	$(CC) -c core/DataSourceImplementations/RateData.cpp 
+	
+CurrentData.o : core/DataSourceImplementations/CurrentData.cpp
+	$(CC) -c core/DataSourceImplementations/CurrentData.cpp
+
+LocalFileClient.o : core/DataSourceImplementations/LocalFileClient.cpp 
+	$(CC) -c core/DataSourceImplementations/LocalFileClient.cpp 
+	
+DataSource.o : core/DataSourceImplementations/DataSource.cpp RateData.o CurrentData.o
+	$(CC) -c core/DataSourceImplementations/DataSource.cpp -o DataSource.o
+
 # Michele objects (extensions objects)
 
 printRunProperties.o: main_func/printRunProperties.cpp
 	$(CC) -c main_func/printRunProperties.cpp $(ROOTINC)
 
-mainNoise.o: main_func/mainNoise.cpp
-	$(CC) -c main_func/mainNoise.cpp $(ROOTINC)
+mainNoise.o: main_func/mainNoise.cpp $(ds_objects)
+	$(CC) -c main_func/mainNoise.cpp $(ds_objects) $(ROOTINC)
 
 studyAsimmetry.o: main_func/studyAsimmetry.cpp
 	$(CC) -c main_func/studyAsimmetry.cpp $(ROOTINC)
@@ -114,6 +131,9 @@ Acquisition.o: Extensions/Acquisition.cpp
 # Mircho applications
 
 # current app is the one in main.cpp
+
+DataSource : main_data_source.o $(ds_objects)
+	$(CC) -o main_ds.lnx main_data_source.o $(ds_objects) $(ROOTLIBS)
 
 CurrentApplication : main.o $(objects)
 #	 $(CC) -o CurrentApplication.lnxapp main.o $(objects) $(ROOTLIBS) $(ROOFITLIBS) 

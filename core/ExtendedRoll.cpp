@@ -20,7 +20,9 @@ using namespace std;
 
 void ExRoll::allocStrips(){
   
+  delete [] this->getStripCollection();  // if the inheritent constructor did constructed the strips. it's a bit retarded
   this->strips = new ExStrip[96];
+  this->initStrips();
   
 }
 
@@ -48,6 +50,7 @@ ExRoll::ExRoll(const string& RollOnlineName): Roll(RollOnlineName){
   //cout << "ExRoll string constructor" << endl;  
   this->NumberOfChipsAssigned = 0;
   this->towerName = "Not Assigned !";
+  this->allocStrips();
   
 }
 
@@ -64,7 +67,7 @@ ExRoll::~ExRoll(){
   //cout << "ExRoll destructor" << endl; // debug line
   delete [] this->getStripCollection();
   delete [] this->stripArea;
-  this->strips = NULL;//causes seg fault because delete called also from the base destructor, after it is called from the derived
+  this->strips = NULL;//causes seg fault because delete called also from the base destructor, after it is called from the derived (when the constructor is virtual ?)
   
 }
 

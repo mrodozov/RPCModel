@@ -36,13 +36,13 @@ class ExRoll : public Roll {
   TFile* refFile;
   
 protected:
-  
-  void incrementNumberOfChips(); // Chip class method, increments the NumberOfChipsAssigned member with one
-  void insertNewChipToChipsMap(const int & num,ChipBaseClass * abstractObject); // no need to override this one
-  
+
 public:
   
   // Methods  Necessary to implement
+  void incrementNumberOfChips(); // Chip class method, increments the NumberOfChipsAssigned member with one
+  void insertNewChipToChipsMap(const int & num,ChipBaseClass * abstractObject); // no need to override this one
+  
   
   virtual void allocStrips(); // override
   virtual void initStrips(); // use Roll::initStrips and add whats needed 

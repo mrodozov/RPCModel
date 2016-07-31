@@ -73,6 +73,7 @@ Roll::Roll(const string & RollOnlineName){
   //cout <<  "Roll string constructor" << endl;
   this->setNumberOfClones(0);
   this->setNumberOfUnpluggedStrips(0);
+  
   //set disconnected
   // clone
   

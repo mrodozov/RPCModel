@@ -167,7 +167,7 @@ int main( int argc ,char *argv[] ){
   rootFilesFolder = argv[2], area = argv[3], outputFile = argv[4], suffix = argv[5];  
   WriteRateVsLumiPerRollFile(LumiFile,rootFilesFolder,area,outputFile,suffix);
   */
-  
+  /*
   
   string ids_file = argv[1],
   input = argv[2], output = argv[3], twoDmapFile = argv[4] , ShortB =argv[5] ,ShortE=argv[6];
@@ -175,9 +175,9 @@ int main( int argc ,char *argv[] ){
   
   
   SlopeRatiosComparisonForPairsOfIDs(ids_file,input,output,twoDmapFile,  ShortB,  ShortE);
+  */
   
-  /*
-
+  
   string datafolder = argv[1], rollName = argv[2];
   string area_file = argv[3];
   string LumiFile = argv[4];
@@ -203,12 +203,14 @@ int main( int argc ,char *argv[] ){
     
     
     for (int j = 0 ; j < rollNames.getLenght() ; j++){
+      if (j == 1) break;
     
       string r_name = rollNames.getElement(j+1 , 1);
     
       ExRoll * aroll = new ExRoll(r_name);
       aroll->allocStrips();
       aroll->initStrips();
+      
       aroll->setStripsAreaFromSource_cmsswResource(area);
       aroll->setStripsRateFromJSONsource(rate);
       
@@ -232,7 +234,7 @@ int main( int argc ,char *argv[] ){
     ss.close();
     
   }
-  */
+  
   
  
   return 0;

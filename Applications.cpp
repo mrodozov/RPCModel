@@ -5960,7 +5960,22 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
   // put here the JSON with the currents ratios
   ifstream ifs("CurrentsRatiosByRoll.json");
   ptree JSONcurrents;
-  boost::property_tree::json_parser::read_json(ifs,JSONcurrents);
+  try {
+    
+    boost::property_tree::json_parser::read_json(ifs,JSONcurrents);
+  
+  }
+  catch(const ptree_error &e) {
+    cout << e.what() << endl;
+  }
+  
+  // put it in a map, it does some shit otherwise
+  map <string, double> RollCurrentsMap;
+  for (ptree::iterator iter = JSONcurrents.begin() ; iter != JSONcurrents.end() ; iter++){
+    RollCurrentsMap[iter->first] = boost::lexical_cast<double>( JSONcurrents.get_child(iter->first).data() );
+  }
+  
+  
   ifs.clear();
   ifs.close();
   
@@ -6009,8 +6024,11 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
 	hist_ptr->SetBinContent(coordinates.at(0),coordinates.at(1),coordinates.at(2));
 	
 	//double CurrentRatioValue = 0;
-	if (JSONcurrents.find(twodim_itr->first) != JSONcurrents.not_found()){
-	  double CurrentRatioValue = JSONcurrents.get<double>(twodim_itr->first);
+	//if (JSONcurrents.find(twodim_itr->first) != JSONcurrents.not_found()){
+	if (RollCurrentsMap.find(twodim_itr->first) != RollCurrentsMap.end() ){
+	  //float CurrentRatioValue = JSONcurrents.get<float>(twodim_itr->first);
+	  double CurrentRatioValue = RollCurrentsMap.at(twodim_itr->first);
+	  cout << twodim_itr->first << endl;
 	  CurrentsRatios->SetBinContent(coordinates.at(0),coordinates.at(1),CurrentRatioValue);
 	}
 	
@@ -6026,9 +6044,9 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
     hist_ptr->SetMaximum(2);
     hist_ptr->Draw("COLZ");
     canvas->SaveAs((resultDir+rName+"_2D.root").c_str());
-    string picname = resultDir+ rName+"_2D.png",  macrofile = resultDir + rName+"_2d.C";
-    canvas->SaveAs( picname.c_str());
-    canvas->SaveAs(macrofile.c_str());
+    //string picname = resultDir+ rName+"_2D.png",  macrofile = resultDir + rName+"_2d.C";
+    //canvas->SaveAs( picname.c_str());
+    //canvas->SaveAs(macrofile.c_str());
     hist_ptr->Delete();
     
     canvasCurrents->cd();
@@ -6036,7 +6054,7 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
     CurrentsRatios->SetMaximum(1.8);
     CurrentsRatios->Draw("COLZ");
     canvasCurrents->SaveAs((resultDir+rName+"_Currents_2D.root").c_str());
-    CurrentsRatios->Delete();
+    //CurrentsRatios->Delete();
   }  
   
   TH1F * Summary = new TH1F ("Ratios","Ratios summary",13,0,13);
