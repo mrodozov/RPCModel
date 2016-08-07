@@ -144,10 +144,10 @@ int main( int argc ,char *argv[] ){
   //aQuery->insertNewOnlineRecord(("W"+orientation).c_str(),("W "+orientation).c_str(),kRed,22);
   
   
-  aQuery->insertNewOnlineRecord(("RE+"+orientation+"_3"+sector).c_str(),("RE "+orientation+" 3").c_str(),kRed,22);
-  aQuery->insertNewOnlineRecord(("RE-"+orientation+"_2"+sector).c_str(),("RE "+orientation+" 2 ").c_str(),kBlue,22);
-  aQuery->insertNewOnlineRecord(("RE+"+orientation+"_3"+sector).c_str(),("RE "+orientation+" 3 ").c_str(),kBlack,21);
-  aQuery->insertNewOnlineRecord(("RE-"+orientation+"_2"+sector).c_str(),("RE "+orientation+" 2 ").c_str(),kSpring-7,25);
+  aQuery->insertNewOnlineRecord(("RE-"+orientation+"_2"+sector).c_str(),("RE -"+orientation+" 2 ").c_str(),kBlue,22);
+  aQuery->insertNewOnlineRecord(("RE+"+orientation+"_2"+sector).c_str(),("RE +"+orientation+" 2").c_str(),kRed,22);
+  aQuery->insertNewOnlineRecord(("RE-"+orientation+"_3"+sector).c_str(),("RE -"+orientation+" 3 ").c_str(),kSpring-7,25);
+  aQuery->insertNewOnlineRecord(("RE+"+orientation+"_3"+sector).c_str(),("RE +"+orientation+" 3 ").c_str(),kBlack,21);
   
   //aQuery->insertNewOnlineRecord("RE+4_2",("RE "+orientation+"+1 1 4 ").c_str(),kSpring-7,27);
   
@@ -169,7 +169,6 @@ int main( int argc ,char *argv[] ){
   aQuery->insertNewOnlineRecord("W+2","W+2",kGreen-7,kOpenDiamond);
   */
   
-  cout << "RE"+orientation+"1"+sector << " check " << endl;
   
   plotRateVsLumi_using_the_database_rollLevel_online(DataFolder,Lumi,IntrinsicOnlineFile,area,0,cutThreshold,aQuery,exluded,useLumiAsRateDivider,debugOUTPUT);
   

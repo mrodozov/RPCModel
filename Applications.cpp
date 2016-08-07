@@ -1209,6 +1209,8 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer_and
     double biggestOn_Y=0;
     double currentLumi =0;
     
+    DataObject areaDO("localResources/area_noise_cmssw_withRE4");
+    
     /* to remove that shit !*/
     
     TPaveText * pt,* secondText;
@@ -1246,8 +1248,39 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer_and
             run_lumi_map[lumiFile.getElement(i+1,1)] = currentLumi;
 	    if(currentLumi > biggestOn_X) biggestOn_X = currentLumi;
 	    
+	    map<string,double> currentRates;
+	    
+	    TFile * file = new TFile((fileContainer_and_suffix+"total_"+lumiFile.getElement(i+1,1)+".root").c_str(),"READ");
+	    TIter nextkey(file->GetListOfKeys());
+	    TKey * key;
+	    TH1F * h1;
+	    TObject * obj1;
+	    
+	    
+	    if (! file->IsOpen()) { cout << "File " << fileContainer_and_suffix+"total_"+lumiFile.getElement(i+1,1)+".root" << " missing !" << endl; continue ; }
+            
+            while (key = (TKey*)nextkey()) {
+	      obj1 = key->ReadObj();
+	      string nameOfRoll = obj1->GetName();
+	      if (nameOfRoll.substr(0,1) == "W" || nameOfRoll.substr(0,2) == "RE") {
+		
+		h1 = dynamic_cast<TH1F*>(obj1);
+		ExRoll * aroll = new ExRoll(nameOfRoll);
+		aroll->setStripsAreaFromSource_cmsswResource(areaDO);
+		aroll->setStripsRatesFromTH1FObject(h1);
+		aroll->removeNoisyStripsForAllClonesWithPercentValue(100);
+		currentRates[nameOfRoll] = aroll->getAvgRatePSCWithoutCorrections();
+		delete aroll;
+	      }
+	    }
+	    
+	    run_rollRate_map[lumiFile.getElement(i+1,1)] = currentRates;
+	    
+	    file->Close("R");
+	    file->Delete();
+	    /*
 	    IFS.open((fileContainer_and_suffix+lumiFile.getElement(i+1,1)+".txt").c_str());
-            map<string,double> currentRates;
+            map<string,double> currentRatess;
             while (getline(IFS,LINE)) {
 	      
                 iss.str(LINE);
@@ -1256,13 +1289,14 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer_and
 		if(intrinsicShouldBeSubtracted) rateOfRoll = rateOfRoll - intrinsic_map.find(rollName)->second;
 		//if(rateOfRoll > biggestOn_Y ) biggestOn_Y = rateOfRoll;
 		
-                currentRates[rollName] = rateOfRoll;
+                currentRatess[rollName] = rateOfRoll;
                 iss.clear();
                 IFS.clear();
 
             }
             IFS.close();
-            run_rollRate_map[lumiFile.getElement(i+1,1)] = currentRates;
+            run_rollRate_map[lumiFile.getElement(i+1,1)] = currentRatess;
+	    */
         }
     }
     
