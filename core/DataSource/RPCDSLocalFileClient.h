@@ -14,14 +14,12 @@ protected:
   
   void getRateDataFromJSONfile(const string & fileName);
   void getRateDataFromROOTfile(const string & fileName);
-  
+  string * parseRequest();
   
 public:
-  ptree * jsonfile;
-  void setRateData(RPCDSRateData * rd);
   
   RPCDSRateData * getRateDataObjectFrom(RPCDSDataType * data); //
-  virtual RPCDSDataType * getDataForRequest(const string & request); // 
+  virtual void getDataForRequest(const string & request); // 
   
     RPCDSLocalFileClient();
     virtual ~RPCDSLocalFileClient();

@@ -67,6 +67,7 @@ int main( int argc ,char *argv[] ){
   aQuery->insertRunRangeForOnlineRecord(198023,199073,3);
   aQuery->insertRunRangeForOnlineRecord(199074,208686,4);
   */  
+  
   /*
   aQuery->setHistoXtitle("Instantaneous luminosity (10^{30} cm^{-2} s^{-1})");
   aQuery->setHistoYtitle(" Rate (Hz/cm^{2})");
@@ -112,6 +113,7 @@ int main( int argc ,char *argv[] ){
   aQuery->insertNewOnlineRecord(("RE"+orientation+"2_3_"+sector).c_str(),("RE D"+orientation+"2 R3 ").c_str(),kSpring-7,25);
   */
   // by single disk
+  
   /*
   aQuery->insertNewOnlineRecord(("RE+"+orientation+"_2_"+sector).c_str(),("RE D+"+orientation+" R2 - 2015").c_str(),kRed,22);
   aQuery->insertNewOnlineRecord(("RE-"+orientation+"_2_"+sector).c_str(),("RE D-"+orientation+" R2 ").c_str(),kBlue,22);
@@ -142,11 +144,12 @@ int main( int argc ,char *argv[] ){
   //aQuery->insertNewOnlineRecord(("W"+orientation).c_str(),("W "+orientation).c_str(),kRed,22);
   
   
-  aQuery->insertNewOnlineRecord(("RE"+orientation+"1"+sector).c_str(),("RE "+orientation+" 1 ").c_str(),kRed,22);
-  aQuery->insertNewOnlineRecord(("RE"+orientation+"1"+sector).c_str(),("RE "+orientation+" 2 ").c_str(),kBlue,22);
-  aQuery->insertNewOnlineRecord(("RE"+orientation+"1"+sector).c_str(),("RE "+orientation+" 3 ").c_str(),kBlack,21);
-  aQuery->insertNewOnlineRecord(("RE"+orientation+"1"+sector).c_str(),("RE "+orientation+" 4 ").c_str(),kSpring-7,25);
+  aQuery->insertNewOnlineRecord(("RE+"+orientation+"_3"+sector).c_str(),("RE "+orientation+" 3").c_str(),kRed,22);
+  aQuery->insertNewOnlineRecord(("RE-"+orientation+"_2"+sector).c_str(),("RE "+orientation+" 2 ").c_str(),kBlue,22);
+  aQuery->insertNewOnlineRecord(("RE+"+orientation+"_3"+sector).c_str(),("RE "+orientation+" 3 ").c_str(),kBlack,21);
+  aQuery->insertNewOnlineRecord(("RE-"+orientation+"_2"+sector).c_str(),("RE "+orientation+" 2 ").c_str(),kSpring-7,25);
   
+  //aQuery->insertNewOnlineRecord("RE+4_2",("RE "+orientation+"+1 1 4 ").c_str(),kSpring-7,27);
   
   // by plus/minus disk
   
@@ -165,6 +168,8 @@ int main( int argc ,char *argv[] ){
   aQuery->insertNewOnlineRecord("W0","W0",kBlack,kFullTriangleUp);
   aQuery->insertNewOnlineRecord("W+2","W+2",kGreen-7,kOpenDiamond);
   */
+  
+  cout << "RE"+orientation+"1"+sector << " check " << endl;
   
   plotRateVsLumi_using_the_database_rollLevel_online(DataFolder,Lumi,IntrinsicOnlineFile,area,0,cutThreshold,aQuery,exluded,useLumiAsRateDivider,debugOUTPUT);
   

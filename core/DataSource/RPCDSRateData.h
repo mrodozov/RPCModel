@@ -11,6 +11,7 @@ class RPCDSRateData : public RPCDSDataType {
   // one run rate
   map<string, vector<double> >  averageRatePerRoll;
   map<string, vector<vector <double> > > fullRatePerRoll;
+  ptree * json;
   
 protected:
   
@@ -22,6 +23,7 @@ public:
   vector<double> getRateForRollChannels(const string & RollName);
   vector<vector<double>> getFullRateRateforRoll(const string & RollName);
   
+  void setRateFromSource(ptree * jData);
   virtual ptree * getDataAsJSON();
   virtual ptree * getJSONdataForKeyInDataAsJSON(const string & key);
   

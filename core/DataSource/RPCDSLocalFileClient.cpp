@@ -5,11 +5,9 @@
 using namespace boost::property_tree;
 
 RPCDSLocalFileClient::RPCDSLocalFileClient(){
-  //this->setData(new DataType);
-  this->setRateData(new RPCDSRateData);
 }
 
-RPCDSDataType* RPCDSLocalFileClient::getDataForRequest(const string& request){
+void RPCDSLocalFileClient::getDataForRequest(const string& request){
   if(request.find(".json") != std::string::npos) this->getRateDataFromJSONfile(request);
   
   //return  this->getRateData();
@@ -25,11 +23,11 @@ void RPCDSLocalFileClient::getRateDataFromJSONfile(const string& fileName){
   ifs.clear(); ifs.close();
   cout << "json read" << endl;
   cout << "blabla" << endl;
-  this->jsonfile = jsonobj;
+  RPCDSRateData * rdata = new RPCDSRateData;
+  rdata->setRateFromSource(jsonobj);
+  this->put(rdata);
 }
 
-void RPCDSLocalFileClient::setRateData(RPCDSRateData* rd){
-}
 
 RPCDSRateData* RPCDSLocalFileClient::getRateDataObjectFrom(RPCDSDataType* data){
   return dynamic_cast<RPCDSRateData*>(data); // get a concrete type 

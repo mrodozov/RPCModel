@@ -6,6 +6,7 @@
 #include <map>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <queue>
 
 using namespace boost::property_tree;
 using namespace std;
@@ -31,18 +32,16 @@ public:
 class RPCDSDataService {
   
 private:
-  
-  RPCDSDataType * data;
+  queue<RPCDSDataType*> resultsQueue;
   
 protected:
-  // clear data
-  virtual void erase(){delete this->data;}
+  
+  virtual void put(RPCDSDataType * data){this->resultsQueue.push(data);}
+  
 public:
   
-  //virtual RPCDSDataType * getRPCDSDataForConfigDetails(InputConfig * config){ };
-  virtual RPCDSDataType * getDataForRequest(const string & request)=0; //
-  virtual void setData(RPCDSDataType * d){ this->data = d;}
-  virtual RPCDSDataType * getData(){return this->data;}
+  virtual RPCDSDataType * get(){RPCDSDataType * r = this->resultsQueue.front(); this->resultsQueue.pop();return r;} // it might cause a problem if pop erases the element
+  virtual void getDataForRequest(const string & request)=0; // process request, put request result on the queue
   
   // virtual RPCDSDataService * getNext ()=0; //
   
@@ -50,6 +49,13 @@ public:
   RPCDSDataService();
   
 };
+
+
+/**
+ * DataSource is the black box to have simple public interface for requesting data
+ * and wait for the result on the result queue from the client side.
+ * The data processing after the request is sent are handled by the DataServices
+ */
 
 
 class RPCDSDataSourceBase {
@@ -64,7 +70,10 @@ protected:
 public:  
   
   virtual RPCDSDataService * getServiceForKey(const string & key) { return this->servicesMap.at(key);}
-  virtual RPCDSDataType * getDataFromServiceForKey(const string & serviceKey)=0;
+  //virtual RPCDSDataType * getDataFromServiceForKey(const string & serviceKey)=0;
+  RPCDSDataType * getResultFromQueue(const string & serviceKey) {this->getServiceForKey(serviceKey)->get();} // get 
+  //virtual void setPointerToQueueResultsForService(const string & serviceKey){ this->servicesMap. }
+  // setup the consumers pointers to DataService without DataSource
   
   virtual ~RPCDSDataSourceBase();
   RPCDSDataSourceBase();

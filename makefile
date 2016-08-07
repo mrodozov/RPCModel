@@ -9,7 +9,7 @@ boost_libs = -lboost_thread-mt
 #MYSQLLIBS = $(shell mysql_config --libs)
 #MYSQLINC = $(shell mysql_config --include)
 
-all : RateLumiEcapOffline RateVsLumi_Online CurrentApplication Print_offline_db_text_files GetEcapPlusMinusRatios Print_online_db_text_files GetRatioOfChambersForTwoRuns RateVsPhi_online CalculateLumiForRunWithFitCoefficientRefference RecoverLumiForEachRunWithCoeffAndRateFiles 2DBK Tutorial
+all : RateLumiEcapOffline RateVsLumi_Online CurrentApplication Print_offline_db_text_files GetEcapPlusMinusRatios Print_online_db_text_files GetRatioOfChambersForTwoRuns RateVsPhi_online CalculateLumiForRunWithFitCoefficientRefference RecoverLumiForEachRunWithCoeffAndRateFiles 2DBK Tutorial DataSource
 #all : RateVsLumi_Online
 
 objects = Strip.o DataObject.o Roll.o ExtendedStrip.o ExtendedRoll.o Chip.o Service.o DBconnector.o Applications.o NoiseAnalyzer.o
@@ -20,7 +20,6 @@ ds_objects = LocalFileClient.o CurrentData.o RateData.o DataSource.o
 
 main.o : main.cpp ExtendedStrip.o ExtendedRoll.o Service.o DBconnector.o Applications.o 
 	$(CC) -c -Wall main.cpp $(ROOTINC)
-	
 
 Chip.o : core/Chip.cpp ExtendedRoll.o
 	$(CC) -c -Wall core/Chip.cpp $(ROOTINC)

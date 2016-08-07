@@ -181,11 +181,7 @@ int main( int argc ,char *argv[] ){
   
   get2DplotsForJSONFileUsingAndJSONmap(jsonDatafile,jsonMapFile);
   
-  
-  
-  /*
-  
-  
+  /*  
   
   
   string datafolder = argv[1], rollName = argv[2];

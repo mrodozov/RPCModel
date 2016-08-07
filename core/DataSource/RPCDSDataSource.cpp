@@ -23,7 +23,7 @@ RPCDSDataType::RPCDSDataType(){}
 RPCDSDataType::~RPCDSDataType(){}
 
 RPCDSDataService::RPCDSDataService(){}
-RPCDSDataService::~RPCDSDataService(){this->erase();}
+RPCDSDataService::~RPCDSDataService(){}
 
 RPCDSDataSourceBase::RPCDSDataSourceBase(){}
 RPCDSDataSourceBase::~RPCDSDataSourceBase(){}
@@ -32,27 +32,6 @@ RPCDSDataSourceBase::~RPCDSDataSourceBase(){}
 
 RPCDSDataSource::RPCDSDataSource(){
 }
-
-RPCDSDataType * RPCDSDataSource::getRateDataForServiceKey( const string & serviceKey){
-  return dynamic_cast< RPCDSRateData* >( this->getDataFromServiceForKey( serviceKey ));
-}
-
-RPCDSDataType* RPCDSDataSource::getCurrentForRunlist(const vector< string >& runlist){
-  return dynamic_cast<RPCDSCurrentData*>(this->getDataFromServiceForKey(runlist.at(0)));
-}
-
-RPCDSDataType* RPCDSDataSource::getCurrentForServiceKey(const string& serviceKey){
-  return dynamic_cast<RPCDSCurrentData*>(this->getDataFromServiceForKey(serviceKey));
-}
-
-RPCDSDataType* RPCDSDataSource::getLumiDataForKey(const string& serviceKey){
-  return dynamic_cast<RPCDSRateData*>(this->getDataFromServiceForKey(serviceKey));
-}
-
-RPCDSDataType* RPCDSDataSource::getRateForRunlist(const vector< string >& runlist){
-  return dynamic_cast<RPCDSRateData*>(this->getDataFromServiceForKey(runlist.at(0)));
-}
-
 
 RPCDSDataSource::~RPCDSDataSource(){  
 }

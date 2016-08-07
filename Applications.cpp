@@ -1192,6 +1192,8 @@ void plotEcap_RateVsPhi(string rateFile, bool subtractIntrinsic, string fileWith
 
 void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer_and_suffix ,DataObject & lumiFile , string intrinsicFile, DataObject& area, bool intrinsicShouldBeSubtracted,double cutThreshold, QueryObject* query,DataObject & exlusionFile,bool divideRateOnLumi,bool debugOUTPUT) {
   
+  // TODO - if it contains .json substring as last 5 symbols, open file with the string, else - try to parse the string as json.
+  
   int divider = 1;//2;
   map<string,double> run_lumi_map;
   map<string,map<string,double> > run_rollRate_map;
@@ -1278,6 +1280,8 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer_and
     can->SetFillColor(0);
     can->cd();
     
+    /** ONLY TO FIND biggests -> first find the biggest value on Y axis to assign the Y */
+    
     for (int i=0;i < query->getOnlineRollCounter() ; i++) {
         int counter=0;
         double current_rate=0;
@@ -1317,14 +1321,14 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer_and
             counter = 0;
             current_rate = 0;
             for (run_iterator = run_rollRate_map_iter->second.begin();run_iterator != run_rollRate_map_iter->second.end();run_iterator++) {
-                if (run_iterator->first.find(query->getOnlineRollMapForRecord(i+1).regex) != string::npos && run_iterator->first.find("RE+1_1") == string::npos && run_iterator->first.find("RE-4_3_13") == string::npos && run_iterator->second < cutThreshold) {
-		  if (debugOUTPUT){
-		    //cout << " run " << run_rollRate_map_iter->first << " Roll " << run_iterator->first << endl;
-		  }
-                    current_rate +=run_iterator->second;
-                    counter ++;
-		    
-                }
+              //if (run_iterator->first.find(query->getOnlineRollMapForRecord(i+1).regex) != string::npos && run_iterator->first.find("RE+1_1") == string::npos && run_iterator->first.find("RE-4_3_13") == string::npos && run_iterator->second < cutThreshold) {
+	      if (run_iterator->second > cutThreshold) continue;
+	      if ( run_iterator->first.find(query->getOnlineRollMapForRecord(i+1).regex) == string::npos ) continue;
+	      if ( run_iterator->first.find("RE+1_1") != string::npos && ( ( query->getOnlineRollMapForRecord(i+1).regex.find("RE+1_1") == string::npos )) ) continue;
+	      
+	      current_rate +=run_iterator->second;
+	      counter ++;
+	      cout << run_iterator->first << " " << run_iterator->second << endl;
             }
             
             current_luminosity_ = run_lumi_map.find(run_rollRate_map_iter->first)->second;

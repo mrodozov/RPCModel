@@ -28,5 +28,11 @@ ptree * RPCDSRateData::getJSONdataForKeyInDataAsJSON(const string& key){
   return t;
 }
 
+void RPCDSRateData::setRateFromSource(ptree * jsonData){
+  this->json = jsonData;
+}
+
+
 RPCDSRateData::~RPCDSRateData(){
 }
+
