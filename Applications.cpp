@@ -1440,64 +1440,6 @@ void plotRateVsLumi_using_root_and_JSON(string data_folder ,DataObject & lumiFil
     OFS.close();
 }
 
-void plot_X_vs_Y_values_using_JSON_data_and_JSON_config(const string& JSON_data_file, const string& JSON_config_file){
-  
-  ifstream ifs(JSON_data_file.c_str());
-  ptree JSON_data, JSON_config;
-  boost::property_tree::json_parser::read_json(ifs,JSON_data);
-  ifs.clear();ifs.close();
-  ifs.open(JSON_config_file.c_str());
-  boost::property_tree::json_parser::read_json(ifs,JSON_config);
-  ifs.clear();ifs.close();
-  
-  TCanvas * acan = new TCanvas("","",1200,700);
-  TLegend * leg;
-  leg = new TLegend(0.135095,0.58678,0.352423,0.886329);
-  leg->SetFillColor(0);
-  leg->SetBorderSize(0);
-  leg->SetTextFont(6);
-  leg->SetTextSize(30);
-  
-  
-  int histosCounter = 0;
-  
-  acan->cd();
-  
-  for (ptree::iterator iter = JSON_data.begin() ; iter != JSON_data.end() ; iter++){
-    cout << iter->first << endl;
-    int counter = 0;
-    
-    vector<double> lumis, rates;
-    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, iter->second.get_child("values")){
-      double val = v.second.get_value<double>();
-       if (! (counter % 2) ) {lumis.push_back(val);}
-       else {rates.push_back(val);}
-       counter++;
-    }    
-    
-    TH2F * h2 = new TH2F((iter->first+"_title").c_str(),(iter->first+"_").c_str(),1000,0,11000,500,0,50);
-    h2->SetStats(false);
-    if ( iter->second.find("title") != iter->second.not_found())  h2->SetName( iter->second.get_child("title").get_value<string>().c_str() );
-    if ( iter->second.find("marker") != iter->second.not_found()) h2->SetMarkerStyle(iter->second.get_child("marker").get_value<int>());
-    if ( iter->second.find("color") != iter->second.not_found()) h2->SetMarkerColor(iter->second.get_child("color").get_value<int>());
-    if ( JSON_config.find("xaxis") != JSON_config.not_found() ) h2->GetXaxis()->SetTitle(JSON_config.get_child("xaxis").get_value<string>().c_str());
-    if ( JSON_config.find("yaxis") != JSON_config.not_found() ) h2->GetYaxis()->SetTitle(JSON_config.get_child("yaxis").get_value<string>().c_str());
-    if ( JSON_config.find("title") != JSON_config.not_found() ) h2->SetTitle(JSON_config.get_child("title").get_value<string>().c_str());
-    
-    for (int ctr = 0 ; ctr < lumis.size() ; ctr ++ ){
-      h2->Fill(lumis.at(ctr),rates.at(ctr),3);
-    }
-    
-    if (!histosCounter)  h2->Draw();
-    else h2->Draw("same");
-    histosCounter++;
-    leg->AddEntry(h2,h2->GetName(),"p");
-  }
-    
-  leg->Draw();
-  acan->SaveAs("try.root");
-  
-}
 
 
 /** //@brief  Pure technical function , just to write the database files - online , recalculated and stored
@@ -5926,7 +5868,7 @@ void WriteRateVsLumiPerRollFile(string& LumiFile, string& rootFilesFolder, strin
       aroll->removeNoisyStripsForAllClonesWithPercentValue(100);
       
       for(int c = 0; c < aroll->getClones(); c++){
-	string rollName = aroll->getRollIDofCloneWithConstructionDBidentifiers(c+1);
+	string rollName = aroll->getRollIDofCloneWithNewIdentifiers(c+1);
 	if(rollID_LumiToRateMap.find(rollName) == rollID_LumiToRateMap.end()) { 
 	  map<double, double> LumiToRateMap;
 	  rollID_LumiToRateMap[rollName] = LumiToRateMap ; 
@@ -6023,6 +5965,7 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
   SummaryPlotNames.push_back("W-2");SummaryPlotNames.push_back("W-1");SummaryPlotNames.push_back("W0");SummaryPlotNames.push_back("W+1");SummaryPlotNames.push_back("W+2");
   SummaryPlotNames.push_back("RE+1");SummaryPlotNames.push_back("RE+2");SummaryPlotNames.push_back("RE+3");SummaryPlotNames.push_back("RE+4");
   
+  ptree Roll_RatioJSON;
   
   for (int i = 0 ; i < IDs.getLenght() ;  i++){
     
@@ -6050,10 +5993,12 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
     second->Delete();
     f1->Delete();
     f2->Delete();
-    
+    Roll_RatioJSON.put<double>(resultID,height16/height15);
     //if ( cf1 < 0.8 ) continue;    
     
-    mapRollToCoordinates.at(resultID).at(2) = height16/height15 ;
+    double the_ratio = height16/height15;
+    if (height15 == 0 || height16 == 0) the_ratio = 0;
+    mapRollToCoordinates.at(resultID).at(2) = the_ratio ;
     
     //cout << max15 << " " << max16 << " " << resultID << " " << height16 / height15 << " " << height16_HL/ height15_HL << " " << cf1 << " " << cf2  << endl;
     
@@ -6068,7 +6013,14 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
     }        
   }
   
+  ofstream ofsss("RollToRateRatios.json");
+  boost::property_tree::json_parser::write_json(ofsss,Roll_RatioJSON);
+  ofsss.close();
+  
+  exit(0);
+  
   inputRoot->Close(); 
+  
   
   // put here the JSON with the currents ratios
   ifstream ifs("CurrentsRatiosByRoll.json");
@@ -6188,7 +6140,7 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
     CurrentsRatios->SetMinimum(0.5);
     CurrentsRatios->SetMaximum(1.8);
     CurrentsRatios->Draw("COLZ");
-    canvasCurrents->SaveAs((resultDir+rName+"_Currents_2D.root").c_str());
+    //canvasCurrents->SaveAs((resultDir+rName+"_Currents_2D.root").c_str());
     //CurrentsRatios->Delete();
   }  
   
@@ -6278,6 +6230,8 @@ void GetLumiHistogramPerLS(string& lumiFile){
   
 }
 
+// universal 2D
+
 void get2DplotsForJSONFileUsingAndJSONmap(const string & JSONdataFile,const string & JSONmapFile){
   
     ptree * JSONdata = new ptree;
@@ -6325,6 +6279,69 @@ void get2DplotsForJSONFileUsingAndJSONmap(const string & JSONdataFile,const stri
     delete JSONdata;
     delete JSONmap;
 }
+
+// Universal X vs Y 
+
+void plot_X_vs_Y_values_using_JSON_data_and_JSON_config(const string& JSON_data_file, const string& JSON_config_file){
+  
+  ifstream ifs(JSON_data_file.c_str());
+  ptree JSON_data, JSON_config;
+  boost::property_tree::json_parser::read_json(ifs,JSON_data);
+  ifs.clear();ifs.close();
+  ifs.open(JSON_config_file.c_str());
+  boost::property_tree::json_parser::read_json(ifs,JSON_config);
+  ifs.clear();ifs.close();
+  
+  TCanvas * acan = new TCanvas("","",1200,700);
+  TLegend * leg;
+  leg = new TLegend(0.135095,0.58678,0.352423,0.886329);
+  leg->SetFillColor(0);
+  leg->SetBorderSize(0);
+  leg->SetTextFont(6);
+  leg->SetTextSize(30);  
+  
+  int histosCounter = 0;
+  
+  acan->cd();
+  
+  for (ptree::iterator iter = JSON_data.begin() ; iter != JSON_data.end() ; iter++){
+    cout << iter->first << endl;
+    int counter = 0;
+    
+    vector<double> lumis, rates;
+    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, iter->second.get_child("values")){
+      double val = v.second.get_value<double>();
+       if (! (counter % 2) ) {lumis.push_back(val);}
+       else {rates.push_back(val);}
+       counter++;
+    }    
+    
+    TH2F * h2 = new TH2F((iter->first+"_title").c_str(),(iter->first+"_").c_str(),1000,0,11000,500,0,50);
+    h2->SetStats(false);
+    if ( iter->second.find("title") != iter->second.not_found())  h2->SetName( iter->second.get_child("title").get_value<string>().c_str() );
+    if ( iter->second.find("marker") != iter->second.not_found()) h2->SetMarkerStyle(iter->second.get_child("marker").get_value<int>());
+    if ( iter->second.find("color") != iter->second.not_found()) h2->SetMarkerColor(iter->second.get_child("color").get_value<int>());
+    if ( JSON_config.find("xaxis") != JSON_config.not_found() ) h2->GetXaxis()->SetTitle(JSON_config.get_child("xaxis").get_value<string>().c_str());
+    if ( JSON_config.find("yaxis") != JSON_config.not_found() ) h2->GetYaxis()->SetTitle(JSON_config.get_child("yaxis").get_value<string>().c_str());
+    if ( JSON_config.find("title") != JSON_config.not_found() ) h2->SetTitle(JSON_config.get_child("title").get_value<string>().c_str());
+    
+    for (int ctr = 0 ; ctr < lumis.size() ; ctr ++ ){
+      h2->Fill(lumis.at(ctr),rates.at(ctr),3);
+    }
+    
+    if (!histosCounter)  h2->Draw();
+    else h2->Draw("same");
+    histosCounter++;
+    leg->AddEntry(h2,h2->GetName(),"p");
+  }
+    
+  leg->Draw();
+  acan->SaveAs("try.root");
+  
+}
+
+
+
 
 // endof QueryObject methods
 

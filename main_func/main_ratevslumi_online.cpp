@@ -143,10 +143,8 @@ int main( int argc ,char *argv[] ){
   
   // by wheels barrel
   //aQuery->insertNewOnlineRecord(("W"+orientation).c_str(),("W "+orientation).c_str(),kRed,22);
-  
-  
-  aQuery->insertNewOnlineRecord(("RE-"+orientation+"4_R2"+sector).c_str(),("RE -4"+orientation+" 2 S"+sector).c_str(),kBlue,22);
-  
+    
+  aQuery->insertNewOnlineRecord(("RE-"+orientation+"4_R2"+sector).c_str(),("RE -4"+orientation+" 2 S"+sector).c_str(),kBlue,22);  
   aQuery->insertNewOnlineRecord(("RE+"+orientation+"4_R2"+sector).c_str(),("RE +4"+orientation+" 2 S"+sector).c_str(),kRed,22);
   aQuery->insertNewOnlineRecord(("RE-"+orientation+"3_R2"+sector).c_str(),("RE -3"+orientation+" 2 S"+sector).c_str(),kSpring-7,25);
   aQuery->insertNewOnlineRecord(("RE+"+orientation+"3_R2"+sector).c_str(),("RE +3"+orientation+" 2 S"+sector).c_str(),kBlack,21);
