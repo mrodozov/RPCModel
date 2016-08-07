@@ -1208,7 +1208,10 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string data_folder ,Data
     double biggestOn_X=0;
     double biggestOn_Y=0;
     double currentLumi =0;
-    
+//     map<string,string> subparts;
+//     for (int i = 0 ; query->getOnlineRollCounter() ; i++){
+//       subparts[query->getOnlineRollMapForRecord(i+1).regex] = query->getOnlineRollMapForRecord(i+1).regex;
+//     }
     ptree run_rateVlumi_JSON;
     DataObject areaDO("localResources/area_noise_cmssw_withRE4");
     
@@ -1252,6 +1255,7 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string data_folder ,Data
 	    map<string,double> currentRates;
 	    
 	    TFile * file = new TFile((data_folder+"total_"+lumiFile.getElement(i+1,1)+".root").c_str(),"READ");
+	    cout << "reading file " << data_folder+"total_"+lumiFile.getElement(i+1,1)+".root" << endl;
 	    TIter nextkey(file->GetListOfKeys());
 	    TKey * key;
 	    TH1F * h1;
@@ -1263,6 +1267,7 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string data_folder ,Data
             while (key = (TKey*)nextkey()) {
 	      obj1 = key->ReadObj();
 	      string nameOfRoll = obj1->GetName();
+// 	      if (subparts.find(nameOfRoll) == subparts.end()) continue;
 	      if (nameOfRoll.substr(0,1) == "W" || nameOfRoll.substr(0,2) == "RE") {
 		
 		h1 = dynamic_cast<TH1F*>(obj1);
@@ -1353,9 +1358,23 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string data_folder ,Data
 	  if(divideRateOnLumi) { divider = current_luminosity_; multiplier = 1000;}
 	  double res_r = current_rate/counter;
 	  hist->Fill(current_luminosity_,res_r,3);
-	  auto & array = run_rateVlumi_JSON.get_child(query->getOnlineRollMapForRecord(i+1).regex);
-	  ptree pp;
-	  array.put(boost::lexical_cast<string>(current_luminosity_),res_r);
+	  ptree & array = run_rateVlumi_JSON.get_child(query->getOnlineRollMapForRecord(i+1).regex).get_child("");
+	  string apair = boost::lexical_cast<string>(current_luminosity_)+","+boost::lexical_cast<string>(res_r);
+	  ptree p;
+	  string cl = boost::lexical_cast<string>(current_luminosity_);
+	  string rr = boost::lexical_cast<string>(res_r);
+	  
+	  p.add("x",cl);
+	  p.add("y",rr);
+// 	  p.put_value<double>(current_luminosity_);
+
+	  array.push_back(std::make_pair("",p));
+// 	  p.put_value<double>(res_r);
+//  	  array.push_back(std::make_pair("",p));
+// 	  p.add(boost::lexical_cast<string>(current_luminosity_),boost::lexical_cast<string>(res_r));
+// 	  array.push_back(std::make_pair("",p.get_child("")));
+	  //array.add("",);
+	  
         }
         
 
