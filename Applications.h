@@ -12,6 +12,15 @@
 #include "ROOT/ROOT.h"
 #include "ServiceClasses/Service.h"
 
+#ifdef __GNUC__
+#define DEPRECATED __attribute__((deprecated))
+#elif defined(_MSC_VER)
+#define DEPRECATED __declspec(deprecated)
+#else
+#pragma message("WARNING: You need to implement DEPRECATED for this compiler")
+#define DEPRECATED
+#endif
+
 using namespace std;
 
 void PrintGeometryTable(std::string InputWithRollNames,std::string Ouput,DataObject & Areas,DataObject & RawIDFile);
@@ -97,7 +106,7 @@ void plotEcap_RateVsPhi(string rateFile,bool subtractIntrinsic,string fileWithIn
 
 void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer,DataObject & lumiFile,string intrinsicFile,DataObject & area,bool intrinsicShouldBeSubtracted,double cutThreshold,QueryObject * query,DataObject & exlucsionFile,bool divideRateOnLumi,bool debugOUTPUT);
 
-void print_online_dbfiles(string rootContainer,string outputContainer ,DataObject & lumiFile,DataObject& area,string RollList,bool correction,double correctionInPercents);
+DEPRECATED void print_online_dbfiles(string rootContainer,string outputContainer ,DataObject & lumiFile,DataObject& area,string RollList,bool correction,double correctionInPercents);
 
 void print_offline_db_files(string rootContainer,string outputContainer ,DataObject & lumiFile,DataObject& area,string RollList,bool correction,double correctionInPercents);
 

@@ -1190,7 +1190,7 @@ void plotEcap_RateVsPhi(string rateFile, bool subtractIntrinsic, string fileWith
     //c1->SaveAs(("/home/rodozov/Desktop/RumiTeX/pictures/DISK2PHIASSYM.png").c_str());
 }
 
-void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer_and_suffix ,DataObject & lumiFile , string intrinsicFile, DataObject& area, bool intrinsicShouldBeSubtracted,double cutThreshold, QueryObject* query,DataObject & exlusionFile,bool divideRateOnLumi,bool debugOUTPUT) {
+void plotRateVsLumi_using_the_database_rollLevel_online(string data_folder ,DataObject & lumiFile , string intrinsicFile, DataObject& area, bool intrinsicShouldBeSubtracted,double cutThreshold, QueryObject* query,DataObject & exlusionFile,bool divideRateOnLumi,bool debugOUTPUT) {
   
   // TODO - if it contains .json substring as last 5 symbols, open file with the string, else - try to parse the string as json.
   
@@ -1209,6 +1209,7 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer_and
     double biggestOn_Y=0;
     double currentLumi =0;
     
+    ptree run_rateVlumi_JSON;
     DataObject areaDO("localResources/area_noise_cmssw_withRE4");
     
     /* to remove that shit !*/
@@ -1250,14 +1251,14 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer_and
 	    
 	    map<string,double> currentRates;
 	    
-	    TFile * file = new TFile((fileContainer_and_suffix+"total_"+lumiFile.getElement(i+1,1)+".root").c_str(),"READ");
+	    TFile * file = new TFile((data_folder+"total_"+lumiFile.getElement(i+1,1)+".root").c_str(),"READ");
 	    TIter nextkey(file->GetListOfKeys());
 	    TKey * key;
 	    TH1F * h1;
 	    TObject * obj1;
 	    
 	    
-	    if (! file->IsOpen()) { cout << "File " << fileContainer_and_suffix+"total_"+lumiFile.getElement(i+1,1)+".root" << " missing !" << endl; continue ; }
+	    if (! file->IsOpen()) { cout << "File " << data_folder+"total_"+lumiFile.getElement(i+1,1)+".root" << " missing !" << endl; continue ; }
             
             while (key = (TKey*)nextkey()) {
 	      obj1 = key->ReadObj();
@@ -1278,29 +1279,10 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer_and
 	    
 	    file->Close("R");
 	    file->Delete();
-	    /*
-	    IFS.open((fileContainer_and_suffix+lumiFile.getElement(i+1,1)+".txt").c_str());
-            map<string,double> currentRatess;
-            while (getline(IFS,LINE)) {
-	      
-                iss.str(LINE);
-                iss >> rollName >> rateOfRoll;
-
-		if(intrinsicShouldBeSubtracted) rateOfRoll = rateOfRoll - intrinsic_map.find(rollName)->second;
-		//if(rateOfRoll > biggestOn_Y ) biggestOn_Y = rateOfRoll;
-		
-                currentRatess[rollName] = rateOfRoll;
-                iss.clear();
-                IFS.clear();
-
-            }
-            IFS.close();
-            run_rollRate_map[lumiFile.getElement(i+1,1)] = currentRatess;
-	    */
+	   
         }
     }
     
-    //biggestOn_X = 6000;
     biggestOn_X += 500;
     
     TLegend * leg;
@@ -1332,14 +1314,9 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer_and
                 }
             }
             if (current_rate/counter > biggestOn_Y) biggestOn_Y = (current_rate/counter);  
-	    //if (divideRateOnLumi) {
-	    //  biggestOn_Y = biggestOn_Y/biggestOn_X;
-	    //}
+	    
 	}
-    }
-    
-    //if (divideRateOnLumi){ biggestOn_Y += 0.005; }
-    //else{ biggestOn_Y += 0.5; }
+    }    
     
     biggestOn_Y += 0.5;
     int multiplier = 1;
@@ -1351,6 +1328,8 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer_and
 	// first find the biggest value on Y axis to assign the Y 
 	TH2F * hist = new TH2F(query->getOnlineRollMapForRecord(i+1).histoName.c_str(),"",1000,0,biggestOn_X,10000,0,biggestOn_Y);
 	
+	run_rateVlumi_JSON.add_child(query->getOnlineRollMapForRecord(i+1).regex,ptree());
+
 	for (run_rollRate_map_iter = run_rollRate_map.begin();run_rollRate_map_iter != run_rollRate_map.end();run_rollRate_map_iter++) {
             counter = 0;
             current_rate = 0;
@@ -1363,29 +1342,22 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer_and
 	      current_rate +=run_iterator->second;
 	      counter ++;
 	      cout << run_iterator->first << " " << run_iterator->second << endl;
-            }
-            
-            current_luminosity_ = run_lumi_map.find(run_rollRate_map_iter->first)->second;
-            
+            }            
+            current_luminosity_ = run_lumi_map.find(run_rollRate_map_iter->first)->second;            
 
 	    if(query->getOnlineRollMapForRecord(i+1).cutByRunRange 
-	     &&  atoi(run_rollRate_map_iter->first.c_str()) >=  query->getOnlineRollMapForRecord(i+1).runStart
-	     &&  atoi(run_rollRate_map_iter->first.c_str()) <= query->getOnlineRollMapForRecord(i+1).runEnd
-	  ){
-	     if(divideRateOnLumi) { divider = current_luminosity_; multiplier = 1000;}
-	     hist->Fill(current_luminosity_,((current_rate/counter)/divider)*multiplier,3);
-// 	     
-// 	     }
-	   }
-	   
-	   if(!query->getOnlineRollMapForRecord(i+1).cutByRunRange){
-	    if(divideRateOnLumi) { divider = current_luminosity_; multiplier = 1000;}
-	     
-	     hist->Fill(current_luminosity_,((current_rate/counter)/divider)*multiplier,3);
-	     
-	   
-	  }
+	     &&  atoi(run_rollRate_map_iter->first.c_str()) <=  query->getOnlineRollMapForRecord(i+1).runStart
+	     &&  atoi(run_rollRate_map_iter->first.c_str()) >= query->getOnlineRollMapForRecord(i+1).runEnd
+	  ) continue;
+	    
+	  if(divideRateOnLumi) { divider = current_luminosity_; multiplier = 1000;}
+	  double res_r = current_rate/counter;
+	  hist->Fill(current_luminosity_,res_r,3);
+	  auto & array = run_rateVlumi_JSON.get_child(query->getOnlineRollMapForRecord(i+1).regex);
+	  ptree pp;
+	  array.put(boost::lexical_cast<string>(current_luminosity_),res_r);
         }
+        
 
         hist->SetMarkerStyle(query->getOnlineRollMapForRecord(i+1).Marker);
         hist->SetMarkerColor(query->getOnlineRollMapForRecord(i+1).Color);
@@ -1426,7 +1398,9 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer_and
     leg->Draw();
     can->SaveAs((query->getCanvasTitle()+".png").c_str());
     can->SaveAs((query->getCanvasTitle()+".root").c_str());
-    
+    ofstream OFS("try.json");
+    boost::property_tree::json_parser::write_json(OFS,run_rateVlumi_JSON);
+    OFS.close();
 }
 
 /** //@brief  Pure technical function , just to write the database files - online , recalculated and stored
