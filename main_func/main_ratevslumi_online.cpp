@@ -47,8 +47,9 @@ int main( int argc ,char *argv[] ){
   aQuery->setHistoYtitle(" Rate (Hz/cm^{2})");
   aQuery->setMainTitle("RE"+orientation+ring+sector);
   string emtpyString = "";
-  bool useLumiAsRateDivider = atoi(argv[11]);
-  bool debugOUTPUT = atoi(argv[12]);
+  bool isOffline = atoi(argv[11]);
+  bool useLumiAsRateDivider = atoi(argv[12]);
+  bool debugOUTPUT = atoi(argv[13]);
   
   if(useLumiAsRateDivider){
     aQuery->setHistoYtitle(" Rate/Lumi  (cm^{-2}s^{-1}/10^{27}cm^{-2}s^{-1})");
@@ -144,10 +145,11 @@ int main( int argc ,char *argv[] ){
   //aQuery->insertNewOnlineRecord(("W"+orientation).c_str(),("W "+orientation).c_str(),kRed,22);
   
   
-  aQuery->insertNewOnlineRecord(("RE-"+orientation+"_2"+sector).c_str(),("RE -"+orientation+" 2 ").c_str(),kBlue,22);
-  aQuery->insertNewOnlineRecord(("RE+"+orientation+"_2"+sector).c_str(),("RE +"+orientation+" 2").c_str(),kRed,22);
-  aQuery->insertNewOnlineRecord(("RE-"+orientation+"_3"+sector).c_str(),("RE -"+orientation+" 3 ").c_str(),kSpring-7,25);
-  aQuery->insertNewOnlineRecord(("RE+"+orientation+"_3"+sector).c_str(),("RE +"+orientation+" 3 ").c_str(),kBlack,21);
+  aQuery->insertNewOnlineRecord(("RE-"+orientation+"4_R2"+sector).c_str(),("RE -4"+orientation+" 2 S"+sector).c_str(),kBlue,22);
+  
+  aQuery->insertNewOnlineRecord(("RE+"+orientation+"4_R2"+sector).c_str(),("RE +4"+orientation+" 2 S"+sector).c_str(),kRed,22);
+  aQuery->insertNewOnlineRecord(("RE-"+orientation+"3_R2"+sector).c_str(),("RE -3"+orientation+" 2 S"+sector).c_str(),kSpring-7,25);
+  aQuery->insertNewOnlineRecord(("RE+"+orientation+"3_R2"+sector).c_str(),("RE +3"+orientation+" 2 S"+sector).c_str(),kBlack,21);
   
   //aQuery->insertNewOnlineRecord("RE+4_2",("RE "+orientation+"+1 1 4 ").c_str(),kSpring-7,27);
   
@@ -170,6 +172,6 @@ int main( int argc ,char *argv[] ){
   */
   
   
-  plotRateVsLumi_using_the_database_rollLevel_online(DataFolder,Lumi,IntrinsicOnlineFile,area,0,cutThreshold,aQuery,exluded,useLumiAsRateDivider,debugOUTPUT);
+  plotRateVsLumi_using_root_and_JSON(DataFolder,Lumi,IntrinsicOnlineFile,area,0,cutThreshold,aQuery,exluded,isOffline,useLumiAsRateDivider,debugOUTPUT);
   
 }

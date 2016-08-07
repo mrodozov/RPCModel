@@ -1190,9 +1190,12 @@ void plotEcap_RateVsPhi(string rateFile, bool subtractIntrinsic, string fileWith
     //c1->SaveAs(("/home/rodozov/Desktop/RumiTeX/pictures/DISK2PHIASSYM.png").c_str());
 }
 
-void plotRateVsLumi_using_the_database_rollLevel_online(string data_folder ,DataObject & lumiFile , string intrinsicFile, DataObject& area, bool intrinsicShouldBeSubtracted,double cutThreshold, QueryObject* query,DataObject & exlusionFile,bool divideRateOnLumi,bool debugOUTPUT) {
+void plotRateVsLumi_using_root_and_JSON(string data_folder ,DataObject & lumiFile , string intrinsicFile, DataObject& area, bool intrinsicShouldBeSubtracted,double cutThreshold, QueryObject* query,DataObject & exlusionFile,bool isOffline,bool divideRateOnLumi,bool debugOUTPUT) {
   
   // TODO - if it contains .json substring as last 5 symbols, open file with the string, else - try to parse the string as json.
+  
+  ptree query_JSON;
+  
   
   int divider = 1;//2;
   map<string,double> run_lumi_map;
@@ -1275,7 +1278,14 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string data_folder ,Data
 		aroll->setStripsAreaFromSource_cmsswResource(areaDO);
 		aroll->setStripsRatesFromTH1FObject(h1);
 		aroll->removeNoisyStripsForAllClonesWithPercentValue(100);
-		currentRates[nameOfRoll] = aroll->getAvgRatePSCWithoutCorrections();
+		if (isOffline) {
+		  for (int r_id = 1 ; r_id <= aroll->getClones() ; r_id++){
+		    currentRates[aroll->getRollIDofCloneWithNewIdentifiers(r_id)] = aroll->getAvgRatePSCWithoutCorrectionsForClone(r_id);
+		  }
+		}
+		else {
+		  currentRates[nameOfRoll] = aroll->getAvgRatePSCWithoutCorrections();
+		}
 		delete aroll;
 	      }
 	    }
@@ -1334,6 +1344,14 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string data_folder ,Data
 	TH2F * hist = new TH2F(query->getOnlineRollMapForRecord(i+1).histoName.c_str(),"",1000,0,biggestOn_X,10000,0,biggestOn_Y);
 	
 	run_rateVlumi_JSON.add_child(query->getOnlineRollMapForRecord(i+1).regex,ptree());
+	run_rateVlumi_JSON.get_child(query->getOnlineRollMapForRecord(i+1).regex).add_child("values",ptree());
+	run_rateVlumi_JSON.get_child(query->getOnlineRollMapForRecord(i+1).regex).add<int>("marker",query->getOnlineRollMapForRecord(i+1).Marker);
+	run_rateVlumi_JSON.get_child(query->getOnlineRollMapForRecord(i+1).regex).add<int>("color",query->getOnlineRollMapForRecord(i+1).Color);
+	run_rateVlumi_JSON.get_child(query->getOnlineRollMapForRecord(i+1).regex).add<string>("title",query->getOnlineRollMapForRecord(i+1).histoName);
+	//run_rateVlumi_JSON.get_child(query->getOnlineRollMapForRecord(i+1).regex).add<int>("title",query->getOnlineRollMapForRecord(i+1).);
+	//run_rateVlumi_JSON.add<>();
+	
+	
 
 	for (run_rollRate_map_iter = run_rollRate_map.begin();run_rollRate_map_iter != run_rollRate_map.end();run_rollRate_map_iter++) {
             counter = 0;
@@ -1354,26 +1372,25 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string data_folder ,Data
 	     &&  atoi(run_rollRate_map_iter->first.c_str()) <=  query->getOnlineRollMapForRecord(i+1).runStart
 	     &&  atoi(run_rollRate_map_iter->first.c_str()) >= query->getOnlineRollMapForRecord(i+1).runEnd
 	  ) continue;
-	    
+	  
 	  if(divideRateOnLumi) { divider = current_luminosity_; multiplier = 1000;}
 	  double res_r = current_rate/counter;
 	  hist->Fill(current_luminosity_,res_r,3);
-	  ptree & array = run_rateVlumi_JSON.get_child(query->getOnlineRollMapForRecord(i+1).regex).get_child("");
+	  int cl_int = 0;
+	  if (current_luminosity_ > 0 ) {cl_int = current_luminosity_ ; current_luminosity_ = cl_int;}
+	  else { cl_int = current_luminosity_ * 1000 ; current_luminosity_ = double(cl_int) / 1000 ;}
+	  ptree & array = run_rateVlumi_JSON.get_child(query->getOnlineRollMapForRecord(i+1).regex+".values");//.get_child("values");
 	  string apair = boost::lexical_cast<string>(current_luminosity_)+","+boost::lexical_cast<string>(res_r);
 	  ptree p;
 	  string cl = boost::lexical_cast<string>(current_luminosity_);
-	  string rr = boost::lexical_cast<string>(res_r);
-	  
-	  p.add("x",cl);
-	  p.add("y",rr);
-// 	  p.put_value<double>(current_luminosity_);
-
+	  p.put_value(cl);
+	  p.put_value<double>(current_luminosity_);
 	  array.push_back(std::make_pair("",p));
-// 	  p.put_value<double>(res_r);
-//  	  array.push_back(std::make_pair("",p));
-// 	  p.add(boost::lexical_cast<string>(current_luminosity_),boost::lexical_cast<string>(res_r));
-// 	  array.push_back(std::make_pair("",p.get_child("")));
-	  //array.add("",);
+// 	  string rr = boost::lexical_cast<string>(res_r);
+// 	  cl += "\"";
+// 	  rr = "\""+rr;
+	  p.put_value<double>(res_r);
+  	  array.push_back(std::make_pair("",p));
 	  
         }
         
@@ -1417,10 +1434,71 @@ void plotRateVsLumi_using_the_database_rollLevel_online(string data_folder ,Data
     leg->Draw();
     can->SaveAs((query->getCanvasTitle()+".png").c_str());
     can->SaveAs((query->getCanvasTitle()+".root").c_str());
+    
     ofstream OFS("try.json");
     boost::property_tree::json_parser::write_json(OFS,run_rateVlumi_JSON);
     OFS.close();
 }
+
+void plot_X_vs_Y_values_using_JSON_data_and_JSON_config(const string& JSON_data_file, const string& JSON_config_file){
+  
+  ifstream ifs(JSON_data_file.c_str());
+  ptree JSON_data, JSON_config;
+  boost::property_tree::json_parser::read_json(ifs,JSON_data);
+  ifs.clear();ifs.close();
+  ifs.open(JSON_config_file.c_str());
+  boost::property_tree::json_parser::read_json(ifs,JSON_config);
+  ifs.clear();ifs.close();
+  
+  TCanvas * acan = new TCanvas("","",1200,700);
+  TLegend * leg;
+  leg = new TLegend(0.135095,0.58678,0.352423,0.886329);
+  leg->SetFillColor(0);
+  leg->SetBorderSize(0);
+  leg->SetTextFont(6);
+  leg->SetTextSize(30);
+  
+  
+  int histosCounter = 0;
+  
+  acan->cd();
+  
+  for (ptree::iterator iter = JSON_data.begin() ; iter != JSON_data.end() ; iter++){
+    cout << iter->first << endl;
+    int counter = 0;
+    
+    vector<double> lumis, rates;
+    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, iter->second.get_child("values")){
+      double val = v.second.get_value<double>();
+       if (! (counter % 2) ) {lumis.push_back(val);}
+       else {rates.push_back(val);}
+       counter++;
+    }    
+    
+    TH2F * h2 = new TH2F((iter->first+"_title").c_str(),(iter->first+"_").c_str(),1000,0,11000,500,0,50);
+    h2->SetStats(false);
+    if ( iter->second.find("title") != iter->second.not_found())  h2->SetName( iter->second.get_child("title").get_value<string>().c_str() );
+    if ( iter->second.find("marker") != iter->second.not_found()) h2->SetMarkerStyle(iter->second.get_child("marker").get_value<int>());
+    if ( iter->second.find("color") != iter->second.not_found()) h2->SetMarkerColor(iter->second.get_child("color").get_value<int>());
+    if ( JSON_config.find("xaxis") != JSON_config.not_found() ) h2->GetXaxis()->SetTitle(JSON_config.get_child("xaxis").get_value<string>().c_str());
+    if ( JSON_config.find("yaxis") != JSON_config.not_found() ) h2->GetYaxis()->SetTitle(JSON_config.get_child("yaxis").get_value<string>().c_str());
+    if ( JSON_config.find("title") != JSON_config.not_found() ) h2->SetTitle(JSON_config.get_child("title").get_value<string>().c_str());
+    
+    for (int ctr = 0 ; ctr < lumis.size() ; ctr ++ ){
+      h2->Fill(lumis.at(ctr),rates.at(ctr),3);
+    }
+    
+    if (!histosCounter)  h2->Draw();
+    else h2->Draw("same");
+    histosCounter++;
+    leg->AddEntry(h2,h2->GetName(),"p");
+  }
+    
+  leg->Draw();
+  acan->SaveAs("try.root");
+  
+}
+
 
 /** //@brief  Pure technical function , just to write the database files - online , recalculated and stored
  *

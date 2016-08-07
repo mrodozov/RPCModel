@@ -102,9 +102,11 @@ bool universalRollFilter(string barrel_or_ecap
 
 void plotRateVsLumi_using_the_database_files_stripLevel(DataObject & LumiFile,string filesCont,string outCont,string IntrinsicFile,bool WriteNewIntrinsic);
 
+void plot_X_vs_Y_values_using_JSON_data_and_JSON_config(const string & JSON_data, const string & JSON_config);
+
 void plotEcap_RateVsPhi(string rateFile,bool subtractIntrinsic,string fileWithIntrinsic,DataObject & area,double cutValueSingleStrip,string SGmapFile,DataObject & LumiFile,QueryObject * query);
 
-void plotRateVsLumi_using_the_database_rollLevel_online(string fileContainer,DataObject & lumiFile,string intrinsicFile,DataObject & area,bool intrinsicShouldBeSubtracted,double cutThreshold,QueryObject * query,DataObject & exlucsionFile,bool divideRateOnLumi,bool debugOUTPUT);
+void plotRateVsLumi_using_root_and_JSON(string fileContainer,DataObject & lumiFile,string intrinsicFile,DataObject & area,bool intrinsicShouldBeSubtracted,double cutThreshold,QueryObject * query,DataObject & exlucsionFile,bool isOffline,bool divideRateOnLumi,bool debugOUTPUT);
 
 DEPRECATED void print_online_dbfiles(string rootContainer,string outputContainer ,DataObject & lumiFile,DataObject& area,string RollList,bool correction,double correctionInPercents);
 
