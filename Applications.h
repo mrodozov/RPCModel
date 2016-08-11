@@ -200,11 +200,14 @@ void WriteRateVsLumiPerRollFile(string & LumiFile, string & rootFilesFolder, str
 void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputFile, string & outputFile, string & twoDMap,string & ShortB, string & ShortE); // firstID, secondID, resultID
 
 
+
 void GetLumiHistogramPerLS(string & lumiFile);
 
 void get2DplotsForJSONFileUsingAndJSONmap(const string & JSONdataFile,const string & JSONmapFile);
 
-void PositiveNegativePartsRatio(string & IDs_file, string & inputFile);
+void PositiveNegativePartsRatio(string & IDs_file, string & runlist, const string & runfolder, const string & area, const string & JSON_config); // for a runlist, for each pair get distributions and write it's value
+
+void getJSONinputForRateVsPhiForRun(const string & run_rootfile, const string & JSON_config, const string & JSONout);
 
 void DrawVvsPhiUsingJSONdataAndJSONconfig(const string & JSON_data_fname, const string & JSON_config_fname); // the data file format is {RollPartName:{title:"",marker:"",color:"",data:[v1,v2,v3...],errors[e1,e2,e3,...]},RollPartName2:...} where the points given are put equdistant along 2pi in radiants on X 
 

@@ -14,6 +14,10 @@ protected:
   
   void getRateDataFromJSONfile(const string & fileName);
   void getRateDataFromROOTfile(const string & fileName);
+  
+  virtual void requestStarted(const string & request) ; // initial setup, specific for each case
+  virtual void handleRequest(const string & request) ; //  
+  virtual void requestFinished(const string & request) ;
   string * parseRequest();
   
 public:

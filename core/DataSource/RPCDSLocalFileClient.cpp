@@ -33,6 +33,21 @@ RPCDSRateData* RPCDSLocalFileClient::getRateDataObjectFrom(RPCDSDataType* data){
   return dynamic_cast<RPCDSRateData*>(data); // get a concrete type 
 }
 
+void RPCDSLocalFileClient::requestStarted(const string& request)
+{
+
+}
+
+void RPCDSLocalFileClient::handleRequest(const string& request)
+{
+
+}
+
+void RPCDSLocalFileClient::requestFinished(const string& request)
+{
+
+}
+
 
 
 void RPCDSLocalFileClient::getRateDataFromROOTfile(const string& fileName){

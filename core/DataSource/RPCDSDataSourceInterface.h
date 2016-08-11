@@ -28,20 +28,28 @@ public:
   
 };
 
-
 class RPCDSDataService {
   
 private:
   queue<RPCDSDataType*> resultsQueue;
+  // counter of all requests 
   
 protected:
   
   virtual void put(RPCDSDataType * data){this->resultsQueue.push(data);}
+  virtual void requestStarted(const string & request) = 0; // initial setup, specific for each case
+  virtual void handleRequest(const string & request) = 0; //  
+  virtual void requestFinished(const string & request) = 0; // call back to notify the processing is over ? 
   
 public:
   
   virtual RPCDSDataType * get(){RPCDSDataType * r = this->resultsQueue.front(); this->resultsQueue.pop();return r;} // it might cause a problem if pop erases the element
-  virtual void getDataForRequest(const string & request)=0; // process request, put request result on the queue
+  virtual void getDataForRequest(const string & request){
+    this->requestStarted(request);
+    this->handleRequest(request); 
+    this->requestFinished(request);
+  }; // process request, put request result on the queue. define in the three protected functions 
+  int getQueueSize() const { return this->resultsQueue.size();}
   
   // virtual RPCDSDataService * getNext ()=0; //
   
@@ -72,8 +80,12 @@ public:
   virtual RPCDSDataService * getServiceForKey(const string & key) { return this->servicesMap.at(key);}
   //virtual RPCDSDataType * getDataFromServiceForKey(const string & serviceKey)=0;
   RPCDSDataType * getResultFromQueue(const string & serviceKey) {this->getServiceForKey(serviceKey)->get();} // get 
+  
   //virtual void setPointerToQueueResultsForService(const string & serviceKey){ this->servicesMap. }
   // setup the consumers pointers to DataService without DataSource
+  
+  // why not only create service for request 
+  
   
   virtual ~RPCDSDataSourceBase();
   RPCDSDataSourceBase();

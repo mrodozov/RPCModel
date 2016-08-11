@@ -12,11 +12,8 @@ vector< double > RPCDSRateData::getRateForRollChannels(const string& RollName){
 }
 
 
-
-
 ptree * RPCDSRateData::getDataAsJSON(){
-  ptree * t;
-  return t;
+  return this->json;
 }
 
 

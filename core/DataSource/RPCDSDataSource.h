@@ -18,7 +18,6 @@ public:
   
   // define methods that for concrete key return concrete type of DataService, using the getServiceForKey method 
   
-  
   void createServiceForKey(const string & key, RPCDSDataService * s) { this->insertNewServiceForKey(key,s);}
   void deleteServiceForKey(const string & key) { this->removeServiceForKey(key);}
   
