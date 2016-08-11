@@ -176,10 +176,12 @@ int main( int argc ,char *argv[] ){
   
   SlopeRatiosComparisonForPairsOfIDs(ids_file,input,output,twoDmapFile,  ShortB,  ShortE);
   */
-  
+   
    string jsonDatafile = argv[1] , jsonMapFile = argv[2];
-  
-  get2DplotsForJSONFileUsingAndJSONmap(jsonDatafile,jsonMapFile);
+   
+   DrawVvsPhiUsingJSONdataAndJSONconfig(jsonDatafile,jsonMapFile); 
+   
+//   get2DplotsForJSONFileUsingAndJSONmap(jsonDatafile,jsonMapFile);
 //   plot_X_vs_Y_values_using_JSON_data_and_JSON_config(jsonDatafile,jsonMapFile);
   
   

@@ -6293,6 +6293,7 @@ void plot_X_vs_Y_values_using_JSON_data_and_JSON_config(const string& JSON_data_
   ifs.clear();ifs.close();
   
   TCanvas * acan = new TCanvas("","",1200,700);
+  TH1F *hr = acan->DrawFrame(0,0,6.282,48);
   TLegend * leg;
   leg = new TLegend(0.135095,0.58678,0.352423,0.886329);
   leg->SetFillColor(0);
@@ -6334,12 +6335,69 @@ void plot_X_vs_Y_values_using_JSON_data_and_JSON_config(const string& JSON_data_
     histosCounter++;
     leg->AddEntry(h2,h2->GetName(),"p");
   }
-    
+  
   leg->Draw();
   acan->SaveAs("try.root");
   
 }
 
+
+void DrawVvsPhiUsingJSONdataAndJSONconfig(const string& JSON_data_fname, const string& JSON_config_fname){
+  
+  ptree JSONdata;
+  ptree JSONconf;
+  ifstream IFS(JSON_data_fname);
+  boost::property_tree::json_parser::read_json(IFS,JSONdata);
+  IFS.clear();IFS.close();
+  IFS.open(JSON_config_fname);
+  boost::property_tree::json_parser::read_json(IFS,JSONconf);
+  IFS.clear();IFS.close();
+  
+  TCanvas * acan = new TCanvas("can","vVsPhi",10,10,1200,700);
+  TH1F *hr = acan->DrawFrame(0,0,6.282,48);
+  int grapCount = 0;
+  
+  for (ptree::iterator iter = JSONdata.begin() ; iter != JSONdata.end() ; iter++){
+    //double values[37],errors[37];
+    vector<double> values, errors;
+    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, iter->second.get_child("data")){ values.push_back( v.second.get_value<double>()); }
+    BOOST_FOREACH(boost::property_tree::ptree::value_type &er, iter->second.get_child("errors")){ errors.push_back( er.second.get_value<double>()); }
+    if (values.size() != errors.size()) continue; // sizes not the same, it's an error
+    int nSectors = values.size() ; // number of sectors , 12 for Barrel, 36 for Endcap
+    double valuesPhi[nSectors+1], xAxisSize[nSectors+1], ex[nSectors+1], ey[nSectors+1];
+    
+    for (int i = 0 ; i < nSectors ; i++){
+      xAxisSize[i] = (i*6.28/nSectors);      
+      valuesPhi[i] =  values.at(i);
+      cout  <<  xAxisSize[i] << " "  << valuesPhi[i] << endl;
+      ex[i] = 0 ; //errors.at(i);
+      ey[i] = 0;
+      
+    }
+    
+    
+    xAxisSize[nSectors] = 6.28;
+    valuesPhi[nSectors] = valuesPhi[0];
+    ex[nSectors] = ex[0];ey[nSectors] = ey[0];
+    cout  <<  xAxisSize[nSectors] << " "  << valuesPhi[nSectors] << endl;
+    
+        
+     TGraphErrors * graph = new TGraphErrors(nSectors+1,xAxisSize,valuesPhi,ex,ey);
+     graph->SetName(iter->second.get_child("title").get_value<string>().c_str());
+     
+     string gname = graph->GetName();
+     //graph->SaveAs((gname+".root").c_str());
+     graph->Draw("LP");
+//      if (grapCount == 0) {graph->Draw();}
+//      else {graph->Draw("same");}
+     grapCount++;
+     //delete graph;
+  }
+  
+  acan->SaveAs("ValuesVPhi.root");
+  
+
+}
 
 
 

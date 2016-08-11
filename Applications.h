@@ -155,8 +155,7 @@ void NewOldLBsHistos(string newLBsList,string oldLBsList,string areaFile,string 
 
 void getRatioOfChambersForTwoRuns(string runLowerRateFile,string runHigherRateFile,string area,string allRollsList,string SGrollsMap,int cutValue);
 
-void getRatioOfNegativePositiveChambers(string dataFolder,string area,string allRollsList,
-					string SGrollsMap,string LumiFile,int cutValue,int referenceRunNumber,string NPtitle);
+void getRatioOfNegativePositiveChambers(string dataFolder,string area,string allRollsList,string SGrollsMap,string LumiFile,int cutValue,int referenceRunNumber,string NPtitle);
 
 void plotRateOnLumi_Vs_Lumi_Endcap_OfflineAverageForDisk(string dataFolder,DataObject & LumiFile,DataObject & area ,string DiskNumber);
 
@@ -200,12 +199,14 @@ void WriteRateVsLumiPerRollFile(string & LumiFile, string & rootFilesFolder, str
 
 void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputFile, string & outputFile, string & twoDMap,string & ShortB, string & ShortE); // firstID, secondID, resultID
 
-void PositiveNegativePartsRatio(string & IDs_file, string & inputFile);
 
 void GetLumiHistogramPerLS(string & lumiFile);
 
 void get2DplotsForJSONFileUsingAndJSONmap(const string & JSONdataFile,const string & JSONmapFile);
 
+void PositiveNegativePartsRatio(string & IDs_file, string & inputFile);
+
+void DrawVvsPhiUsingJSONdataAndJSONconfig(const string & JSON_data_fname, const string & JSON_config_fname); // the data file format is {RollPartName:{title:"",marker:"",color:"",data:[v1,v2,v3...],errors[e1,e2,e3,...]},RollPartName2:...} where the points given are put equdistant along 2pi in radiants on X 
 
 /**
  *  Drawing Only Functions
