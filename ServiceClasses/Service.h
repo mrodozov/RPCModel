@@ -111,6 +111,9 @@ public:
   void setMainTitle(string);
   string getMainTitle();
   
+  void  clearAllOnlineRollRecords(); // clear the map with the records and start over
+  
+  
   /**
    * after the tests , rewrite this set methods to be setHistoTitle,setHistoName,
    * and for the fiter options use enum with names like ecapplusonly ecapminusonly and so on 

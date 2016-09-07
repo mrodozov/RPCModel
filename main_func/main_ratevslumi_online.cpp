@@ -50,6 +50,7 @@ int main( int argc ,char *argv[] ){
   bool isOffline = atoi(argv[11]);
   bool useLumiAsRateDivider = atoi(argv[12]);
   bool debugOUTPUT = atoi(argv[13]);
+  string outputJSON = argv[14];
   
   if(useLumiAsRateDivider){
     aQuery->setHistoYtitle(" Rate/Lumi  (cm^{-2}s^{-1}/10^{27}cm^{-2}s^{-1})");
@@ -124,9 +125,13 @@ int main( int argc ,char *argv[] ){
   // system
   
   /*
+  aQuery->setCanvasTitle("SystemBarrelEndcap");
+  outputJSON = "SystemRateLumi.json";
   aQuery->insertNewOnlineRecord("RE","Endcap",kBlack,21);
   aQuery->insertNewOnlineRecord("R","System average",kGreen+3,kFullTriangleUp);
   aQuery->insertNewOnlineRecord("W","Barrel",kRed,kFullCircle);
+  plotRateVsLumi_using_root_and_JSON(DataFolder,Lumi,IntrinsicOnlineFile,area,0,cutThreshold,aQuery,exluded,isOffline,useLumiAsRateDivider,debugOUTPUT,outputJSON);
+  aQuery->clearAllOnlineRollRecords();
   */
   
   // system , HV ranges 2012
@@ -143,12 +148,37 @@ int main( int argc ,char *argv[] ){
   
   // by wheels barrel
   //aQuery->insertNewOnlineRecord(("W"+orientation).c_str(),("W "+orientation).c_str(),kRed,22);
+  /*
+  aQuery->setCanvasTitle("RE_43_HotZones_Offline");
+  sector = "10";
+  outputJSON = "HotRE43sectors.json";
+   aQuery->insertNewOnlineRecord(("RE-"+orientation+"4_R2_CH"+sector).c_str(),("RE -4"+orientation+" 2 S"+sector).c_str(),kBlue,22);  
+   aQuery->insertNewOnlineRecord(("RE+"+orientation+"4_R2_CH"+sector).c_str(),("RE +4"+orientation+" 2 S"+sector).c_str(),kRed,22);
+   aQuery->insertNewOnlineRecord(("RE-"+orientation+"3_R2_CH"+sector).c_str(),("RE -3"+orientation+" 2 S"+sector).c_str(),kSpring-7,25);
+   aQuery->insertNewOnlineRecord(("RE+"+orientation+"3_R2_CH"+sector).c_str(),("RE +3"+orientation+" 2 S"+sector).c_str(),kBlack,21);
+   isOffline = 1;
+   plotRateVsLumi_using_root_and_JSON(DataFolder,Lumi,IntrinsicOnlineFile,area,0,cutThreshold,aQuery,exluded,isOffline,useLumiAsRateDivider,debugOUTPUT,outputJSON);
+   
+   sector = "";
+   outputJSON = "RE41.json";
+   aQuery->clearAllOnlineRollRecords();
+  aQuery->setCanvasTitle("RE_4_1_Online");
+    aQuery->insertNewOnlineRecord(("RE+"+orientation+"1_1_01"+sector).c_str(),("RE +4"+orientation+" 1 S 1"+sector).c_str(),kBlue,22);  
+    aQuery->insertNewOnlineRecord(("RE+"+orientation+"1_1_02"+sector).c_str(),("RE +4"+orientation+" 1 S 2"+sector).c_str(),kRed,22);
+    aQuery->insertNewOnlineRecord(("RE+"+orientation+"1_1_03"+sector).c_str(),("RE +4"+orientation+" 1 S 3"+sector).c_str(),kSpring-7,25);
+    aQuery->insertNewOnlineRecord(("RE+"+orientation+"1_1_04"+sector).c_str(),("RE +4"+orientation+" 1 S 4"+sector).c_str(),kBlack,21);
+    isOffline = 0;
+    plotRateVsLumi_using_root_and_JSON(DataFolder,Lumi,IntrinsicOnlineFile,area,0,cutThreshold,aQuery,exluded,isOffline,useLumiAsRateDivider,debugOUTPUT,outputJSON);
+  */
+   aQuery->setCanvasTitle("RE"+orientation+"_average");  sector = "";   outputJSON = "RE"+orientation+"_average.json";
+   
+   aQuery->insertNewOnlineRecord(("RE+"+orientation+"_2"+sector).c_str(),("RE+"+orientation+" 2 "+sector).c_str(),kBlue,22);  
+   aQuery->insertNewOnlineRecord(("RE-"+orientation+"_2"+sector).c_str(),("RE-"+orientation+" 2 "+sector).c_str(),kRed,22);
+   aQuery->insertNewOnlineRecord(("RE+"+orientation+"_3"+sector).c_str(),("RE+"+orientation+" 3 "+sector).c_str(),kSpring-7,25);
+   aQuery->insertNewOnlineRecord(("RE-"+orientation+"_3"+sector).c_str(),("RE-"+orientation+" 3 "+sector).c_str(),kBlack,21);
+   isOffline = 0;
+   plotRateVsLumi_using_root_and_JSON(DataFolder,Lumi,IntrinsicOnlineFile,area,0,cutThreshold,aQuery,exluded,isOffline,useLumiAsRateDivider,debugOUTPUT,outputJSON);
     
-  aQuery->insertNewOnlineRecord(("RE-"+orientation+"4_R2"+sector).c_str(),("RE -4"+orientation+" 2 S"+sector).c_str(),kBlue,22);  
-  aQuery->insertNewOnlineRecord(("RE+"+orientation+"4_R2"+sector).c_str(),("RE +4"+orientation+" 2 S"+sector).c_str(),kRed,22);
-  aQuery->insertNewOnlineRecord(("RE-"+orientation+"3_R2"+sector).c_str(),("RE -3"+orientation+" 2 S"+sector).c_str(),kSpring-7,25);
-  aQuery->insertNewOnlineRecord(("RE+"+orientation+"3_R2"+sector).c_str(),("RE +3"+orientation+" 2 S"+sector).c_str(),kBlack,21);
-  
   //aQuery->insertNewOnlineRecord("RE+4_2",("RE "+orientation+"+1 1 4 ").c_str(),kSpring-7,27);
   
   // by plus/minus disk
@@ -165,11 +195,11 @@ int main( int argc ,char *argv[] ){
   aQuery->insertNewOnlineRecord("W-2","W-2",kViolet-7,kOpenCircle);
   aQuery->insertNewOnlineRecord("W+1","W+1",kRed,kFullSquare);
   aQuery->insertNewOnlineRecord("W-1","W-1",kSpring-7,kFullCircle);
-  aQuery->insertNewOnlineRecord("W0","W0",kBlack,kFullTriangleUp);
+  aQuery->insertNewOnlineRecord("W+0","W0",kBlack,kFullTriangleUp);
   aQuery->insertNewOnlineRecord("W+2","W+2",kGreen-7,kOpenDiamond);
   */
   
   
-  plotRateVsLumi_using_root_and_JSON(DataFolder,Lumi,IntrinsicOnlineFile,area,0,cutThreshold,aQuery,exluded,isOffline,useLumiAsRateDivider,debugOUTPUT);
+  //plotRateVsLumi_using_root_and_JSON(DataFolder,Lumi,IntrinsicOnlineFile,area,0,cutThreshold,aQuery,exluded,isOffline,useLumiAsRateDivider,debugOUTPUT,outputJSON);
   
 }

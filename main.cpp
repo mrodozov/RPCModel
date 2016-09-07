@@ -162,29 +162,30 @@ int main( int argc ,char *argv[] ){
   aplot->SaveAs("frame.root");
   */
   
-  /*
-  string LumiFile = argv[1],
-  rootFilesFolder = argv[2], area = argv[3], outputFile = argv[4], suffix = argv[5];  
-  WriteRateVsLumiPerRollFile(LumiFile,rootFilesFolder,area,outputFile,suffix);
-  */
   
-  /*
-  string ids_file = argv[1],
-  input = argv[2], output = argv[3], twoDmapFile = argv[4] , ShortB =argv[5] ,ShortE=argv[6];
-  ;//, outputFile = argv[4], suffix = argv[5];
+//   string LumiFile = argv[1],
+//   rootFilesFolder = argv[2], area = argv[3], outputFile = argv[4], suffix = argv[5];  
+//   WriteRateVsLumiPerRollFile(LumiFile,rootFilesFolder,area,outputFile,suffix);
   
   
-  SlopeRatiosComparisonForPairsOfIDs(ids_file,input,output,twoDmapFile,  ShortB,  ShortE);
-  */
+//   string ids_file = argv[1],
+//   input = argv[2], output = argv[3], twoDmapFile = argv[4] , ShortB =argv[5] ,ShortE=argv[6];
+//   SlopeRatiosComparisonForPairsOfIDs(ids_file,input,output,twoDmapFile,  ShortB,  ShortE);
+  
+//    string jsonDatafile = argv[1] , jsonMapFile = argv[2], yaxisttitle = argv[5],fileSuffix = argv[6];
+//    int barrelmax = atoi(argv[3]), endcapmax = atoi(argv[4]);
    
-   string jsonDatafile = argv[1] , jsonMapFile = argv[2];
-   
-   DrawVvsPhiUsingJSONdataAndJSONconfig(jsonDatafile,jsonMapFile); 
-   
-//   get2DplotsForJSONFileUsingAndJSONmap(jsonDatafile,jsonMapFile);
+//    get2DplotsForJSONFileUsingAndJSONmap(jsonDatafile,jsonMapFile,barrelmax,endcapmax,yaxisttitle,fileSuffix);
+//   DrawVvsPhiUsingJSONdataAndJSONconfig(jsonDatafile,jsonMapFile); 
 //   plot_X_vs_Y_values_using_JSON_data_and_JSON_config(jsonDatafile,jsonMapFile);
+    
+   string rootFile=argv[1],jsonFile=argv[2],areaFile=argv[3];
+   int bmax = atoi(argv[4]),emax = atoi(argv[5]);
   
+//   getRateInJSONformatFromRootFile(rootFile,jsonFile,areaFile);
   
+   get2DplotsOnRateFromROOTfile(rootFile,jsonFile,areaFile,bmax,emax);
+   
   /*  
   
   

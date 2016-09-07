@@ -173,6 +173,11 @@ std::string QueryObject::getMainTitle(){
   return this->mainHistoTitle;
 }
 
+void QueryObject::clearAllOnlineRollRecords() {
+  this->online_Roll_Map.clear();
+}
+
+
 /** 
  * 
  */

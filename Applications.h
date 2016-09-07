@@ -21,7 +21,7 @@
 #define DEPRECATED
 #endif
 
-using namespace std;
+using namespace std;// DrawVvsPhiUsingJSONdataAndJSONconfig(jsonDatafile,jsonMapFile); 
 
 void PrintGeometryTable(std::string InputWithRollNames,std::string Ouput,DataObject & Areas,DataObject & RawIDFile);
 
@@ -106,7 +106,7 @@ void plot_X_vs_Y_values_using_JSON_data_and_JSON_config(const string & JSON_data
 
 void plotEcap_RateVsPhi(string rateFile,bool subtractIntrinsic,string fileWithIntrinsic,DataObject & area,double cutValueSingleStrip,string SGmapFile,DataObject & LumiFile,QueryObject * query);
 
-void plotRateVsLumi_using_root_and_JSON(string fileContainer,DataObject & lumiFile,string intrinsicFile,DataObject & area,bool intrinsicShouldBeSubtracted,double cutThreshold,QueryObject * query,DataObject & exlucsionFile,bool isOffline,bool divideRateOnLumi,bool debugOUTPUT);
+void plotRateVsLumi_using_root_and_JSON(string fileContainer,DataObject & lumiFile,string intrinsicFile,DataObject & area,bool intrinsicShouldBeSubtracted,double cutThreshold,QueryObject * query,DataObject & exlucsionFile,bool isOffline,bool divideRateOnLumi,bool debugOUTPUT,string & outputJSON);
 
 DEPRECATED void print_online_dbfiles(string rootContainer,string outputContainer ,DataObject & lumiFile,DataObject& area,string RollList,bool correction,double correctionInPercents);
 
@@ -199,17 +199,25 @@ void WriteRateVsLumiPerRollFile(string & LumiFile, string & rootFilesFolder, str
 
 void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputFile, string & outputFile, string & twoDMap,string & ShortB, string & ShortE); // firstID, secondID, resultID
 
-
-
 void GetLumiHistogramPerLS(string & lumiFile);
 
-void get2DplotsForJSONFileUsingAndJSONmap(const string & JSONdataFile,const string & JSONmapFile);
+void getRateInJSONformatFromRootFile(const string & rootfilename,const string & JSONoutFileName,const string & areaFileName);
+
+
+// drawing functions only
+
+void get2DplotsForJSONFileUsingAndJSONmap(const string & JSONdataFile,const string & JSONmapFile, const int & BarrelMax, const int & EndcapMax, const string & ZaxisTitle,const string & fileSuffixes);
 
 void PositiveNegativePartsRatio(string & IDs_file, string & runlist, const string & runfolder, const string & area, const string & JSON_config); // for a runlist, for each pair get distributions and write it's value
 
 void getJSONinputForRateVsPhiForRun(const string & run_rootfile, const string & JSON_config, const string & JSONout);
 
 void DrawVvsPhiUsingJSONdataAndJSONconfig(const string & JSON_data_fname, const string & JSON_config_fname); // the data file format is {RollPartName:{title:"",marker:"",color:"",data:[v1,v2,v3...],errors[e1,e2,e3,...]},RollPartName2:...} where the points given are put equdistant along 2pi in radiants on X 
+
+// combined - data prep + drawing 
+
+void get2DplotsOnRateFromROOTfile(const string& rootfile, const string & jsonMap,const string& areaFile ,const int & bmax,const int & emax);
+
 
 /**
  *  Drawing Only Functions

@@ -15,17 +15,18 @@
 #include <assert.h>
 #include <math.h>
 #include <map>
-//#include <boost/concept_check.hpp>
+#include <boost/concept_check.hpp>
 #include "core/DataObject.h"
 #include "core/ExtendedStrip.h"
 #include "core/ExtendedRoll.h"
 #include "core/Chip.h"
 #include "Applications.h"
-//#include "ROOT/ROOT.h"
 #include "ROOT/tdrStyle.h"
-#include "ServiceClasses/Service.h"
+//#include "ServiceClasses/Service.h"
+
 
 using namespace std;
+
 
 void PrintGeometryTable(string InputWithRollNames, string Ouput, DataObject& Areas, DataObject& RawIDFile) {
     ifstream IFS; // intput file stream
@@ -49,6 +50,8 @@ void PrintGeometryTable(string InputWithRollNames, string Ouput, DataObject& Are
     IFS.close();
     OFS.close();
 }
+
+
 
 TH2F * getHVvsRatePlotForOneRollForRunList(string & rollName,const string & resourcePath,const string & suffix,DataObject & RunHVTempDataObject,DataObject & areas) {
     ExRoll * aroll ;
@@ -85,6 +88,7 @@ TH2F * getHVvsRatePlotForOneRollForRunList(string & rollName,const string & reso
     delete bufferRunNumber,buffHV,refPress,refTemp;
     return histo;
 }
+
 
 
 void GetSingleDoubleGapRatios(string MapOfSingleGapRolls, string regex, string DBfilesContainer, string runlist,string LumiFile,string histoTitle,int histoBins,int histocolor,int histoLineColor) {
@@ -1190,7 +1194,7 @@ void plotEcap_RateVsPhi(string rateFile, bool subtractIntrinsic, string fileWith
     //c1->SaveAs(("/home/rodozov/Desktop/RumiTeX/pictures/DISK2PHIASSYM.png").c_str());
 }
 
-void plotRateVsLumi_using_root_and_JSON(string data_folder ,DataObject & lumiFile , string intrinsicFile, DataObject& area, bool intrinsicShouldBeSubtracted,double cutThreshold, QueryObject* query,DataObject & exlusionFile,bool isOffline,bool divideRateOnLumi,bool debugOUTPUT) {
+void plotRateVsLumi_using_root_and_JSON(string data_folder ,DataObject & lumiFile , string intrinsicFile, DataObject& area, bool intrinsicShouldBeSubtracted,double cutThreshold, QueryObject* query,DataObject & exlusionFile,bool isOffline,bool divideRateOnLumi,bool debugOUTPUT,string & outputJSON) {
   
   // TODO - if it contains .json substring as last 5 symbols, open file with the string, else - try to parse the string as json.
   
@@ -1262,8 +1266,7 @@ void plotRateVsLumi_using_root_and_JSON(string data_folder ,DataObject & lumiFil
 	    TIter nextkey(file->GetListOfKeys());
 	    TKey * key;
 	    TH1F * h1;
-	    TObject * obj1;
-	    
+	    TObject * obj1;    
 	    
 	    if (! file->IsOpen()) { cout << "File " << data_folder+"total_"+lumiFile.getElement(i+1,1)+".root" << " missing !" << endl; continue ; }
             
@@ -1435,7 +1438,7 @@ void plotRateVsLumi_using_root_and_JSON(string data_folder ,DataObject & lumiFil
     can->SaveAs((query->getCanvasTitle()+".png").c_str());
     can->SaveAs((query->getCanvasTitle()+".root").c_str());
     
-    ofstream OFS("try.json");
+    ofstream OFS(outputJSON.c_str());
     boost::property_tree::json_parser::write_json(OFS,run_rateVlumi_JSON);
     OFS.close();
 }
@@ -5948,7 +5951,7 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
   detectorParts.push_back("RE+3_R2");detectorParts.push_back("RE+3_R3");detectorParts.push_back("RE-3_R2");detectorParts.push_back("RE-3_R3");
   detectorParts.push_back("RE+2_R2");detectorParts.push_back("RE+2_R3");detectorParts.push_back("RE-2_R2");detectorParts.push_back("RE-2_R3");
   detectorParts.push_back("RE+1_R2");detectorParts.push_back("RE+1_R3");detectorParts.push_back("RE-1_R2");detectorParts.push_back("RE-1_R3");
-  detectorParts.push_back("W-2");detectorParts.push_back("W-1");detectorParts.push_back("W0");detectorParts.push_back("W+1");detectorParts.push_back("W+2");
+  detectorParts.push_back("W-2");detectorParts.push_back("W-1");detectorParts.push_back("W+0");detectorParts.push_back("W+1");detectorParts.push_back("W+2");
   map<string, vector<double> > detectorPartsMap;
   map<string, vector<double> > detectorPartsMap_HL_LHC;
   
@@ -5962,7 +5965,7 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
   
   vector<string> SummaryPlotNames;
   SummaryPlotNames.push_back("RE-4");SummaryPlotNames.push_back("RE-3");SummaryPlotNames.push_back("RE-2");SummaryPlotNames.push_back("RE-1");
-  SummaryPlotNames.push_back("W-2");SummaryPlotNames.push_back("W-1");SummaryPlotNames.push_back("W0");SummaryPlotNames.push_back("W+1");SummaryPlotNames.push_back("W+2");
+  SummaryPlotNames.push_back("W-2");SummaryPlotNames.push_back("W-1");SummaryPlotNames.push_back("W+0");SummaryPlotNames.push_back("W+1");SummaryPlotNames.push_back("W+2");
   SummaryPlotNames.push_back("RE+1");SummaryPlotNames.push_back("RE+2");SummaryPlotNames.push_back("RE+3");SummaryPlotNames.push_back("RE+4");
   
   ptree Roll_RatioJSON;
@@ -5993,20 +5996,22 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
     second->Delete();
     f1->Delete();
     f2->Delete();
-    Roll_RatioJSON.put<double>(resultID,height16/height15);
+    
+    double the_ratio = height16/height15;  
+    if (height15 == 0 || height16 == 0) the_ratio = 0;
+    
+    Roll_RatioJSON.put<double>(resultID,the_ratio);
     //if ( cf1 < 0.8 ) continue;    
     
-    double the_ratio = height16/height15;
-    if (height15 == 0 || height16 == 0) the_ratio = 0;
     mapRollToCoordinates.at(resultID).at(2) = the_ratio ;
     
-    //cout << max15 << " " << max16 << " " << resultID << " " << height16 / height15 << " " << height16_HL/ height15_HL << " " << cf1 << " " << cf2  << endl;
+    //cout << max15 << " " << max16 << " " << resultID << " " << the_ratio << " " << height16_HL/ height15_HL << " " << cf1 << " " << cf2  << endl;
     
     for (string & ecapp : detectorParts){
       
       if(resultID.find(ecapp) != string::npos) {
 	
-	detectorPartsMap.at(ecapp).push_back(height16 / height15) ;
+	detectorPartsMap.at(ecapp).push_back(the_ratio) ;
 	detectorPartsMap_HL_LHC.at(ecapp).push_back(height16_HL / height15_HL) ;
 
       }            
@@ -6017,7 +6022,7 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
   boost::property_tree::json_parser::write_json(ofsss,Roll_RatioJSON);
   ofsss.close();
   
-  exit(0);
+  //exit(0);
   
   inputRoot->Close(); 
   
@@ -6230,10 +6235,59 @@ void GetLumiHistogramPerLS(string& lumiFile){
   
 }
 
+// get rates in JSON to plot with the universal 2D function
+
+void getRateInJSONformatFromRootFile ( const string& rootfilename, const string& JSONoutFileName, const string& areaFileName ) {
+  
+  TFile * rootf = new TFile(rootfilename.c_str(),"READ","in");
+  DataObject area(areaFileName);
+  
+  TH1F * h1;
+  TIter nextkey( rootf->GetListOfKeys() );
+  TKey *key;
+  TObject *obj;
+  string histoCurrentName;
+  
+  ptree JSONobj;
+  
+  while (key = (TKey*)nextkey()) {
+    
+    obj = key->ReadObj();
+    h1 =  dynamic_cast<TH1F*>(obj);
+    if (!rootf->IsOpen()) break;
+    histoCurrentName = h1->GetName();
+    // populate the rolls here
+    ExRoll * singleRoll;
+    if (histoCurrentName.substr(0,1) == "W" || histoCurrentName.substr(0,2) == "RE") {
+      singleRoll = new ExRoll(histoCurrentName);
+      singleRoll->setStripsAreaFromSource_cmsswResource(area);
+      singleRoll->setStripsRatesFromTH1FObject(h1);
+      for (unsigned nclone = 0 ; nclone < singleRoll->getClones() ; nclone++){
+	double correctedRate = 0;
+	string resultID = singleRoll->getRollIDofCloneWithNewIdentifiers(nclone+1);
+	singleRoll->removeNoisyStripsForAllClonesWithPercentValue(100);
+	correctedRate = singleRoll->getAvgRatePSCWithoutCorrectionsForClone(nclone+1);
+	JSONobj.put<double>(resultID,correctedRate);
+      }
+    }
+    delete singleRoll;
+  }
+  
+  ofstream ofs(JSONoutFileName.c_str());
+  boost::property_tree::json_parser::write_json(ofs,JSONobj);
+  ofs.clear();ofs.close();
+  
+  rootf->Close("R");
+  
+
+}
+
+
 // universal 2D
 
-void get2DplotsForJSONFileUsingAndJSONmap(const string & JSONdataFile,const string & JSONmapFile){
-  
+
+void get2DplotsForJSONFileUsingAndJSONmap(const string & JSONdataFile,const string & JSONmapFile, const int & BarrelMax, const int & EndcapMax, const string & ZaxisTitle,const string & fileSuffixes){
+
     ptree * JSONdata = new ptree;
     ptree * JSONmap = new ptree;
     ifstream ifs(JSONdataFile.c_str());
@@ -6245,6 +6299,7 @@ void get2DplotsForJSONFileUsingAndJSONmap(const string & JSONdataFile,const stri
     for ( ptree::iterator iter = JSONmap->begin() ; iter != JSONmap->end() ; iter++ ){
       cout << iter->first << endl;
       string detectorPart = iter->first;
+      if (detectorPart == "W0") continue;
       vector<double> dimensions;
       vector<string> Xlabels;
       vector<string> Ylabels;
@@ -6255,8 +6310,12 @@ void get2DplotsForJSONFileUsingAndJSONmap(const string & JSONdataFile,const stri
       
       TH2F * twoDimensionalHisto = new TH2F(detectorPart.c_str(),detectorPart.c_str(),dimensions.at(0),dimensions.at(1),dimensions.at(2),dimensions.at(3),dimensions.at(4),dimensions.at(5));
       
-      for (int ii = 0 ; ii < Xlabels.size() ; ii++){ twoDimensionalHisto->GetXaxis()->SetBinLabel(ii+1, Xlabels.at(ii).c_str());  }
-      for (int iii = 0; iii < Ylabels.size() ; iii++){ twoDimensionalHisto->GetYaxis()->SetBinLabel(iii+1, Ylabels.at(iii).c_str());}
+      bool isEndcap = (detectorPart.find("RE") != string::npos);
+      twoDimensionalHisto->SetMinimum(0);
+      twoDimensionalHisto->SetMaximum(isEndcap ? EndcapMax : BarrelMax);
+      
+      for (int ii = 0 ; ii < Xlabels.size() ; ii++){ twoDimensionalHisto->GetXaxis()->SetBinLabel(ii+1, Xlabels.at(ii).c_str()); }
+      for (int iii = 0; iii < Ylabels.size() ; iii++){ twoDimensionalHisto->GetYaxis()->SetBinLabel(iii+1, Ylabels.at(iii).c_str()); }
       
       BOOST_FOREACH(boost::property_tree::ptree::value_type &v, iter->second.get_child("XYcoordinates")) {  
 	
@@ -6267,12 +6326,19 @@ void get2DplotsForJSONFileUsingAndJSONmap(const string & JSONdataFile,const stri
 	BOOST_FOREACH(boost::property_tree::ptree::value_type &vv, v.second.get_child("")) {  coordinates.push_back(boost::lexical_cast<double>(vv.second.data())); }
 	twoDimensionalHisto->SetBinContent(coordinates.at(0),coordinates.at(1),value);
       }
-      
-      TCanvas * acan = new TCanvas((detectorPart+"_can").c_str(),(detectorPart+"_can").c_str(),1200,700);
+            
+      TCanvas * acan = new TCanvas((detectorPart+"_can").c_str(),(detectorPart+"_can").c_str(),1200,700);      
       acan->cd();
       twoDimensionalHisto->SetStats(kFALSE);
+      twoDimensionalHisto->GetXaxis()->SetTitle("Sector");
+      twoDimensionalHisto->GetYaxis()->SetTitle("Detector Unit");
+      double currentTYoffset = twoDimensionalHisto->GetYaxis()->GetTitleOffset();
+      twoDimensionalHisto->GetYaxis()->SetTitleOffset(currentTYoffset + currentTYoffset*( isEndcap ? 0.1 : 0.4));
+      twoDimensionalHisto->GetZaxis()->SetTitle(ZaxisTitle.c_str());
+      twoDimensionalHisto->GetZaxis()->CenterTitle();
+      twoDimensionalHisto->GetYaxis()->CenterTitle();
       twoDimensionalHisto->Draw("COLZ");
-      acan->SaveAs((detectorPart+"__2D.root").c_str());
+      acan->SaveAs((detectorPart+fileSuffixes+".root").c_str());
       twoDimensionalHisto->Delete();
     }
     
@@ -6380,7 +6446,6 @@ void DrawVvsPhiUsingJSONdataAndJSONconfig(const string& JSON_data_fname, const s
     valuesPhi[nSectors] = valuesPhi[0];
     ex[nSectors] = ex[0];ey[nSectors] = ey[0];
     cout  <<  xAxisSize[nSectors] << " "  << valuesPhi[nSectors] << endl;
-    
         
      TGraphErrors * graph = new TGraphErrors(nSectors+1,xAxisSize,valuesPhi,ex,ey);
      graph->SetName(iter->second.get_child("title").get_value<string>().c_str());
@@ -6397,6 +6462,23 @@ void DrawVvsPhiUsingJSONdataAndJSONconfig(const string& JSON_data_fname, const s
   acan->SaveAs("ValuesVPhi.root");
   
 
+}
+
+
+void get2DplotsOnRateFromROOTfile ( const string& rootfile, const string & jsonMap,const string& areaFile ,const int & bmax,const int & emax ) {
+  
+  size_t toRoot = rootfile.find(".root");
+  size_t toLastSlash = rootfile.rfind("/");
+  // if the file contains total_ usually this is followed by runnumber so get only the run number
+  if (rootfile.find("total_") != string::npos) toLastSlash = rootfile.find("total_") + 6; 
+  string fileBaseName = rootfile.substr(toLastSlash,rootfile.length()-toRoot+1);
+  cout << toLastSlash << " " << toRoot << endl;
+  string JSONout = fileBaseName+"roll_rates.json";
+  
+  getRateInJSONformatFromRootFile(rootfile,JSONout,areaFile);
+  get2DplotsForJSONFileUsingAndJSONmap(JSONout,jsonMap,bmax,emax,"Rate (Hz/cm^{2})","_"+fileBaseName+"_2D");
+  
+  
 }
 
 
