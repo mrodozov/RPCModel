@@ -171,14 +171,15 @@ int main( int argc ,char *argv[] ){
 //   string ids_file = argv[1],
 //   input = argv[2], output = argv[3], twoDmapFile = argv[4] , ShortB =argv[5] ,ShortE=argv[6];
 //   SlopeRatiosComparisonForPairsOfIDs(ids_file,input,output,twoDmapFile,  ShortB,  ShortE);
-  
-//    string jsonDatafile = argv[1] , jsonMapFile = argv[2], yaxisttitle = argv[5],fileSuffix = argv[6];
-//    int barrelmax = atoi(argv[3]), endcapmax = atoi(argv[4]);
-   
-//    get2DplotsForJSONFileUsingAndJSONmap(jsonDatafile,jsonMapFile,barrelmax,endcapmax,yaxisttitle,fileSuffix);
-//   DrawVvsPhiUsingJSONdataAndJSONconfig(jsonDatafile,jsonMapFile); 
-//   plot_X_vs_Y_values_using_JSON_data_and_JSON_config(jsonDatafile,jsonMapFile);
     
+     string jsonDatafile = argv[1] , jsonMapFile = argv[2], rootOutput=argv[3];
+//     yaxisttitle = argv[5],fileSuffix = argv[6];
+//     int barrelmax = atoi(argv[3]), endcapmax = atoi(argv[4]);
+   
+//     get2DplotsForJSONFileUsingAndJSONmap(jsonDatafile,jsonMapFile,barrelmax,endcapmax,yaxisttitle,fileSuffix);
+//   DrawVvsPhiUsingJSONdataAndJSONconfig(jsonDatafile,jsonMapFile); 
+   plot_X_vs_Y_values_using_JSON_data_and_JSON_config(jsonDatafile,jsonMapFile,rootOutput);
+   
 //    string rootFile=argv[1],jsonFile=argv[2],areaFile=argv[3];
 //    int bmax = atoi(argv[4]),emax = atoi(argv[5]);
   

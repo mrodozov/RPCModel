@@ -1251,7 +1251,7 @@ map<string, map< string,double> > prepareDataSourceWithRatesAndLumi ( string dat
 	    run_rollRate_map[lumiFile.getElement(i+1,1)] = currentRates;
 	    
 	    file->Close("R");
-	    cout << "file is closed: " << file->IsOpen() << endl;
+	    //cout << "file is closed: " << file->IsOpen() << endl;
 	    file->Delete();
     }
     
@@ -1268,12 +1268,9 @@ void plotRateVsLumi_using_root_and_JSON(const  map<string, map< string,double> >
   // TODO - if it contains .json substring as last 5 symbols, open file with the string, else - try to parse the string as json.
   
   //ptree query_JSON; // to hold the query data perhaps
-  
-  
+    
   int divider = 1;//2;
-  map<string, double> run_lumi_map;
-
-  
+  map<string, double> run_lumi_map;  
   
   
   int min_lumi_sections = 100;
@@ -1353,7 +1350,7 @@ void plotRateVsLumi_using_root_and_JSON(const  map<string, map< string,double> >
         
 	// first find the biggest value on Y axis to assign the Y 
 	TH2F * hist = new TH2F(query->getOnlineRollMapForRecord(i+1).histoName.c_str(),"",1000,0,biggestOn_X,1000,0,biggestOn_Y);
-	cout << query->getOnlineRollMapForRecord(i+1).histoName << endl;
+	//cout << query->getOnlineRollMapForRecord(i+1).histoName << endl;
 	run_rateVlumi_JSON.add_child(query->getOnlineRollMapForRecord(i+1).regex,ptree());
 	run_rateVlumi_JSON.get_child(query->getOnlineRollMapForRecord(i+1).regex).add_child("values",ptree());
 	run_rateVlumi_JSON.get_child(query->getOnlineRollMapForRecord(i+1).regex).add<int>("marker",query->getOnlineRollMapForRecord(i+1).Marker);
@@ -1423,15 +1420,15 @@ void plotRateVsLumi_using_root_and_JSON(const  map<string, map< string,double> >
 	if(query->getOnlineRollMapForRecord(i+1).histoName != ""){
 	  leg->AddEntry(hist,query->getOnlineRollMapForRecord(i+1).histoName.c_str(),"p");
 	}
-	
-	cout << "Correlation factor " << hist->GetCorrelationFactor() << " ";
-	hist->Fit(func,"R0");  cout << "Rate extrapolated to 50000: " << func->Eval(50000) << " ";
+	hist->Fit(func,"R0q");
+	cout << query->getOnlineRollMapForRecord(i+1).histoName << " "<< "Correlation factor " << hist->GetCorrelationFactor() << " ";
+	cout << "Rate extrapolated to 50000: " << func->Eval(50000) << " " << endl;
 	//delete func;
 	//delete hist;
 	
     }
     
-    cout << "out of looney " << endl;
+    cout << "out the looney " << endl;
     
     pt->Draw();
     secondText->Draw();
@@ -6350,7 +6347,7 @@ void get2DplotsForJSONFileUsingAndJSONmap(const string & JSONdataFile,const stri
 
 // Universal X vs Y 
 
-void plot_X_vs_Y_values_using_JSON_data_and_JSON_config(const string& JSON_data_file, const string& JSON_config_file){
+void plot_X_vs_Y_values_using_JSON_data_and_JSON_config(const string& JSON_data_file, const string& JSON_config_file,const string & rootOutputName){
   
   ifstream ifs(JSON_data_file.c_str());
   ptree JSON_data, JSON_config;
@@ -6405,7 +6402,7 @@ void plot_X_vs_Y_values_using_JSON_data_and_JSON_config(const string& JSON_data_
   }
   
   leg->Draw();
-  acan->SaveAs("try.root");
+  acan->SaveAs((rootOutputName+".root").c_str());
   
 }
 

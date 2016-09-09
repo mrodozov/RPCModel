@@ -102,7 +102,7 @@ bool universalRollFilter(string barrel_or_ecap
 
 void plotRateVsLumi_using_the_database_files_stripLevel(DataObject & LumiFile,string filesCont,string outCont,string IntrinsicFile,bool WriteNewIntrinsic);
 
-void plot_X_vs_Y_values_using_JSON_data_and_JSON_config(const string & JSON_data, const string & JSON_config);
+void plot_X_vs_Y_values_using_JSON_data_and_JSON_config(const string & JSON_data, const string & JSON_config,const string & rootOutputName);
 
 void plotEcap_RateVsPhi(string rateFile,bool subtractIntrinsic,string fileWithIntrinsic,DataObject & area,double cutValueSingleStrip,string SGmapFile,DataObject & LumiFile,QueryObject * query);
 
