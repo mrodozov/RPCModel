@@ -120,7 +120,8 @@ void GetSingleDoubleGapRatios(string MapOfSingleGapRolls, string regex, string D
     TH1F * h1 = new TH1F("h1","DG/SG ratio",histoBins,0,10);
     TH2F * RatioAverageVsLumi = new TH2F("h2"," Ratios average Vs luminosity",100,0,3600,100,0,10);
     TH2F * RatiosDistrubutionMeanVsLumi = new TH2F("h3"," Ratios mean Vs luminosity",100,0,3600,100,0,10);
-
+    //RatioAverageVsLumi->AndersonDarlingTest();
+    //h1->AndersonDarlingTest();
     // load in map all SG roll names
 
     ratiosSumBuffer = 0;
@@ -1194,70 +1195,24 @@ void plotEcap_RateVsPhi(string rateFile, bool subtractIntrinsic, string fileWith
     //c1->SaveAs(("/home/rodozov/Desktop/RumiTeX/pictures/DISK2PHIASSYM.png").c_str());
 }
 
-void plotRateVsLumi_using_root_and_JSON(string data_folder ,DataObject & lumiFile , string intrinsicFile, DataObject& area, bool intrinsicShouldBeSubtracted,double cutThreshold, QueryObject* query,DataObject & exlusionFile,bool isOffline,bool divideRateOnLumi,bool debugOUTPUT,string & outputJSON) {
+
+map<string, map< string,double> > prepareDataSourceWithRatesAndLumi ( string data_folder, DataObject& lumiFile, bool isOffline ) {
   
-  // TODO - if it contains .json substring as last 5 symbols, open file with the string, else - try to parse the string as json.
-  
-  ptree query_JSON;
-  
-  
-  int divider = 1;//2;
-  map<string,double> run_lumi_map;
   map<string,map<string,double> > run_rollRate_map;
-    map<string,double>::iterator run_lumi_map_iter,run_iterator;
-    map<string,map<string,double> >::iterator run_rollRate_map_iter;
-    map<string,double> intrinsic_map;
+    map<string,double>::iterator run_iterator;
+    
     int min_lumi_sections = 100;
-    ifstream IFS;
-    istringstream iss;
     string LINE,rollName;
     double rateOfRoll=0;
     double biggestOn_X=0;
     double biggestOn_Y=0;
     double currentLumi =0;
-//     map<string,string> subparts;
-//     for (int i = 0 ; query->getOnlineRollCounter() ; i++){
-//       subparts[query->getOnlineRollMapForRecord(i+1).regex] = query->getOnlineRollMapForRecord(i+1).regex;
-//     }
-    ptree run_rateVlumi_JSON;
+    
     DataObject areaDO("localResources/area_noise_cmssw_withRE4");
     
-    /* to remove that shit !*/
-    
-    TPaveText * pt,* secondText;
-    pt = new TPaveText(0.092511,0.930556,0.234949,0.997222,"NDC"); // NDC sets coords
-    secondText = new TPaveText(0.653846,0.925595,0.950669,0.997024,"NDC");
-    secondText->SetFillColor(0);
-    secondText->SetBorderSize(0);
-    secondText->SetTextSize(0.05);
-    
-    secondText->AddText("CMS Preliminary");
-    pt->SetFillColor(0); // text is black on white
-    pt->SetBorderSize(0); //no shade
-    pt->SetTextSize(0.05);
-    pt->AddText("#sqrt{s} = 13 TeV");
-    /*   */
-    // fill the intrinsic map
-    
-    DataObject DO_INTR_FILE(intrinsicFile);
-    for (int i=1;i <= DO_INTR_FILE.getLenght();i++){
-      intrinsic_map[DO_INTR_FILE.getElement(i,1)]= DO_INTR_FILE.getElementAsDouble(i,2);
-    }
-    
-    //fill exclusion map
-    map<string,string> exclusionsList;
-    
-    for(int i = 1; i <= exlusionFile.getLenght();i++){
-      exclusionsList[exlusionFile.getElement(i,1)] = exlusionFile.getElement(i,1);
-    }
     
     for (int i = 0 ; i < lumiFile.getLenght() ; i++) {
-        if (lumiFile.getElementAsInt(i+1,2) > min_lumi_sections && (exclusionsList.find(lumiFile.getElement(i+1,1)) == exclusionsList.end())) {// more than 100 lumisections
-	    currentLumi = (lumiFile.getElementAsDouble(i+1,3)/lumiFile.getElementAsDouble(i+1,2))/23.31;
-	    //cout << lumiFile.getElement(i+1,1) << " " << currentLumi << endl;
-	    
-            run_lumi_map[lumiFile.getElement(i+1,1)] = currentLumi;
-	    if(currentLumi > biggestOn_X) biggestOn_X = currentLumi;
+        if ( min_lumi_sections > lumiFile.getElementAsInt(i+1,2))  continue ;    
 	    
 	    map<string,double> currentRates;
 	    
@@ -1273,9 +1228,9 @@ void plotRateVsLumi_using_root_and_JSON(string data_folder ,DataObject & lumiFil
             while (key = (TKey*)nextkey()) {
 	      obj1 = key->ReadObj();
 	      string nameOfRoll = obj1->GetName();
-// 	      if (subparts.find(nameOfRoll) == subparts.end()) continue;
+	      //if (subparts.find(nameOfRoll) == subparts.end()) continue;
 	      if (nameOfRoll.substr(0,1) == "W" || nameOfRoll.substr(0,2) == "RE") {
-		
+
 		h1 = dynamic_cast<TH1F*>(obj1);
 		ExRoll * aroll = new ExRoll(nameOfRoll);
 		aroll->setStripsAreaFromSource_cmsswResource(areaDO);
@@ -1296,88 +1251,139 @@ void plotRateVsLumi_using_root_and_JSON(string data_folder ,DataObject & lumiFil
 	    run_rollRate_map[lumiFile.getElement(i+1,1)] = currentRates;
 	    
 	    file->Close("R");
+	    cout << "file is closed: " << file->IsOpen() << endl;
 	    file->Delete();
-	   
-        }
     }
     
-    biggestOn_X += 500;
     
-    TLegend * leg;
-    leg = new TLegend(0.135095,0.58678,0.352423,0.886329);
-    leg->SetFillColor(0);
-    leg->SetBorderSize(0);
-    leg->SetTextFont(6);
-    leg->SetTextSize(30);
+    //return run_rollRate_map;
     
-    TCanvas * can = new TCanvas("can",query->getCanvasTitle().c_str(),1200,700);
-    can->SetFillColor(0);
-    can->cd();
+    return run_rollRate_map;
+}
+
+
+
+void plotRateVsLumi_using_root_and_JSON(const  map<string, map< string,double> > & run_rollRate_map ,DataObject & lumiFile,int cutThreshold,QueryObject * query,bool isOffline,bool debugOUTPUT,const string & outputJSON) {
+  
+  // TODO - if it contains .json substring as last 5 symbols, open file with the string, else - try to parse the string as json.
+  
+  //ptree query_JSON; // to hold the query data perhaps
+  
+  
+  int divider = 1;//2;
+  map<string, double> run_lumi_map;
+
+  
+  
+  
+  int min_lumi_sections = 100;
+  ifstream IFS;
+  istringstream iss;
+  string LINE,rollName;
+  double rateOfRoll=0;
+  double biggestOn_X=0;
+  double biggestOn_Y=0;
+  double currentLumi =0;
+  ptree run_rateVlumi_JSON;
+  
+  TPaveText * pt,* secondText;
+  pt = new TPaveText(0.092511,0.930556,0.234949,0.997222,"NDC"); // NDC sets coords
+  secondText = new TPaveText(0.653846,0.925595,0.950669,0.997024,"NDC");
+  secondText->SetFillColor(0);
+  secondText->SetBorderSize(0);
+  secondText->SetTextSize(0.05);
+      
+  secondText->AddText("CMS Preliminary");
+  pt->SetFillColor(0); // text is black on white
+  pt->SetBorderSize(0); //no shade
+  pt->SetTextSize(0.05);
+  pt->AddText("#sqrt{s} = 13 TeV");    
     
-    /** ONLY TO FIND biggests -> first find the biggest value on Y axis to assign the Y */
+  for (int i = 0 ; i < lumiFile.getLenght() ; i++) {
+    currentLumi = (lumiFile.getElementAsDouble(i+1,3)/lumiFile.getElementAsDouble(i+1,2))/23.31;
+    run_lumi_map[lumiFile.getElement(i+1,1)] = currentLumi;
+    if(currentLumi > biggestOn_X) biggestOn_X = currentLumi;      
+  }
+  
+  biggestOn_X += 500;
+  
+  TLegend * leg;
+  leg = new TLegend(0.135095,0.58678,0.352423,0.886329);
+  leg->SetFillColor(0);
+  leg->SetBorderSize(0);
+  leg->SetTextFont(6);
+  leg->SetTextSize(30);
+  
+  TCanvas * can = new TCanvas(query->getCanvasTitle().c_str(),query->getCanvasTitle().c_str(),1200,700);
+  can->SetFillColor(0);
+  can->cd();
+  
+  /** ONLY TO FIND biggests -> first find the biggest value on Y axis to assign the Y */
+       
+  for (int i=0;i < query->getOnlineRollCounter() ; i++) {
+      string roll_part = query->getOnlineRollMapForRecord(i+1).regex;
+      for (auto & itr : run_rollRate_map){
+      double current_rate= 0; int counter = 0;      
+      for (auto & itrr : itr.second){
+	//cout << itrr.first << " " << itrr.second << " " << roll_part << " " << cutThreshold << endl;
+	if (itrr.second > cutThreshold) continue; 
+	if (itrr.first.find(roll_part) == string::npos)  continue;
+	current_rate += itrr.second;
+	  //cout << itr.first << " " << itrr.first << " " << itrr.second << endl;
+	counter ++;
+      }
+      
+      double currentAvg = current_rate/counter;
+      biggestOn_Y = ( currentAvg > biggestOn_Y ) ? currentAvg : biggestOn_Y ;     
+//       cout << biggestOn_Y << " "<<  currentAvg << endl;
+    }
+  }
+  
+  biggestOn_Y += 0.5;
     
-    for (int i=0;i < query->getOnlineRollCounter() ; i++) {
-        int counter=0;
-        double current_rate=0;
-        // first find the biggest value on Y axis to assign the Y 
-	
-	for (run_rollRate_map_iter = run_rollRate_map.begin();run_rollRate_map_iter != run_rollRate_map.end();run_rollRate_map_iter++) {
-            counter = 0;
-            current_rate = 0;
-            for (run_iterator = run_rollRate_map_iter->second.begin();run_iterator != run_rollRate_map_iter->second.end();run_iterator++) {
-                if (run_iterator->first.find(query->getOnlineRollMapForRecord(i+1).regex) != string::npos && run_iterator->second < cutThreshold) {
-		  
-                  current_rate +=run_iterator->second;
-                  counter ++;
-                }
-            }
-            if (current_rate/counter > biggestOn_Y) biggestOn_Y = (current_rate/counter);  
-	    
-	}
-    }    
-    
-    biggestOn_Y += 0.5;
     int multiplier = 1;
     
+    TF1 * func = new TF1("aLine","[0]+x*[1]",0,50000);
+    
+    cout << "entering the looney " << endl;
+    
     for (int i=0;i < query->getOnlineRollCounter() ; i++) {
-        int counter;
+        double counter;
         double current_rate,current_luminosity_;
         
 	// first find the biggest value on Y axis to assign the Y 
-	TH2F * hist = new TH2F(query->getOnlineRollMapForRecord(i+1).histoName.c_str(),"",1000,0,biggestOn_X,10000,0,biggestOn_Y);
-	
+	TH2F * hist = new TH2F(query->getOnlineRollMapForRecord(i+1).histoName.c_str(),"",1000,0,biggestOn_X,1000,0,biggestOn_Y);
+	cout << query->getOnlineRollMapForRecord(i+1).histoName << endl;
 	run_rateVlumi_JSON.add_child(query->getOnlineRollMapForRecord(i+1).regex,ptree());
 	run_rateVlumi_JSON.get_child(query->getOnlineRollMapForRecord(i+1).regex).add_child("values",ptree());
 	run_rateVlumi_JSON.get_child(query->getOnlineRollMapForRecord(i+1).regex).add<int>("marker",query->getOnlineRollMapForRecord(i+1).Marker);
 	run_rateVlumi_JSON.get_child(query->getOnlineRollMapForRecord(i+1).regex).add<int>("color",query->getOnlineRollMapForRecord(i+1).Color);
 	run_rateVlumi_JSON.get_child(query->getOnlineRollMapForRecord(i+1).regex).add<string>("title",query->getOnlineRollMapForRecord(i+1).histoName);
-	//run_rateVlumi_JSON.get_child(query->getOnlineRollMapForRecord(i+1).regex).add<int>("title",query->getOnlineRollMapForRecord(i+1).);
-	//run_rateVlumi_JSON.add<>();
-	
 	
 
-	for (run_rollRate_map_iter = run_rollRate_map.begin();run_rollRate_map_iter != run_rollRate_map.end();run_rollRate_map_iter++) {
+	for (auto & run_rollRate_map_iter : run_rollRate_map) {
             counter = 0;
             current_rate = 0;
-            for (run_iterator = run_rollRate_map_iter->second.begin();run_iterator != run_rollRate_map_iter->second.end();run_iterator++) {
+            for (auto & run_iterator : run_rollRate_map_iter.second) {
               //if (run_iterator->first.find(query->getOnlineRollMapForRecord(i+1).regex) != string::npos && run_iterator->first.find("RE+1_1") == string::npos && run_iterator->first.find("RE-4_3_13") == string::npos && run_iterator->second < cutThreshold) {
-	      if (run_iterator->second > cutThreshold) continue;
-	      if ( run_iterator->first.find(query->getOnlineRollMapForRecord(i+1).regex) == string::npos ) continue;
-	      if ( run_iterator->first.find("RE+1_1") != string::npos && ( ( query->getOnlineRollMapForRecord(i+1).regex.find("RE+1_1") == string::npos )) ) continue;
+	      if (run_iterator.second > cutThreshold) continue;
+	      if ( run_iterator.first.find(query->getOnlineRollMapForRecord(i+1).regex) == string::npos ) continue;
+	      if ( run_iterator.first.find("RE+1_1") != string::npos && ( ( query->getOnlineRollMapForRecord(i+1).regex.find("RE+1_1") == string::npos )) ) continue;
 	      
-	      current_rate +=run_iterator->second;
+	      current_rate +=run_iterator.second;
 	      counter ++;
-	      cout << run_iterator->first << " " << run_iterator->second << endl;
+	      //cout << run_iterator.first << " " << run_iterator.second << endl;
             }            
-            current_luminosity_ = run_lumi_map.find(run_rollRate_map_iter->first)->second;            
+            current_luminosity_ = run_lumi_map.find(run_rollRate_map_iter.first)->second;            
 
 	    if(query->getOnlineRollMapForRecord(i+1).cutByRunRange 
-	     &&  atoi(run_rollRate_map_iter->first.c_str()) <=  query->getOnlineRollMapForRecord(i+1).runStart
-	     &&  atoi(run_rollRate_map_iter->first.c_str()) >= query->getOnlineRollMapForRecord(i+1).runEnd
+	     &&  atoi(run_rollRate_map_iter.first.c_str()) <=  query->getOnlineRollMapForRecord(i+1).runStart
+	     &&  atoi(run_rollRate_map_iter.first.c_str()) >= query->getOnlineRollMapForRecord(i+1).runEnd
 	  ) continue;
 	  
-	  if(divideRateOnLumi) { divider = current_luminosity_; multiplier = 1000;}
+	  
 	  double res_r = current_rate/counter;
+	  //cout << run_rollRate_map_iter.first << " "  << res_r << " " << lumiFile.getElementByKeyAsDouble(run_rollRate_map_iter.first,1) << " " << current_luminosity_ << endl;
 	  hist->Fill(current_luminosity_,res_r,3);
 	  int cl_int = 0;
 	  if (current_luminosity_ > 0 ) {cl_int = current_luminosity_ ; current_luminosity_ = cl_int;}
@@ -1389,20 +1395,17 @@ void plotRateVsLumi_using_root_and_JSON(string data_folder ,DataObject & lumiFil
 	  p.put_value(cl);
 	  p.put_value<double>(current_luminosity_);
 	  array.push_back(std::make_pair("",p));
-// 	  string rr = boost::lexical_cast<string>(res_r);
-// 	  cl += "\"";
-// 	  rr = "\""+rr;
 	  p.put_value<double>(res_r);
-  	  array.push_back(std::make_pair("",p));
+	  array.push_back(std::make_pair("",p));
 	  
         }
         
-
+        
         hist->SetMarkerStyle(query->getOnlineRollMapForRecord(i+1).Marker);
         hist->SetMarkerColor(query->getOnlineRollMapForRecord(i+1).Color);
         hist->SetStats(false);
 	// to be removed after fit
-	TF1 * func = new TF1((query->getOnlineRollMapForRecord(i+1).histoName+"_function").c_str(),"[0]+x*[1]",0,50000);
+	//TF1 * func = new TF1((query->getOnlineRollMapForRecord(i+1).histoName+"_function").c_str(),"[0]+x*[1]",0,50000);
 	
 	
         if (i+1 == 1) {
@@ -1413,25 +1416,23 @@ void plotRateVsLumi_using_root_and_JSON(string data_folder ,DataObject & lumiFil
 	    hist->GetXaxis()->SetTitleOffset(hist->GetXaxis()->GetTitleOffset()*0.8);
 	    hist->GetYaxis()->SetTitleOffset(hist->GetYaxis()->GetTitleOffset()*0.8);
             hist->Draw();
-// 	    hist->SetName("twelve");
-// 	    hist->SaveAs("2012.root");
         }
         else {
             hist->Draw("same");
-// 	    hist->SetName("twelve");
-// 	    hist->SaveAs("2012.root");
         }
-        cout << "Correlation factor " << hist->GetCorrelationFactor() << endl;
-        // hist->Fit(func);
-	cout << hist->GetName() << " " << func->GetMaximum() << endl;
 	if(query->getOnlineRollMapForRecord(i+1).histoName != ""){
-        leg->AddEntry(hist,query->getOnlineRollMapForRecord(i+1).histoName.c_str(),"p");
+	  leg->AddEntry(hist,query->getOnlineRollMapForRecord(i+1).histoName.c_str(),"p");
 	}
-// 	delete func;
+	
+	cout << "Correlation factor " << hist->GetCorrelationFactor() << " ";
+	hist->Fit(func,"R0");  cout << "Rate extrapolated to 50000: " << func->Eval(50000) << " ";
+	//delete func;
+	//delete hist;
 	
     }
     
-    setTDRStyle();
+    cout << "out of looney " << endl;
+    
     pt->Draw();
     secondText->Draw();
     leg->Draw();
@@ -1441,6 +1442,7 @@ void plotRateVsLumi_using_root_and_JSON(string data_folder ,DataObject & lumiFil
     ofstream OFS(outputJSON.c_str());
     boost::property_tree::json_parser::write_json(OFS,run_rateVlumi_JSON);
     OFS.close();
+    run_rateVlumi_JSON.clear();
 }
 
 
@@ -6218,7 +6220,7 @@ void GetLumiHistogramPerLS(string& lumiFile){
   
   DataObject Lumi(lumiFile);
   
-  TH1F * lumiHisto = new TH1F("","",Lumi.getLenght(),0,Lumi.getLenght());
+  TH1F * lumiHisto = new TH1F("lumihisto","lumihisto",Lumi.getLenght(),0,Lumi.getLenght());
   
   for (int i = 0 ; i < Lumi.getLenght() ; i++){
     
@@ -6479,6 +6481,12 @@ void get2DplotsOnRateFromROOTfile ( const string& rootfile, const string & jsonM
   get2DplotsForJSONFileUsingAndJSONmap(JSONout,jsonMap,bmax,emax,"Rate (Hz/cm^{2})","_"+fileBaseName+"_2D");
   
   
+}
+
+void compareHistos ( TH1F* reference, TH1F* testing ) {
+  
+  
+
 }
 
 

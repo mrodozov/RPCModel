@@ -175,6 +175,8 @@ std::string QueryObject::getMainTitle(){
 
 void QueryObject::clearAllOnlineRollRecords() {
   this->online_Roll_Map.clear();
+  map<int,QueryObject::onlineRollStruct> nextMap;
+  this->online_Roll_Map = nextMap; //because regardless the map is clear it clearly something remained leading to debugging and shit
 }
 
 

@@ -179,12 +179,18 @@ int main( int argc ,char *argv[] ){
 //   DrawVvsPhiUsingJSONdataAndJSONconfig(jsonDatafile,jsonMapFile); 
 //   plot_X_vs_Y_values_using_JSON_data_and_JSON_config(jsonDatafile,jsonMapFile);
     
-   string rootFile=argv[1],jsonFile=argv[2],areaFile=argv[3];
-   int bmax = atoi(argv[4]),emax = atoi(argv[5]);
+//    string rootFile=argv[1],jsonFile=argv[2],areaFile=argv[3];
+//    int bmax = atoi(argv[4]),emax = atoi(argv[5]);
   
 //   getRateInJSONformatFromRootFile(rootFile,jsonFile,areaFile);
   
-   get2DplotsOnRateFromROOTfile(rootFile,jsonFile,areaFile,bmax,emax);
+//    get2DplotsOnRateFromROOTfile(rootFile,jsonFile,areaFile,bmax,emax);
+   
+   
+   
+   
+
+   //compareHistos();
    
   /*  
   

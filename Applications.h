@@ -106,7 +106,9 @@ void plot_X_vs_Y_values_using_JSON_data_and_JSON_config(const string & JSON_data
 
 void plotEcap_RateVsPhi(string rateFile,bool subtractIntrinsic,string fileWithIntrinsic,DataObject & area,double cutValueSingleStrip,string SGmapFile,DataObject & LumiFile,QueryObject * query);
 
-void plotRateVsLumi_using_root_and_JSON(string fileContainer,DataObject & lumiFile,string intrinsicFile,DataObject & area,bool intrinsicShouldBeSubtracted,double cutThreshold,QueryObject * query,DataObject & exlucsionFile,bool isOffline,bool divideRateOnLumi,bool debugOUTPUT,string & outputJSON);
+map<string,map<string,double> > prepareDataSourceWithRatesAndLumi ( string data_folder, DataObject& lumiFile, bool isOffline );
+
+void plotRateVsLumi_using_root_and_JSON(const map<string,map<string,double> > & run_rollRate_map ,DataObject & lumiFile,int cutThreshold,QueryObject * query,bool isOffline,bool debugOUTPUT,const string & outputJSON);
 
 DEPRECATED void print_online_dbfiles(string rootContainer,string outputContainer ,DataObject & lumiFile,DataObject& area,string RollList,bool correction,double correctionInPercents);
 
@@ -203,6 +205,9 @@ void GetLumiHistogramPerLS(string & lumiFile);
 
 void getRateInJSONformatFromRootFile(const string & rootfilename,const string & JSONoutFileName,const string & areaFileName);
 
+// analysis 
+
+void compareHistos(TH1F * reference, TH1F * testing);
 
 // drawing functions only
 
