@@ -1196,9 +1196,11 @@ void plotEcap_RateVsPhi(string rateFile, bool subtractIntrinsic, string fileWith
 }
 
 
-map<string, map< string,double> > prepareDataSourceWithRatesAndLumi ( string data_folder, DataObject& lumiFile, bool isOffline ) {
+map< string, map<string, map< string,double> > >prepareDataSourceWithRatesAndLumi ( string data_folder, DataObject& lumiFile ) {
   
   map<string,map<string,double> > run_rollRate_map;
+  map<string,map<string,double> > run_rollRate_map_online;
+  map<string,map <string, map <string, double> > > combined_resource;
     map<string,double>::iterator run_iterator;
     
     int min_lumi_sections = 100;
@@ -1215,6 +1217,7 @@ map<string, map< string,double> > prepareDataSourceWithRatesAndLumi ( string dat
         if ( min_lumi_sections > lumiFile.getElementAsInt(i+1,2))  continue ;    
 	    
 	    map<string,double> currentRates;
+	    map<string,double> currentRates_online;
 	    
 	    TFile * file = new TFile((data_folder+"total_"+lumiFile.getElement(i+1,1)+".root").c_str(),"READ");
 	    cout << "reading file " << data_folder+"total_"+lumiFile.getElement(i+1,1)+".root" << endl;
@@ -1236,19 +1239,19 @@ map<string, map< string,double> > prepareDataSourceWithRatesAndLumi ( string dat
 		aroll->setStripsAreaFromSource_cmsswResource(areaDO);
 		aroll->setStripsRatesFromTH1FObject(h1);
 		aroll->removeNoisyStripsForAllClonesWithPercentValue(100);
-		if (isOffline) {
+		
 		  for (int r_id = 1 ; r_id <= aroll->getClones() ; r_id++){
 		    currentRates[aroll->getRollIDofCloneWithNewIdentifiers(r_id)] = aroll->getAvgRatePSCWithoutCorrectionsForClone(r_id);
 		  }
-		}
-		else {
-		  currentRates[nameOfRoll] = aroll->getAvgRatePSCWithoutCorrections();
-		}
+		
+		  currentRates_online[nameOfRoll] = aroll->getAvgRatePSCWithoutCorrections();
+		
 		delete aroll;
 	      }
 	    }
 	    
 	    run_rollRate_map[lumiFile.getElement(i+1,1)] = currentRates;
+	    run_rollRate_map_online[lumiFile.getElement(i+1,1)] = currentRates_online;
 	    
 	    file->Close("R");
 	    //cout << "file is closed: " << file->IsOpen() << endl;
@@ -1258,12 +1261,17 @@ map<string, map< string,double> > prepareDataSourceWithRatesAndLumi ( string dat
     
     //return run_rollRate_map;
     
-    return run_rollRate_map;
+    combined_resource["offline"] = run_rollRate_map;
+    combined_resource["online"] = run_rollRate_map_online;
+    
+    return combined_resource;
 }
 
 
 
-void plotRateVsLumi_using_root_and_JSON(const  map<string, map< string,double> > & run_rollRate_map ,DataObject & lumiFile,int cutThreshold,QueryObject * query,bool isOffline,bool debugOUTPUT,const string & outputJSON) {
+
+
+void plotRateVsLumi_using_root_and_JSON( const map<string, map<string,map<string,double> > > & dataSource ,DataObject & lumiFile,int cutThreshold,QueryObject * query,bool isOffline,bool debugOUTPUT,const string & outputJSON) {
   
   // TODO - if it contains .json substring as last 5 symbols, open file with the string, else - try to parse the string as json.
   
@@ -1315,8 +1323,13 @@ void plotRateVsLumi_using_root_and_JSON(const  map<string, map< string,double> >
   can->SetFillColor(0);
   can->cd();
   
+  string sourceType = (isOffline) ? "offline" : "online";
+  
+  map<string,map<string,double> > run_rollRate_map = dataSource.at(sourceType);
+  
+  
   /** ONLY TO FIND biggests -> first find the biggest value on Y axis to assign the Y */
-       
+  
   for (int i=0;i < query->getOnlineRollCounter() ; i++) {
       string roll_part = query->getOnlineRollMapForRecord(i+1).regex;
       for (auto & itr : run_rollRate_map){
@@ -1340,14 +1353,14 @@ void plotRateVsLumi_using_root_and_JSON(const  map<string, map< string,double> >
     
     int multiplier = 1;
     
-    TF1 * func = new TF1("aLine","[0]+x*[1]",0,50000);
+    
     
     cout << "entering the looney " << endl;
     
     for (int i=0;i < query->getOnlineRollCounter() ; i++) {
         double counter;
         double current_rate,current_luminosity_;
-        
+         TF1 * func = new TF1("aLine","[0]+x*[1]",0,50000);
 	// first find the biggest value on Y axis to assign the Y 
 	TH2F * hist = new TH2F(query->getOnlineRollMapForRecord(i+1).histoName.c_str(),"",1000,0,biggestOn_X,1000,0,biggestOn_Y);
 	//cout << query->getOnlineRollMapForRecord(i+1).histoName << endl;
@@ -1476,8 +1489,8 @@ void print_online_dbfiles(string rootContainer,string outputContainer ,DataObjec
     }
     
     
-
-
+    
+    
     for (run_lumi_map_iter = run_lumi_map.begin();run_lumi_map_iter != run_lumi_map.end();run_lumi_map_iter++) {
         TFile * file = new TFile((rootContainer+"total_"+run_lumi_map_iter->first+".root").c_str(),"READ");
         TIter nextkey(file->GetListOfKeys());
@@ -6109,9 +6122,6 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
       //cout << twodim_itr->first << endl;
       if(twodim_itr->first.find(rName) != string::npos ){
 	vector<double> coordinates = twodim_itr->second;
-	
-	
-	
 	hist_ptr->SetBinContent(coordinates.at(0),coordinates.at(1),coordinates.at(2));
 	
 	//double CurrentRatioValue = 0;
@@ -6182,9 +6192,9 @@ void SlopeRatiosComparisonForPairsOfIDs(string & IDs_file, string & inputRootFil
     for (string & partname : SummaryPlotNames){
       namePos++;
       if (partname == iter->first){
-	Summary->SetBinContent(namePos, ( hist->GetMean() - 1 )*100 );
+	Summary->SetBinContent(namePos, hist->GetMean() );
 	Summary->GetXaxis()->SetBinLabel(namePos,partname.c_str());
-	Summary->SetBinError(namePos,(hist->GetRMS()/hist->GetMean())*100);
+	Summary->SetBinError(namePos,hist->GetRMS());
 	//cout << namePos << endl;
 	break;
       }      

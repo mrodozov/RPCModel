@@ -106,9 +106,10 @@ void plot_X_vs_Y_values_using_JSON_data_and_JSON_config(const string & JSON_data
 
 void plotEcap_RateVsPhi(string rateFile,bool subtractIntrinsic,string fileWithIntrinsic,DataObject & area,double cutValueSingleStrip,string SGmapFile,DataObject & LumiFile,QueryObject * query);
 
-map<string,map<string,double> > prepareDataSourceWithRatesAndLumi ( string data_folder, DataObject& lumiFile, bool isOffline );
+map< string, map<string,map<string,double> > >prepareDataSourceWithRatesAndLumi ( string data_folder, DataObject& lumiFile );
 
-void plotRateVsLumi_using_root_and_JSON(const map<string,map<string,double> > & run_rollRate_map ,DataObject & lumiFile,int cutThreshold,QueryObject * query,bool isOffline,bool debugOUTPUT,const string & outputJSON);
+
+void plotRateVsLumi_using_root_and_JSON(const map<string, map<string,map<string,double> > > & run_rollRate_map ,DataObject & lumiFile,int cutThreshold,QueryObject * query,bool isOffline,bool debugOUTPUT,const string & outputJSON);
 
 DEPRECATED void print_online_dbfiles(string rootContainer,string outputContainer ,DataObject & lumiFile,DataObject& area,string RollList,bool correction,double correctionInPercents);
 
