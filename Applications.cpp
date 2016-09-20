@@ -6568,7 +6568,7 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
   DataObject runDurations(runDurationsList);
   DataObject area(areafile);
   TH1F * nril_h = new TH1F("nril_h","nril_h",2000,0,0.2);;
-  TH1F * rl_h = new TH1F("rl_h","rl_h",2000,0,2);; ;
+  //TH1F *  = new TH1F("","",2000,0,2);; ;
   TH1F * rms_distribution = new TH1F("RMSdistr","Ratios RMS distribution",2000,0,0.2);
   //TH1F * r_il_h = new TH1F("r_il_h","r_il_h",2000,0,20);;; 
   
@@ -6636,9 +6636,9 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
     
     cout << run << endl;
     
-    TFile * stripsResults = new TFile(("stripsResults_"+run+".root").c_str(),"UPDATE");
+    //TFile * stripsResults = new TFile(("stripsResults_"+run+".root").c_str(),"UPDATE");
     //stripsResults->cd();
-    TFile * rollsResults = new TFile(("rollsResults_"+run+".root").c_str(),"UPDATE");
+    TFile * rollsResults = new TFile(("rollsResults_"+run+".root").c_str(),"NEW");
     
     
     while ((file=(TSystemFile*)next())) {
@@ -6679,6 +6679,10 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
       // create two files to write for that run - one for channel and one for roll/LB results . or single file with directories after the roll/LB names            
       
       cout << fname << endl;
+      
+      
+      
+      
       while (key = (TKey*)nextkey()) {
 	obj = key->ReadObj();
 	h1 = dynamic_cast<TH1F*>(obj);
@@ -6689,7 +6693,7 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	    
 	    
 	    int time_intervals = h1->GetNbinsX();
-	    TH1F * lumi_histo = lumiHistos.at(run).at(time_intervals);
+	    //TH1F * lumi_histo = lumiHistos.at(run).at(time_intervals);
 	    TH1F * instLumi_histo = InstlumiHistos.at(run).at(time_intervals);
 	    
 	    string rollname = histoCurrentName.substr(0,histoCurrentName.find(" "));
@@ -6703,8 +6707,7 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	    else {
 	      aroll = new ExRoll(rollname);
 	      aroll->setStripsAreaFromSource_cmsswResource(area);
-	      rollsMap[rollname] = aroll;
-	      
+	      rollsMap[rollname] = aroll;      
 	    }
 	    
 	    if (meansAndRMSsOfRollsPerRun.at(run).find(aroll->getRollIDofCloneWithNewIdentifiers(1)) == meansAndRMSsOfRollsPerRun.at(run).end()){      
@@ -6723,57 +6726,73 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	    double stripArea = aroll->getStripsAreaFromClone( cloneNumberOfStrip);    
 	    string offlineRollName = aroll->getRollIDofCloneWithNewIdentifiers(cloneNumberOfStrip);
 	    
-	    vector<double> r_l, r_il, nr_il; 
+	    //vector<double> r_l, r_il, nr_il; 
+	    
+	    //TH1F * rateLumiRatio = new TH1F((rollname+"_ch"+channelString+"_run"+run+"_RLR").c_str(),histoCurrentName.c_str(),200,0,0.4 );
+	    TH1F * normRateInstLumiRatio = new TH1F((rollname+"_ch"+channelString+"_run"+run+"_NRLIR").c_str(),histoCurrentName.c_str(),200, 0,0.2); // study on the distribution have shown main distribution to not exceed 0.15
+	    
+	    TH1F * areaScaledRate = dynamic_cast<TH1F*>(h1->Clone("scaledratehisto"));
+	    
+	    //cout << areaScaledRate->GetNbinsX() << " " << instLumi_histo->GetNbinsX() << endl;
+	    //exit(0);
+	    areaScaledRate->Scale(1/stripArea);    
+	    //areaScaledRate->Divide(instLumi_histo);
+	    
 	    
 	    for (int bini = 0 ; bini < time_intervals ; bini++){
 	      
-	      double ratelumiratiovalue = h1->GetBinContent(bini) / lumi_histo->GetBinContent(bini);
-	      double rateInstlumiratiovalue = h1->GetBinContent(bini) / instLumi_histo->GetBinContent(bini);
-	      double normRateInstlumiratiovalue = ( h1->GetBinContent(bini) / stripArea ) / instLumi_histo->GetBinContent(bini);
-	      r_l.push_back(ratelumiratiovalue);
-	      r_il.push_back(rateInstlumiratiovalue);
-	      nr_il.push_back(normRateInstlumiratiovalue);
+	      //double ratelumiratiovalue = h1->GetBinContent(bini) / lumi_histo->GetBinContent(bini);
+	      //double normRateInstlumiratiovalue = ( h1->GetBinContent(bini) / stripArea ) / instLumi_histo->GetBinContent(bini);
+	      //r_l.push_back(ratelumiratiovalue);
+	      //nr_il.push_back(normRateInstlumiratiovalue);
+	      //rateLumiRatio->Fill(ratelumiratiovalue);
+	      //double ratioValue = areaScaledRate->GetBinContent(bini) / instLumi_histo->GetBinContent(bini);
+	      normRateInstLumiRatio->Fill(areaScaledRate->GetBinContent(bini)/instLumi_histo->GetBinContent(bini));
+	      nril_h->Fill(areaScaledRate->GetBinContent(bini)/instLumi_histo->GetBinContent(bini));
+	      //->Fill(r_l.at(ith_fill));
 	    }
 	    
-	    r_l; r_il;nr_il;
+	    //cout << normRateInstLumiRatio->GetMean() << " " << normRateInstLumiRatio->GetRandom() << endl;
+	    
+	    meansAndRMSsOfRollsPerRun.at(run).at(offlineRollName).push_back(normRateInstLumiRatio->GetMean());
+	    RMSsOfChannelRatiosPerRun.at(run).at(offlineRollName).push_back(normRateInstLumiRatio->GetRMS()); 
+	    
+	    //areaScaledRate->Delete();
+	    
+	    /*
 	    sort(r_l.begin(),r_l.end());sort(r_il.begin(),r_il.end());sort(nr_il.begin(),nr_il.end());
 	    
-	    TH1F * rateLumiRatio = new TH1F((rollname+"_ch"+channelString+"_run"+run+"_RLR").c_str(),histoCurrentName.c_str(),200,0,0.4 );
-	    TH1F * normRateInstLumiRatio = new TH1F((rollname+"_ch"+channelString+"_run"+run+"_NRLIR").c_str(),histoCurrentName.c_str(),200, 0,0.2); // study on the distribution have shown main distribution to not exceed 0.15
-	    for (int ith_fill = 0 ; ith_fill < r_l.size();ith_fill++){
+	       for (int ith_fill = 0 ; ith_fill < r_l.size();ith_fill++){
 	      
 	      rateLumiRatio->Fill(r_l.at(ith_fill));
 	      normRateInstLumiRatio->Fill(nr_il.at(ith_fill));
 	      nril_h->Fill(nr_il.at(ith_fill));
-	      rl_h->Fill(r_l.at(ith_fill));
+	      ->Fill(r_l.at(ith_fill));
 	      
 	    }
+	    */
 	    
 	    //rollStripsRatiosPlot->SetBinContent(channelNumber,normRateInstLumiRatio->GetMean());
 	    //rollStripsRatiosPlot->SetBinError(channelNumber,normRateInstLumiRatio->GetRMS());    
 	    
-	    stripsResults->cd();	    
+	    //stripsResults->cd();	    
 	    
-	    if (meansAndRMSsOfRollsPerRun.at(run).find(offlineRollName) == meansAndRMSsOfRollsPerRun.at(run).end()) cout << offlineRollName << endl;
+	    //if (meansAndRMSsOfRollsPerRun.at(run).find(offlineRollName) == meansAndRMSsOfRollsPerRun.at(run).end()) cout << offlineRollName << endl;
 	    
-	    meansAndRMSsOfRollsPerRun.at(run).at(offlineRollName).push_back(normRateInstLumiRatio->GetMean());
-	    RMSsOfChannelRatiosPerRun.at(run).at(offlineRollName).push_back(normRateInstLumiRatio->GetRMS());
-	    
-	    
-	    
+	    /*
 	    TDirectory *dir = stripsResults->GetDirectory(rollname.c_str());
 	    if (!dir) { stripsResults->mkdir(rollname.c_str()); }
 	    stripsResults->cd(rollname.c_str());
+	    */
+	    //if (! stripsResults->GetListOfKeys()->Contains(rateLumiRatio->GetName())){
+	    //  rateLumiRatio->Write();
+	    //}
+	    //if (! stripsResults->GetListOfKeys()->Contains(normRateInstLumiRatio->GetName())){
+	    //  normRateInstLumiRatio->Write();
+	    // }
 	    
-	    if (! stripsResults->GetListOfKeys()->Contains(rateLumiRatio->GetName())){
-	      rateLumiRatio->Write();
-	    }
-	    if (! stripsResults->GetListOfKeys()->Contains(normRateInstLumiRatio->GetName())){
-	      normRateInstLumiRatio->Write();
-	    }
-	    
-	    rateLumiRatio->Delete();
-	    normRateInstLumiRatio->Delete();
+	    //rateLumiRatio->Delete();
+	    //normRateInstLumiRatio->Delete();
 	    
 	    //stripsResults->cd();
 	    
@@ -6796,13 +6815,16 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 
     }    
     
-    stripsResults->Save();
-    cout << run << " results saved" << endl;
-    stripsResults->Close();
+    //stripsResults->Save();
+    //cout << run << " results saved" << endl;
+    //stripsResults->Close();
     
     /* from the mean values and RMS (stdev) derive Correlation strenght */
     
     rollsResults->cd();
+    
+    //cout << meansAndRMSsOfRollsPerRun.size() << " " << RMSsOfChannelRatiosPerRun.size() << endl;
+    
     for (auto & rn : meansAndRMSsOfRollsPerRun){
       for (auto & rv : rn.second){
 	TH1F * stripsRatiosForRollInRun = new TH1F((rv.first+"_"+run+"_stripsRatios_NRILR").c_str(),rv.first.c_str(),rv.second.size(),0,rv.second.size());
@@ -6810,9 +6832,10 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	for (unsigned vect_it = 0 ; vect_it < rv.second.size() ; vect_it++){  
 	  stripsRatiosForRollInRun->SetBinContent(vect_it+1,rv.second.at(vect_it));
 	  stripsRatiosForRollInRun->SetBinError(vect_it+1,RMSvector.at(vect_it));
+	  rms_distribution->Fill(RMSvector.at(vect_it));
 	}
 	stripsRatiosForRollInRun->Write();
-	stripsRatiosForRollInRun->Delete();
+	//stripsRatiosForRollInRun->Delete();
       }
     }
     
@@ -6830,8 +6853,8 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
     //rollsResults->Save();
   }
   
-  TFile * allRunsF = new TFile("allRuns_stats.root","UPDATE");
-  allRunsF->cd();
+  //TFile * allRunsF = new TFile("allRuns_stats.root","NEW");
+  //allRunsF->cd();
   string first_run;
     for (auto & rn : meansAndRMSsOfRollsPerRun){ first_run = rn.first ; break ; }
     
@@ -6841,6 +6864,7 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
       roll_names_v.push_back(roll_itr.first);
     }
     
+    TFile * allRunsF = new TFile("allRuns_stats.root","NEW");
     for (auto & r_name_ : roll_names_v){
       int nChannelsInroll = meansAndRMSsOfRollsPerRun.at(first_run).at(r_name_).size();
       allRunsF->cd();
@@ -6866,12 +6890,14 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
       }
     }
   
-  rl_h->SaveAs("BasicRatioDistr.root");
+  allRunsF->Save();
+  allRunsF->Close();
+  
+  
+  //->SaveAs("BasicRatioDistr.root");
   nril_h->SaveAs("RateAndLumiNormalizedDistr.root");
   rms_distribution->SaveAs("RMSratio.root");
   
-  allRunsF->Save();
-  allRunsF->Close();
   
   
 }
