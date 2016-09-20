@@ -8,6 +8,9 @@
 
 #include <string>
 #include "StripInterface.h"
+//#include "TH1F.h"
+
+using namespace std;
 
 class Strip : public StripInterface{
   

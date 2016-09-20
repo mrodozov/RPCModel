@@ -9,18 +9,8 @@
 #include <string>
 #include <map>
 #include "core/DataObject.h"
-#include "ROOT/ROOT.h"
+//#include "ROOT/ROOT.h"
 #include "ServiceClasses/Service.h"
-
-#ifdef __GNUC__
-#define DEPRECATED __attribute__((deprecated))
-#elif defined(_MSC_VER)
-#define DEPRECATED __declspec(deprecated)
-#else
-#pragma message("WARNING: You need to implement DEPRECATED for this compiler")
-#define DEPRECATED
-#endif
-
 using namespace std;// DrawVvsPhiUsingJSONdataAndJSONconfig(jsonDatafile,jsonMapFile); 
 
 void PrintGeometryTable(std::string InputWithRollNames,std::string Ouput,DataObject & Areas,DataObject & RawIDFile);
@@ -111,7 +101,7 @@ map< string, map<string,map<string,double> > >prepareDataSourceWithRatesAndLumi 
 
 void plotRateVsLumi_using_root_and_JSON(const map<string, map<string,map<string,double> > > & run_rollRate_map ,DataObject & lumiFile,int cutThreshold,QueryObject * query,bool isOffline,bool debugOUTPUT,const string & outputJSON);
 
-DEPRECATED void print_online_dbfiles(string rootContainer,string outputContainer ,DataObject & lumiFile,DataObject& area,string RollList,bool correction,double correctionInPercents);
+void print_online_dbfiles(string rootContainer,string outputContainer ,DataObject & lumiFile,DataObject& area,string RollList,bool correction,double correctionInPercents);
 
 void print_offline_db_files(string rootContainer,string outputContainer ,DataObject & lumiFile,DataObject& area,string RollList,bool correction,double correctionInPercents);
 
@@ -210,6 +200,8 @@ void getRateInJSONformatFromRootFile(const string & rootfilename,const string & 
 
 void compareHistos(TH1F * reference, TH1F * testing);
 
+void testLumiRateCorrelation(const string & runRateFoldersList, const string & runPerLumiFilesList, const string & runDurationsList, const string & area); // test the rate lumi ratio per channel and per roll using detailed rate granularity and scaled lumi files. 
+
 // drawing functions only
 
 void get2DplotsForJSONFileUsingAndJSONmap(const string & JSONdataFile,const string & JSONmapFile, const int & BarrelMax, const int & EndcapMax, const string & ZaxisTitle,const string & fileSuffixes);
@@ -223,6 +215,8 @@ void DrawVvsPhiUsingJSONdataAndJSONconfig(const string & JSON_data_fname, const 
 // combined - data prep + drawing 
 
 void get2DplotsOnRateFromROOTfile(const string& rootfile, const string & jsonMap,const string& areaFile ,const int & bmax,const int & emax);
+
+void printTimeBins(string folderlist);
 
 
 /**

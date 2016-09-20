@@ -7,6 +7,10 @@
 #define EXTENDED_STRIP_H
 
 #include "Strip.h"
+#include "vector"
+//#include "TH1F.h"
+
+using namespace std;
 
 class ExStrip : public Strip{
   
@@ -15,6 +19,7 @@ class ExStrip : public Strip{
   bool isToUnmask;
   double timeWhileNoisy;
   double maxRate;
+  //TH1F * channelRateProfile;
   
 public:
   
@@ -37,6 +42,8 @@ public:
   const double & getTimeAsNoisy();
   void setmaxRate(const double &);
   const double & getMaxRate();
+  //void setRateProfileHisto( TH1F * rateProfile){ this->channelRateProfile = rateProfile; }
+  //TH1F * getRateProfileHisto(){return this->channelRateProfile;}
   
   virtual void ClearConditions(); 
   

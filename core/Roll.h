@@ -8,9 +8,11 @@
 #define ROLL_H
 
 #include <string>
-#include "Strip.h"
 #include "RollInterface.h"
 #include "DataObject.h"
+#include "Strip.h"
+
+
 
 class Roll : public RollInterface{
   
@@ -34,16 +36,17 @@ public:
   
   // methods important for the logic 
   
-  virtual Strip * getStripCollection(); // to override, this method should return concrete type 
-  virtual Strip * getStrip(int number); // to override, this method should return concrete type
-  virtual void allocStrips(); // override , this method should allocate the objects that are associated with the abstract field 'strips' (objects of type Strip in this case)
-  virtual void initStrips(); // use the existing implementations of all the previous classes with invoking LastMotherClass::initStrips() and add new functionality after that
-  
+    
   Roll();
   
   Roll(const std::string & W_D_,const int & W_D_N_,const int & sec_,const std::string & roll_id_,const std::string & roll_id_num_);  
   
   Roll(const string & RollOnlineName);
+  
+  virtual Strip * getStripCollection(); // to override, this method should return concrete type 
+  virtual Strip * getStrip(int number); // to override, this method should return concrete type
+  virtual void allocStrips(); // override , this method should allocate the objects that are associated with the abstract field 'strips' (objects of type Strip in this case)
+  virtual void initStrips(); // use the existing implementations of all the previous classes with invoking LastMotherClass::initStrips() and add new functionality after that
   
   virtual ~Roll();
   

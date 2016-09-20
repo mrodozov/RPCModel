@@ -54,6 +54,7 @@
 #include "TApplication.h"
 #include "TStopwatch.h"
 #include "TVector3.h"
+#include "TSystemDirectory.h"
 
 #endif
 

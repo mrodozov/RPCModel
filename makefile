@@ -28,7 +28,7 @@ DataObject.o: core/DataObject.cpp
 	$(CC) -c core/DataObject.cpp
 
 Strip.o: core/Strip.cpp
-	$(CC) -c core/Strip.cpp
+	$(CC) -c core/Strip.cpp $(ROOTINC)
 
 Roll.o : core/Roll.cpp Strip.o DataObject.o
 	$(CC) -c core/Roll.cpp $(ROOTINC)

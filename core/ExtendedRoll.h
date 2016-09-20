@@ -10,7 +10,7 @@
 #include "Roll.h"
 #include "ExtendedStrip.h"
 #include "DataObject.h"
-#include "ChipInterface.h"
+//#include "ChipInterface.h"
 #include "Chip.h"
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -35,8 +35,9 @@ class ExRoll : public Roll {
   string TH1Path;
   TFile* refFile;
   
+  
 protected:
-
+  
 public:
   
   // Methods  Necessary to implement
@@ -95,6 +96,7 @@ public:
   void setTowerNameFromMap(map<string,string> towerMap); //
   void setLBnameFromMap(map<string,string> RollName_LBname_Map);
   void setStripsRateFromJSONsource(const ptree & JSONobj);
+  
   
   // virtual ExRoll * cloneObject() const { return new ExRoll(*this); } // return copy of the existing object, doesnt work this way !
   

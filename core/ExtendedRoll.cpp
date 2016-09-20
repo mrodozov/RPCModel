@@ -10,11 +10,13 @@
 #include <new>
 #include <cstdlib>
 #include "DataObject.h"
+
 #include "ExtendedStrip.h"
+
 #include "ExtendedRoll.h"
 #include "Chip.h"
-#include "../ROOT/ROOT.h"
-#include "../Extensions/NoiseAnalyzer.h"
+//#include "../ROOT/ROOT.h"
+//#include "../Extensions/NoiseAnalyzer.h"
 
 using namespace std;
 
@@ -881,7 +883,7 @@ int ExRoll::getEmptyStrip(){
    empty += getUnplugedFromClone(j+1) + getMaskedFromClone(j+1);
   return empty;
 }
-
+/*
 double ExRoll::CalculateRateFromTH1(bool correct, int clone){
 
 if (clone != -9){}
@@ -903,7 +905,7 @@ for (int k=1; k<=96;k++)
   return integral;
 
 }
-
+*/
 void ExRoll::setStripsRateFromJSONsource(const ptree& JSONobj){
   
   if (JSONobj.find(this->getRollIDofCloneWithNewIdentifiers(1)) == JSONobj.not_found()) return; // probably there was no record

@@ -22,6 +22,8 @@
 #include "core/Chip.h"
 #include "Applications.h"
 #include "ROOT/tdrStyle.h"
+#include <algorithm>
+#include <list>
 //#include "ServiceClasses/Service.h"
 
 
@@ -6227,7 +6229,7 @@ void GetLumiHistogramPerLS(string& lumiFile){
   
   DataObject Lumi(lumiFile);
   
-  TH1F * lumiHisto = new TH1F("lumihisto","lumihisto",Lumi.getLenght(),0,Lumi.getLenght());
+  TH1F * lumiHisto = new TH1F(lumiFile.c_str(),lumiFile.c_str(),Lumi.getLenght(),0,Lumi.getLenght());
   
   for (int i = 0 ; i < Lumi.getLenght() ; i++){
     
@@ -6240,7 +6242,7 @@ void GetLumiHistogramPerLS(string& lumiFile){
   
   lumiHisto->GetXaxis()->SetTitle("Number of lumi section");
   lumiHisto->GetYaxis()->SetTitle("Luminosity /ub ");
-  lumiHisto->SaveAs("DetailedLumi.root");
+  lumiHisto->SaveAs((lumiFile+".root").c_str());
   
 }
 
@@ -6496,7 +6498,384 @@ void compareHistos ( TH1F* reference, TH1F* testing ) {
 
 }
 
+void printTimeBins ( string folder_list ) {
 
+  DataObject folders(folder_list);
+  for (int i = 0 ; i < folders.getLenght() ; i++){
+    
+    string folder = folders.getElement(i+1,1);
+    
+    TSystemDirectory dir(folder.c_str(), folder.c_str());
+    TList *files = dir.GetListOfFiles();
+    
+    if (files) {
+      TSystemFile *file;
+      string fname;
+      TIter next(files);
+      
+      while ((file=(TSystemFile*)next())) {
+	//cout << "1" << endl;
+	fname = file->GetName();
+	if (fname.find(".root") == string::npos) continue;
+	string fullName = folder +"/"+ fname;
+	TFile * rfile = new TFile(fullName.c_str(),"read");
+	TH1F * ptr;
+	 
+	TIter nextt();
+	// cout << "2" << endl;
+	
+	TH1F * h1;
+	TIter nextkey( rfile->GetListOfKeys() );
+	TKey *key;
+	TObject *obj;
+	string histoCurrentName;
+	//cout << "3" << endl;
+	
+	while (key = (TKey*)nextkey()) {
+	  obj = key->ReadObj();
+	  h1 = (TH1F*)obj;
+	  histoCurrentName = h1->GetName();
+	  if (histoCurrentName.substr(0,1) == "W" || histoCurrentName.substr(0,2) == "RE") {
+	    cout << fname << " " << h1->GetNbinsX() << endl;
+	    break;
+	  }
+	}
+	
+	
+	rfile->Close("R");
+	rfile->Delete();    
+	 
+      }
+   }
+    
+  }
+  
+}
+
+void testLumiRateCorrelation ( const string& runRateFoldersList, const string& lumiPerRunFilesList , const string & runDurationsList, const string & areafile) {
+  
+  // save per run
+  // distribution per channel rate/lumi, destribution per channel rate/timeNormalizedLumi, distribution per channel areaNormalizedRate/timeNormalizedLumi
+  // profile plot per roll (or per linkboard) with bin number the channel (or strip) number, bin content the ratio and bin error the RMS of the ratio distribution
+  // given the time interval duration, the luminosity can be normalized with scale, same for the rate per cm^2 with the strip area
+  // when all runs ratios computation is finished, start cross run comparisons for same channels - plots of one channel ratios for all runs on single profile, put runnumber as bin label
+  // more average values of the same sort - cross run roll/LB average profiles
+  
+  // try to get the 'stable value ratios' (if the stat show ratios are stable) and then compare with 'bad results' runs (out of the linear fit). See both the stable and the unstable cases
+  
+  DataObject rateFoldersList(runRateFoldersList);
+  DataObject lumiFilesList(lumiPerRunFilesList);
+  DataObject runDurations(runDurationsList);
+  DataObject area(areafile);
+  TH1F * nril_h = new TH1F("nril_h","nril_h",2000,0,0.2);;
+  TH1F * rl_h = new TH1F("rl_h","rl_h",2000,0,2);; ;
+  TH1F * rms_distribution = new TH1F("RMSdistr","Ratios RMS distribution",2000,0,0.2);
+  //TH1F * r_il_h = new TH1F("r_il_h","r_il_h",2000,0,20);;; 
+  
+  for (int i = 0 ; i < runDurations.getLenght();i++){
+    cout << runDurations.getElement(i+1,1) << " " << runDurations.getElement(i+1,2)<<endl;
+  }
+  
+
+  TSystemDirectory lumis_dir(lumiPerRunFilesList.c_str(), lumiPerRunFilesList.c_str());
+  TList * lumiFiles = lumis_dir.GetListOfFiles();
+  TIter nextLumiFile(lumiFiles);
+  TSystemFile * lfile;
+  
+  map<string,map<int, TH1F*> > lumiHistos;
+  map<string,map<int, TH1F*> > InstlumiHistos;
+  
+  
+  while ((lfile=(TSystemFile*)nextLumiFile())) {
+    
+    string lumi_fname = lfile->GetName();
+    if (lumi_fname.find(".root") == string::npos) continue;
+    string runnum = lumi_fname.substr(0,6);
+    int interval = atoi ( lumi_fname.substr(7,lumi_fname.find(".")).c_str() );
+    //cout << runnum << " " << interval << endl;
+    TFile * lumif = new TFile((lumiPerRunFilesList+"/"+lumi_fname).c_str(),"READ");
+    if (lumiHistos.find(runnum) == lumiHistos.end()) { map<int,TH1F*> amap ;  lumiHistos[runnum] = amap; }
+    lumiHistos[runnum][interval] = new TH1F(* dynamic_cast<TH1F*> (lumif->Get("lumihisto")));    
+    lumiHistos[runnum][interval]->SetName(lumi_fname.c_str());
+    if (InstlumiHistos.find(runnum) == lumiHistos.end()) { map<int,TH1F*> bmap ;  InstlumiHistos[runnum] = bmap; }
+    
+    InstlumiHistos[runnum][interval] = new TH1F(* dynamic_cast<TH1F*> (lumif->Get("lumihisto")));
+    InstlumiHistos[runnum][interval]->SetName((lumi_fname+"_instLumi").c_str());
+    double single_interval = runDurations.getElementByKeyAsDouble(runnum,1) / interval ;
+    //cout << single_interval << endl;
+    InstlumiHistos[runnum][interval]->Scale(1/single_interval);
+  }
+  
+  
+  map < string, map<string,vector <double> > > meansAndRMSsOfRollsPerRun;
+  map < string, map<string,vector <double> > > RMSsOfChannelRatiosPerRun;
+  
+  
+//   lumiHistos["275001"][629]->SaveAs("c.root");
+//   InstlumiHistos["275001"][629]->SaveAs("ci.root");
+
+  //sleep(10);
+  //exit(0);
+  
+  map<string,ExRoll*> rollsMap;
+  
+  for (int i = 0 ; i < rateFoldersList.getLenght() ; i++){
+    
+    string folder = rateFoldersList.getElement(i+1,1);    
+    TSystemDirectory dir(folder.c_str(), folder.c_str());
+    TList *files = dir.GetListOfFiles();
+    
+    if (!files) continue;
+    TSystemFile *file;
+    string fname;
+    TIter next(files);
+    
+    string run = folder.substr(folder.find("/run")+4, 6);
+    if (meansAndRMSsOfRollsPerRun.find(run) == meansAndRMSsOfRollsPerRun.end()) {map<string,vector <double> > run_rolls_map ; meansAndRMSsOfRollsPerRun[run] = run_rolls_map;}
+    if (RMSsOfChannelRatiosPerRun.find(run) == RMSsOfChannelRatiosPerRun.end()) {map<string,vector <double> > run_rms_rolls_map ; RMSsOfChannelRatiosPerRun[run] = run_rms_rolls_map;}
+    
+    cout << run << endl;
+    
+    TFile * stripsResults = new TFile(("stripsResults_"+run+".root").c_str(),"UPDATE");
+    //stripsResults->cd();
+    TFile * rollsResults = new TFile(("rollsResults_"+run+".root").c_str(),"UPDATE");
+    
+    
+    while ((file=(TSystemFile*)next())) {
+    
+      //cout << "1" << endl;
+      fname = file->GetName();
+      if (fname.find(".root") == string::npos) continue;
+      string fullName = folder +"/"+ fname;
+      TFile * rfile = new TFile(fullName.c_str(),"read");
+      
+      
+    // cout << "2" << endl;
+
+      TH1F * h1;
+      TIter nextkey( rfile->GetListOfKeys() );
+      TKey *key;
+      TObject *obj;
+      string histoCurrentName;
+      /*
+      TList * objectsList = rfile->GetListOfKeys();
+      objectsList->Sort();
+      //objectsList->
+      list<string> rollNamesList;
+      
+      for (auto & object : objectsList){
+	rollNamesList.push_back(object->GetName());
+      }
+      
+      rollNamesList.sort();
+      rollNamesList.unique();
+      
+      for (auto & e : rollNamesList){
+	
+      }
+      */
+      
+      //cout << "3" << endl;      
+      // create two files to write for that run - one for channel and one for roll/LB results . or single file with directories after the roll/LB names            
+      
+      cout << fname << endl;
+      while (key = (TKey*)nextkey()) {
+	obj = key->ReadObj();
+	h1 = dynamic_cast<TH1F*>(obj);
+	histoCurrentName = h1->GetName();
+	if (histoCurrentName.substr(0,1) == "W" || histoCurrentName.substr(0,2) == "RE") {  
+	  if(histoCurrentName.find("Strip") != string ::npos){        
+	    if (h1->GetFillColor() == 9) continue;
+	    
+	    
+	    int time_intervals = h1->GetNbinsX();
+	    TH1F * lumi_histo = lumiHistos.at(run).at(time_intervals);
+	    TH1F * instLumi_histo = InstlumiHistos.at(run).at(time_intervals);
+	    
+	    string rollname = histoCurrentName.substr(0,histoCurrentName.find(" "));
+	    size_t dotposition = histoCurrentName.find(". ");
+	    string channelString = histoCurrentName.substr(dotposition+2,histoCurrentName.rfind(" ")-dotposition-3);
+	    int channelNumber = atoi(channelString.c_str());
+	    //cout << rollname << " " << channelNumber << endl;
+	    
+	    ExRoll * aroll;
+	    if (rollsMap.find(rollname) != rollsMap.end()) { aroll = rollsMap.at(rollname); }
+	    else {
+	      aroll = new ExRoll(rollname);
+	      aroll->setStripsAreaFromSource_cmsswResource(area);
+	      rollsMap[rollname] = aroll;
+	      
+	    }
+	    
+	    if (meansAndRMSsOfRollsPerRun.at(run).find(aroll->getRollIDofCloneWithNewIdentifiers(1)) == meansAndRMSsOfRollsPerRun.at(run).end()){      
+	      
+	      for (int cl = 0 ; cl < aroll->getClones();cl++){
+		vector<double> roll_vetor_map;
+		vector<double> rms_vector_map;
+		meansAndRMSsOfRollsPerRun.at(run)[aroll->getRollIDofCloneWithNewIdentifiers(cl+1)] = roll_vetor_map;
+		RMSsOfChannelRatiosPerRun.at(run)[aroll->getRollIDofCloneWithNewIdentifiers(cl+1)] = rms_vector_map;
+	      }
+	    }
+	    
+	    
+	    
+	    int cloneNumberOfStrip = ( (channelNumber-1) / (96/aroll->getClones()) ) +1;
+	    double stripArea = aroll->getStripsAreaFromClone( cloneNumberOfStrip);    
+	    string offlineRollName = aroll->getRollIDofCloneWithNewIdentifiers(cloneNumberOfStrip);
+	    
+	    vector<double> r_l, r_il, nr_il; 
+	    
+	    for (int bini = 0 ; bini < time_intervals ; bini++){
+	      
+	      double ratelumiratiovalue = h1->GetBinContent(bini) / lumi_histo->GetBinContent(bini);
+	      double rateInstlumiratiovalue = h1->GetBinContent(bini) / instLumi_histo->GetBinContent(bini);
+	      double normRateInstlumiratiovalue = ( h1->GetBinContent(bini) / stripArea ) / instLumi_histo->GetBinContent(bini);
+	      r_l.push_back(ratelumiratiovalue);
+	      r_il.push_back(rateInstlumiratiovalue);
+	      nr_il.push_back(normRateInstlumiratiovalue);
+	    }
+	    
+	    r_l; r_il;nr_il;
+	    sort(r_l.begin(),r_l.end());sort(r_il.begin(),r_il.end());sort(nr_il.begin(),nr_il.end());
+	    
+	    TH1F * rateLumiRatio = new TH1F((rollname+"_ch"+channelString+"_run"+run+"_RLR").c_str(),histoCurrentName.c_str(),200,0,0.4 );
+	    TH1F * normRateInstLumiRatio = new TH1F((rollname+"_ch"+channelString+"_run"+run+"_NRLIR").c_str(),histoCurrentName.c_str(),200, 0,0.2); // study on the distribution have shown main distribution to not exceed 0.15
+	    for (int ith_fill = 0 ; ith_fill < r_l.size();ith_fill++){
+	      
+	      rateLumiRatio->Fill(r_l.at(ith_fill));
+	      normRateInstLumiRatio->Fill(nr_il.at(ith_fill));
+	      nril_h->Fill(nr_il.at(ith_fill));
+	      rl_h->Fill(r_l.at(ith_fill));
+	      
+	    }
+	    
+	    //rollStripsRatiosPlot->SetBinContent(channelNumber,normRateInstLumiRatio->GetMean());
+	    //rollStripsRatiosPlot->SetBinError(channelNumber,normRateInstLumiRatio->GetRMS());    
+	    
+	    stripsResults->cd();	    
+	    
+	    if (meansAndRMSsOfRollsPerRun.at(run).find(offlineRollName) == meansAndRMSsOfRollsPerRun.at(run).end()) cout << offlineRollName << endl;
+	    
+	    meansAndRMSsOfRollsPerRun.at(run).at(offlineRollName).push_back(normRateInstLumiRatio->GetMean());
+	    RMSsOfChannelRatiosPerRun.at(run).at(offlineRollName).push_back(normRateInstLumiRatio->GetRMS());
+	    
+	    
+	    
+	    TDirectory *dir = stripsResults->GetDirectory(rollname.c_str());
+	    if (!dir) { stripsResults->mkdir(rollname.c_str()); }
+	    stripsResults->cd(rollname.c_str());
+	    
+	    if (! stripsResults->GetListOfKeys()->Contains(rateLumiRatio->GetName())){
+	      rateLumiRatio->Write();
+	    }
+	    if (! stripsResults->GetListOfKeys()->Contains(normRateInstLumiRatio->GetName())){
+	      normRateInstLumiRatio->Write();
+	    }
+	    
+	    rateLumiRatio->Delete();
+	    normRateInstLumiRatio->Delete();
+	    
+	    //stripsResults->cd();
+	    
+	    //rollsResults->cd();
+	    
+	    //rollStripsRatiosPlot->Write(rollStripsRatiosPlot->GetName(),TObject::kOverwrite);
+	  }
+	}
+      }
+      
+      
+      
+      rfile->Close();
+      
+      //rfile->Delete();
+      //stripsResults->Save();
+      
+      //rollsResults->Save();      
+      
+
+    }    
+    
+    stripsResults->Save();
+    cout << run << " results saved" << endl;
+    stripsResults->Close();
+    
+    /* from the mean values and RMS (stdev) derive Correlation strenght */
+    
+    rollsResults->cd();
+    for (auto & rn : meansAndRMSsOfRollsPerRun){
+      for (auto & rv : rn.second){
+	TH1F * stripsRatiosForRollInRun = new TH1F((rv.first+"_"+run+"_stripsRatios_NRILR").c_str(),rv.first.c_str(),rv.second.size(),0,rv.second.size());
+	vector<double> RMSvector = RMSsOfChannelRatiosPerRun.at(run).at(rv.first);
+	for (unsigned vect_it = 0 ; vect_it < rv.second.size() ; vect_it++){  
+	  stripsRatiosForRollInRun->SetBinContent(vect_it+1,rv.second.at(vect_it));
+	  stripsRatiosForRollInRun->SetBinError(vect_it+1,RMSvector.at(vect_it));
+	}
+	stripsRatiosForRollInRun->Write();
+	stripsRatiosForRollInRun->Delete();
+      }
+    }
+    
+    /* ratio stability channel vs run */
+    
+    //meansAndRMSsOfRollsPerRun.    
+    
+    
+    rollsResults->Save();
+    rollsResults->Close();
+    
+    //rollsResults->Save();
+    //rollsResults->Close();
+    
+    //rollsResults->Save();
+  }
+  
+  TFile * allRunsF = new TFile("allRuns_stats.root","UPDATE");
+  allRunsF->cd();
+  string first_run;
+    for (auto & rn : meansAndRMSsOfRollsPerRun){ first_run = rn.first ; break ; }
+    
+    vector<string> roll_names_v;
+    
+    for (auto & roll_itr : meansAndRMSsOfRollsPerRun.at(first_run)){
+      roll_names_v.push_back(roll_itr.first);
+    }
+    
+    for (auto & r_name_ : roll_names_v){
+      int nChannelsInroll = meansAndRMSsOfRollsPerRun.at(first_run).at(r_name_).size();
+      allRunsF->cd();
+      TDirectory *dirr = allRunsF->GetDirectory(r_name_.c_str());
+      if (!dirr) { allRunsF->mkdir(r_name_.c_str()); }
+      allRunsF->cd(r_name_.c_str());
+      for (int ch_n = 0 ; ch_n < nChannelsInroll ; ch_n ++){
+	string ch_as_string = boost::lexical_cast<string>(ch_n+1);
+	// histo for each channel and then get the channels value from each run
+	TH1F * channelRatioForAllRuns = new TH1F((r_name_+"_"+ch_as_string+"_allRuns_NRILR").c_str(),(r_name_+"_"+ch_as_string).c_str(),meansAndRMSsOfRollsPerRun.size(),0,meansAndRMSsOfRollsPerRun.size());
+	TH1F * channelsRateLumiRatioDistr = new TH1F((r_name_+"_"+ch_as_string+"_RatiosDistr").c_str(), (r_name_+"_"+ch_as_string).c_str(),200,0,0.2);
+	int bin_incr = 0 ;
+	for (auto & nRun : meansAndRMSsOfRollsPerRun){
+	  double val = meansAndRMSsOfRollsPerRun.at(nRun.first).at(r_name_).at(ch_n);
+	  channelRatioForAllRuns->SetBinContent(bin_incr+1,val);
+	  channelRatioForAllRuns->SetBinError(bin_incr+1,RMSsOfChannelRatiosPerRun.at(nRun.first).at(r_name_).at(ch_n));
+	  channelRatioForAllRuns->GetXaxis()->SetBinLabel(bin_incr+1,nRun.first.c_str());
+	  channelsRateLumiRatioDistr->Fill(val);
+	  bin_incr++;
+	}
+	channelsRateLumiRatioDistr->Write();
+	channelRatioForAllRuns->Write();
+      }
+    }
+  
+  rl_h->SaveAs("BasicRatioDistr.root");
+  nril_h->SaveAs("RateAndLumiNormalizedDistr.root");
+  rms_distribution->SaveAs("RMSratio.root");
+  
+  allRunsF->Save();
+  allRunsF->Close();
+  
+  
+}
+    
 
 // endof QueryObject methods
 

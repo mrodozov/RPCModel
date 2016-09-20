@@ -40,7 +40,7 @@ void ExStrip::ClearConditions(){
   this->rate = 0;
   this->timeWhileNoisy = 0;
   this->maxRate = 0;
-    
+  //this->channelRateProfile = nullptr;
 }
 
 const double & ExStrip::getRate(){

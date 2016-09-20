@@ -12,7 +12,7 @@
 
 #include "ChipInterface.h"
 #include "ExtendedStrip.h"
-#include "RollInterface.h"
+//#include "RollInterface.h"
 #include "../ROOT/ROOT.h"
 
 using namespace std;
