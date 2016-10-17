@@ -98,8 +98,9 @@ void plotEcap_RateVsPhi(string rateFile,bool subtractIntrinsic,string fileWithIn
 
 map< string, map<string,map<string,double> > >prepareDataSourceWithRatesAndLumi ( string data_folder, DataObject& lumiFile );
 
+map<string, map <string,vector<string> > > getConditionsMapFromFolderForRunlist (const string & runlist,const string & condFolder);
 
-void plotRateVsLumi_using_root_and_JSON(const map<string, map<string,map<string,double> > > & run_rollRate_map ,DataObject & lumiFile,int cutThreshold,QueryObject * query,bool isOffline,bool debugOUTPUT,const string & outputJSON);
+void plotRateVsLumi_using_root_and_JSON(const map<string, map<string,map<string,double> > > & run_rollRate_map ,DataObject & lumiFile,int cutThreshold,QueryObject * query,bool isOffline,bool debugOUTPUT,const map<string, map<string,vector<string> > > & condMap,const string & outputJSON);
 
 void print_online_dbfiles(string rootContainer,string outputContainer ,DataObject & lumiFile,DataObject& area,string RollList,bool correction,double correctionInPercents);
 
@@ -201,6 +202,8 @@ void getRateInJSONformatFromRootFile(const string & rootfilename,const string & 
 void compareHistos(TH1F * reference, TH1F * testing);
 
 void testLumiRateCorrelation(const string & runRateFoldersList, const string & runPerLumiFilesList, const string & runDurationsList, const string & area); // test the rate lumi ratio per channel and per roll using detailed rate granularity and scaled lumi files. 
+
+void recalcAverageRateForAdjustedSimilarLuminosity(const string & adjustLumiToRun, const string & dataFolder, const string & lumiFile,const string & resultsFolder); // 
 
 // drawing functions only
 

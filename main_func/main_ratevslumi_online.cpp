@@ -54,26 +54,32 @@ int main( int argc ,char *argv[] ){
   string emtpyString = "";
   bool isOffline = atoi(argv[9]);
   bool debugOUTPUT = atoi(argv[10]);
-  string outputJSON = argv[11];
-    
-  isOffline = 0;
+  string conditionsFolder = argv[11];
+  string outputJSON = argv[12];
+  
+  //cout << conditionsFolder << endl;
+  
+  isOffline = 1;
   auto dataMap =  prepareDataSourceWithRatesAndLumi(DataFolder,Lumi);
+  auto conditionsMap = getConditionsMapFromFolderForRunlist(argv[2],conditionsFolder);
+  
   
   sector = "";
   outputJSON = "RED1R1.json";
   aQuery->clearAllOnlineRollRecords();
   aQuery->setCanvasTitle("RE_1_1_Online");
-  aQuery->insertNewOnlineRecord(("RE+1_1_01"+sector).c_str(),("RE +1 1 S 1"+sector).c_str(),kBlue,22);  
-  aQuery->insertNewOnlineRecord(("RE+1_1_02"+sector).c_str(),("RE +1 1 S 2"+sector).c_str(),kRed,22);
-  aQuery->insertNewOnlineRecord(("RE+1_1_03"+sector).c_str(),("RE +1 1 S 3"+sector).c_str(),kSpring-7,25);
-  aQuery->insertNewOnlineRecord(("RE+1_1_04"+sector).c_str(),("RE +1 1 S 4"+sector).c_str(),kBlack,21);
-  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,outputJSON);
+  
+  aQuery->insertNewOnlineRecord(("RE+1_R1_CH04"+sector).c_str(),("RE +1 1 S 4"+sector).c_str(),kBlack,21);
+  aQuery->insertNewOnlineRecord(("RE+1_R1_CH02"+sector).c_str(),("RE +1 1 S 2"+sector).c_str(),kRed,22);
+  aQuery->insertNewOnlineRecord(("RE+1_R1_CH03"+sector).c_str(),("RE +1 1 S 3"+sector).c_str(),kSpring-7,25);
+  aQuery->insertNewOnlineRecord(("RE+1_R1_CH01"+sector).c_str(),("RE +1 1 S 1"+sector).c_str(),kBlue,23);  
+  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON);
   
   vector<string> disks;
-  disks.push_back("1");
-  disks.push_back("2");
-  disks.push_back("3");
   disks.push_back("4");
+  disks.push_back("3");
+  disks.push_back("2");
+  disks.push_back("1");
   
   for ( auto & i : disks){
     
@@ -81,12 +87,12 @@ int main( int argc ,char *argv[] ){
     aQuery->clearAllOnlineRollRecords();
     aQuery->setCanvasTitle("RE"+orientation+"_average");  sector = "";   outputJSON = "RE"+orientation+"_average.json";
     
-    aQuery->insertNewOnlineRecord(("RE+"+orientation+"_2"+sector).c_str(),("RE+"+orientation+" 2 "+sector).c_str(),kBlue,22);  
-    aQuery->insertNewOnlineRecord(("RE-"+orientation+"_2"+sector).c_str(),("RE-"+orientation+" 2 "+sector).c_str(),kRed,22);
-    aQuery->insertNewOnlineRecord(("RE+"+orientation+"_3"+sector).c_str(),("RE+"+orientation+" 3 "+sector).c_str(),kSpring-7,25);
-    aQuery->insertNewOnlineRecord(("RE-"+orientation+"_3"+sector).c_str(),("RE-"+orientation+" 3 "+sector).c_str(),kBlack,21);
+    aQuery->insertNewOnlineRecord(("RE-"+orientation+"_R2_CH"+sector).c_str(),("RE-"+orientation+" 2 "+sector).c_str(),kRed,22);
+    aQuery->insertNewOnlineRecord(("RE+"+orientation+"_R2_CH"+sector).c_str(),("RE+"+orientation+" 2 "+sector).c_str(),kBlue,23);      
+    aQuery->insertNewOnlineRecord(("RE-"+orientation+"_R3_CH"+sector).c_str(),("RE-"+orientation+" 3 "+sector).c_str(),kBlack,21);
+    aQuery->insertNewOnlineRecord(("RE+"+orientation+"_R3_CH"+sector).c_str(),("RE+"+orientation+" 3 "+sector).c_str(),kSpring-7,25);
     //isOffline = 0;
-    plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,outputJSON);
+    plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON);
     
   }
   
@@ -97,29 +103,44 @@ int main( int argc ,char *argv[] ){
   aQuery->insertNewOnlineRecord("RE","Endcap",kBlack,21);
   aQuery->insertNewOnlineRecord("R","System average",kGreen+3,kFullTriangleUp);
   aQuery->insertNewOnlineRecord("W","Barrel",kRed,kFullCircle);
-  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,outputJSON);
+  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON);
   
   aQuery->setCanvasTitle("BarrelWheels");
   outputJSON = "BarrelWheels.json";    
   aQuery->clearAllOnlineRollRecords();
-  aQuery->insertNewOnlineRecord("W-2","W-2",kViolet-7,kOpenCircle);
-  aQuery->insertNewOnlineRecord("W+1","W+1",kRed,kFullSquare);
-  aQuery->insertNewOnlineRecord("W-1","W-1",kSpring-7,kFullCircle);
-  aQuery->insertNewOnlineRecord("W0","W0",kBlack,kFullTriangleUp);
   aQuery->insertNewOnlineRecord("W+2","W+2",kGreen-7,kOpenDiamond);
-  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,outputJSON);
+  aQuery->insertNewOnlineRecord("W-2","W-2",kViolet-7,kOpenCircle);
+  aQuery->insertNewOnlineRecord("W-1","W-1",kSpring-7,kFullCircle);
+  aQuery->insertNewOnlineRecord("W+1","W+1",kRed,kFullSquare);
+  aQuery->insertNewOnlineRecord("W0","W0",kBlack,kFullTriangleUp);
+  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON);
   
-  isOffline = 1;
+  
+  aQuery->setCanvasTitle("allEcapDisks");
+  outputJSON = "allEcapDisks.json";
+  aQuery->clearAllOnlineRollRecords();
+  
+  aQuery->insertNewOnlineRecord("RE-4","RE-4",kRed,kOpenCircle);
+  aQuery->insertNewOnlineRecord("RE+4","RE+4",43,kFullTriangleUp);      
+  aQuery->insertNewOnlineRecord("RE-3","RE-3",kBlack,kFullSquare);
+  aQuery->insertNewOnlineRecord("RE+3","RE+3",kCyan,kOpenSquare);
+  aQuery->insertNewOnlineRecord("RE-2","RE-2",kGreen,kFullCircle);      
+  aQuery->insertNewOnlineRecord("RE+2","RE+2",kPink,kOpenStar);
+  aQuery->insertNewOnlineRecord("RE-1","RE-1",kBlue,kOpenTriangleUp);
+  aQuery->insertNewOnlineRecord("RE+1","RE+1",46,kOpenDiamond);
+  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON);
+  
+  
   //auto rollLevelData = prepareDataSourceWithRatesAndLumi(DataFolder,Lumi,isOffline);
   sector = "10_C";
   outputJSON = "HotRE43sectors_Eta_C.json";
   aQuery->clearAllOnlineRollRecords();
   orientation = "";
   aQuery->setCanvasTitle("RE_43_HotZones_Offline_C");
-  aQuery->insertNewOnlineRecord(("RE-"+orientation+"4_R2_CH"+sector).c_str(),("RE -4"+orientation+" 2 S"+sector).c_str(),kBlue,22);  
-  aQuery->insertNewOnlineRecord(("RE+"+orientation+"4_R2_CH"+sector).c_str(),("RE +4"+orientation+" 2 S"+sector).c_str(),kRed,22);
-  aQuery->insertNewOnlineRecord(("RE-"+orientation+"3_R2_CH"+sector).c_str(),("RE -3"+orientation+" 2 S"+sector).c_str(),kSpring-7,25);
-  aQuery->insertNewOnlineRecord(("RE+"+orientation+"3_R2_CH"+sector).c_str(),("RE +3"+orientation+" 2 S"+sector).c_str(),kBlack,21);
-  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,outputJSON);    
+  aQuery->insertNewOnlineRecord(("RE-"+orientation+"4_R2_CH"+sector).c_str(),("RE -4"+orientation+" 2 S 10 C").c_str(),kBlue,23);  
+  aQuery->insertNewOnlineRecord(("RE+"+orientation+"4_R2_CH"+sector).c_str(),("RE +4"+orientation+" 2 S 10 C").c_str(),kRed,22);  
+  aQuery->insertNewOnlineRecord(("RE+"+orientation+"3_R2_CH"+sector).c_str(),("RE +3"+orientation+" 2 S 10 C").c_str(),kBlack,21);
+  aQuery->insertNewOnlineRecord(("RE-"+orientation+"3_R2_CH"+sector).c_str(),("RE -3"+orientation+" 2 S 10 C").c_str(),kSpring-7,25);
+  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON);    
   
 }

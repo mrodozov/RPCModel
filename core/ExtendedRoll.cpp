@@ -928,9 +928,7 @@ void ExRoll::setStripsRateFromJSONsource(const ptree& JSONobj){
     }
     
     for(int j = 0 ; j < channelsVector.size() ; j++){
-      
-      
-      
+                  
       this->getStrip(channelsVector.at(j))->setRate(ratesVector.at(j)*this->getStripsAreaFromClone(i+1)); 
       // i'm actually DENORMALIZING the rate here, which is retarded. This is because we assigned the rate only so far, and after we normlized it on the area
       

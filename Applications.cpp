@@ -4,7 +4,7 @@
  * 
 */
 
-#include <iostream>
+//#include <iostream>
 #include <iomanip>
 #include <string>
 #include <fstream>
@@ -1270,10 +1270,42 @@ map< string, map<string, map< string,double> > >prepareDataSourceWithRatesAndLum
 }
 
 
+std::map< string, std::map< string, std::vector<string > > > getConditionsMapFromFolderForRunlist ( const string& runlist, const string& condFolder ) {
+  DataObject runlistDO(runlist);
+  
+  ifstream IFS;
+  map<string, map<string , vector<string> > > conditions_map;
+  
+  for (int i = 0 ; i < runlistDO.getLenght() ; i++) {
+    string rnum = runlistDO.getElement(i+1,1);
+    //cout << condFolder +"run"+rnum+"/output_rolls.json" << endl;
+    IFS.open((condFolder+"run"+rnum+"/output_rolls.json").c_str());
+    if (! IFS.good()) continue;
+    ptree * conditions = new ptree;
+    boost::property_tree::json_parser::read_json(IFS,*conditions);
+    IFS.clear(); IFS.close();
+    
+    map<string,vector<string > > currentRunCondMap;
+    vector<string> tomask_vector;
+    
+    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, conditions->get_child("tomask")){
+      tomask_vector.push_back(v.first);
+      //cout << v.first << endl;
+    }
+    currentRunCondMap["tomask"] = tomask_vector;
+    // the rest some day goes here
+    conditions_map[rnum] = currentRunCondMap;
+    delete conditions;
+  }
+  
+  
+  return conditions_map;
+  
+}
 
 
 
-void plotRateVsLumi_using_root_and_JSON( const map<string, map<string,map<string,double> > > & dataSource ,DataObject & lumiFile,int cutThreshold,QueryObject * query,bool isOffline,bool debugOUTPUT,const string & outputJSON) {
+void plotRateVsLumi_using_root_and_JSON( const map<string, map<string,map<string,double> > > & dataSource ,DataObject & lumiFile,int cutThreshold,QueryObject * query,bool isOffline,bool debugOUTPUT,const map<string, map<string,vector<string> > > & condMap,const string & outputJSON) {
   
   // TODO - if it contains .json substring as last 5 symbols, open file with the string, else - try to parse the string as json.
   
@@ -1281,7 +1313,7 @@ void plotRateVsLumi_using_root_and_JSON( const map<string, map<string,map<string
     
   int divider = 1;//2;
   map<string, double> run_lumi_map;  
-  
+  map<string, ptree> run_rollConditions_map;
   
   int min_lumi_sections = 100;
   ifstream IFS;
@@ -1295,21 +1327,22 @@ void plotRateVsLumi_using_root_and_JSON( const map<string, map<string,map<string
   
   TPaveText * pt,* secondText;
   pt = new TPaveText(0.092511,0.930556,0.234949,0.997222,"NDC"); // NDC sets coords
-  secondText = new TPaveText(0.653846,0.925595,0.950669,0.997024,"NDC");
+  secondText = new TPaveText(0.616027,0.912354,0.933234,0.98368,"NDC");
   secondText->SetFillColor(0);
   secondText->SetBorderSize(0);
   secondText->SetTextSize(0.05);
-      
-  secondText->AddText("CMS Preliminary");
+  
+  secondText->AddText("CMS Preliminary 2016");
   pt->SetFillColor(0); // text is black on white
   pt->SetBorderSize(0); //no shade
   pt->SetTextSize(0.05);
-  pt->AddText("#sqrt{s} = 13 TeV");    
-    
+  pt->AddText("#sqrt{s} = 13 TeV");      
+  
   for (int i = 0 ; i < lumiFile.getLenght() ; i++) {
     currentLumi = (lumiFile.getElementAsDouble(i+1,3)/lumiFile.getElementAsDouble(i+1,2))/23.31;
     run_lumi_map[lumiFile.getElement(i+1,1)] = currentLumi;
-    if(currentLumi > biggestOn_X) biggestOn_X = currentLumi;      
+    if(currentLumi > biggestOn_X) biggestOn_X = currentLumi;
+        
   }
   
   biggestOn_X += 500;
@@ -1329,16 +1362,29 @@ void plotRateVsLumi_using_root_and_JSON( const map<string, map<string,map<string
   
   map<string,map<string,double> > run_rollRate_map = dataSource.at(sourceType);
   
+  /** remove entries marked as noisy */
+  
+  for (auto & cond_itr : condMap){
+    vector<string> rollstm = cond_itr.second.at("tomask");
+    for (auto & roll_to_mask : rollstm) {      
+      if(run_rollRate_map.find(cond_itr.first) != run_rollRate_map.end()) {
+	//removing roll_to_mask from run cond_itr.first
+	run_rollRate_map.at(cond_itr.first).erase(roll_to_mask);           
+      }
+    }
+  }
+  
   
   /** ONLY TO FIND biggests -> first find the biggest value on Y axis to assign the Y */
   
   for (int i=0;i < query->getOnlineRollCounter() ; i++) {
       string roll_part = query->getOnlineRollMapForRecord(i+1).regex;
       for (auto & itr : run_rollRate_map){
-      double current_rate= 0; int counter = 0;      
+      double current_rate= 0; int counter = 0;
+      
       for (auto & itrr : itr.second){
 	//cout << itrr.first << " " << itrr.second << " " << roll_part << " " << cutThreshold << endl;
-	if (itrr.second > cutThreshold) continue; 
+	if (itrr.second > cutThreshold ) continue; 
 	if (itrr.first.find(roll_part) == string::npos)  continue;
 	current_rate += itrr.second;
 	  //cout << itr.first << " " << itrr.first << " " << itrr.second << endl;
@@ -1382,6 +1428,7 @@ void plotRateVsLumi_using_root_and_JSON( const map<string, map<string,map<string
 	      if ( run_iterator.first.find(query->getOnlineRollMapForRecord(i+1).regex) == string::npos ) continue;
 	      if ( run_iterator.first.find("RE+1_1") != string::npos && ( ( query->getOnlineRollMapForRecord(i+1).regex.find("RE+1_1") == string::npos )) ) continue;
 	      
+	      
 	      current_rate +=run_iterator.second;
 	      counter ++;
 	      //cout << run_iterator.first << " " << run_iterator.second << endl;
@@ -1391,7 +1438,7 @@ void plotRateVsLumi_using_root_and_JSON( const map<string, map<string,map<string
 	    if(query->getOnlineRollMapForRecord(i+1).cutByRunRange 
 	     &&  atoi(run_rollRate_map_iter.first.c_str()) <=  query->getOnlineRollMapForRecord(i+1).runStart
 	     &&  atoi(run_rollRate_map_iter.first.c_str()) >= query->getOnlineRollMapForRecord(i+1).runEnd
-	  ) continue;
+	    ) continue;
 	  
 	  
 	  double res_r = current_rate/counter;
@@ -1418,7 +1465,7 @@ void plotRateVsLumi_using_root_and_JSON( const map<string, map<string,map<string
         hist->SetStats(false);
 	// to be removed after fit
 	//TF1 * func = new TF1((query->getOnlineRollMapForRecord(i+1).histoName+"_function").c_str(),"[0]+x*[1]",0,50000);
-	
+	 
 	
         if (i+1 == 1) {
             hist->GetXaxis()->SetTitle(query->getHistoXtitle().c_str());
@@ -1450,6 +1497,7 @@ void plotRateVsLumi_using_root_and_JSON( const map<string, map<string,map<string
     leg->Draw();
     can->SaveAs((query->getCanvasTitle()+".png").c_str());
     can->SaveAs((query->getCanvasTitle()+".root").c_str());
+    can->SaveAs((query->getCanvasTitle()+".C").c_str());
     
     ofstream OFS(outputJSON.c_str());
     boost::property_tree::json_parser::write_json(OFS,run_rateVlumi_JSON);
@@ -6341,7 +6389,7 @@ void get2DplotsForJSONFileUsingAndJSONmap(const string & JSONdataFile,const stri
       TCanvas * acan = new TCanvas((detectorPart+"_can").c_str(),(detectorPart+"_can").c_str(),1200,700);      
       acan->cd();
       twoDimensionalHisto->SetStats(kFALSE);
-      twoDimensionalHisto->GetXaxis()->SetTitle("Sector");
+      twoDimensionalHisto->GetXaxis()->SetTitle("Azimutal angle (degrees)");
       twoDimensionalHisto->GetYaxis()->SetTitle("Detector Unit");
       double currentTYoffset = twoDimensionalHisto->GetYaxis()->GetTitleOffset();
       twoDimensionalHisto->GetYaxis()->SetTitleOffset(currentTYoffset + currentTYoffset*( isEndcap ? 0.1 : 0.4));
@@ -6476,7 +6524,7 @@ void DrawVvsPhiUsingJSONdataAndJSONconfig(const string& JSON_data_fname, const s
 }
 
 
-void get2DplotsOnRateFromROOTfile ( const string& rootfile, const string & jsonMap,const string& areaFile ,const int & bmax,const int & emax ) {
+void get2DplotsOnRateFromROOTfile ( const string& rootfile, const string & jsonMap="localResources/2DjsonMap.json",const string& areaFile="localResources/area_noise_cmssw_withRE4" ,const int & bmax=15,const int & emax=25 ) {
   
   size_t toRoot = rootfile.find(".root");
   size_t toLastSlash = rootfile.rfind("/");
@@ -6567,14 +6615,14 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
   DataObject lumiFilesList(lumiPerRunFilesList);
   DataObject runDurations(runDurationsList);
   DataObject area(areafile);
-  TH1F * nril_h = new TH1F("nril_h","nril_h",2000,0,0.2);;
+  //TH1F * nril_h = new TH1F("nril_h","nril_h",2000,0,0.2);;
   //TH1F *  = new TH1F("","",2000,0,2);; ;
-  TH1F * rms_distribution = new TH1F("RMSdistr","Ratios RMS distribution",2000,0,0.2);
+  //TH1F * rms_distribution = new TH1F("RMSdistr","Ratios RMS distribution",2000,0,0.2);
   //TH1F * r_il_h = new TH1F("r_il_h","r_il_h",2000,0,20);;; 
   
-  for (int i = 0 ; i < runDurations.getLenght();i++){
-    cout << runDurations.getElement(i+1,1) << " " << runDurations.getElement(i+1,2)<<endl;
-  }
+  
+  // 
+  
   
 
   TSystemDirectory lumis_dir(lumiPerRunFilesList.c_str(), lumiPerRunFilesList.c_str());
@@ -6582,15 +6630,19 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
   TIter nextLumiFile(lumiFiles);
   TSystemFile * lfile;
   
+  /*
+  
   map<string,map<int, TH1F*> > lumiHistos;
   map<string,map<int, TH1F*> > InstlumiHistos;
   
   
   while ((lfile=(TSystemFile*)nextLumiFile())) {
-    
+    //cout << " " << endl;
     string lumi_fname = lfile->GetName();
+    //cout << lfile << endl;
     if (lumi_fname.find(".root") == string::npos) continue;
     string runnum = lumi_fname.substr(0,6);
+    //cout << runnum << endl;
     int interval = atoi ( lumi_fname.substr(7,lumi_fname.find(".")).c_str() );
     //cout << runnum << " " << interval << endl;
     TFile * lumif = new TFile((lumiPerRunFilesList+"/"+lumi_fname).c_str(),"READ");
@@ -6606,6 +6658,7 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
     InstlumiHistos[runnum][interval]->Scale(1/single_interval);
   }
   
+  */
   
   map < string, map<string,vector <double> > > meansAndRMSsOfRollsPerRun;
   map < string, map<string,vector <double> > > RMSsOfChannelRatiosPerRun;
@@ -6636,10 +6689,31 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
     
     cout << run << endl;
     
-    //TFile * stripsResults = new TFile(("stripsResults_"+run+".root").c_str(),"UPDATE");
+    //TFile * rollsResults = new TFile(("rollsResults_"+run+".root").c_str(),"RECREATE");
+    //TFile * stripsResults = new TFile(("stripsResults_"+run+".root").c_str(),"RECREATE");
     //stripsResults->cd();
-    TFile * rollsResults = new TFile(("rollsResults_"+run+".root").c_str(),"NEW");
     
+    
+    TH1F * LumiRateRatioDeviation = new TH1F (("stdperc"+run).c_str(),"stdperc",10000,0,100);
+    TH1F * LumiRateRatioDeviationWithAddingStdDev = new TH1F(("meanPlus3STDs"+run).c_str(),"mean / (mean + 3*stddev)",10000,0,100);
+    TH1F * CoefficientOfVariation = new TH1F(("CV"+run).c_str(),"stddev/mean",10000,0,100);
+    //DataObject * detailedLuminosity = new DataObject("chambers_lumis_DO_"+run+".txt"); // no way to be used, this file is not symetrical
+    
+    ptree * detailedLuminosity = new ptree;
+    ifstream ifss(("chambers_lumis_"+run+".json").c_str());
+    boost::property_tree::json_parser::read_json(ifss,*detailedLuminosity);
+    ifss.clear();ifss.close();
+    
+    map<string, vector<double> > rollToLumiesMap;
+  
+    for (ptree::iterator iter = detailedLuminosity->begin() ; iter != detailedLuminosity->end() ; iter++){
+    //double values[37],errors[37];
+    vector<double> values;
+      BOOST_FOREACH(boost::property_tree::ptree::value_type &v, iter->second.get_child("")){ values.push_back( v.second.get_value<double>()); }       
+      rollToLumiesMap[iter->first] = values;
+    }
+    
+    delete detailedLuminosity;
     
     while ((file=(TSystemFile*)next())) {
     
@@ -6691,10 +6765,10 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	  if(histoCurrentName.find("Strip") != string ::npos){        
 	    if (h1->GetFillColor() == 9) continue;
 	    
-	    
+	    //cout << " 1" << endl;
 	    int time_intervals = h1->GetNbinsX();
 	    //TH1F * lumi_histo = lumiHistos.at(run).at(time_intervals);
-	    TH1F * instLumi_histo = InstlumiHistos.at(run).at(time_intervals);
+	    //TH1F * instLumi_histo = InstlumiHistos.at(run).at(time_intervals);
 	    
 	    string rollname = histoCurrentName.substr(0,histoCurrentName.find(" "));
 	    size_t dotposition = histoCurrentName.find(". ");
@@ -6709,7 +6783,7 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	      aroll->setStripsAreaFromSource_cmsswResource(area);
 	      rollsMap[rollname] = aroll;      
 	    }
-	    
+	    //cout << " 1" << endl;
 	    if (meansAndRMSsOfRollsPerRun.at(run).find(aroll->getRollIDofCloneWithNewIdentifiers(1)) == meansAndRMSsOfRollsPerRun.at(run).end()){      
 	      
 	      for (int cl = 0 ; cl < aroll->getClones();cl++){
@@ -6720,7 +6794,7 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	      }
 	    }
 	    
-	    
+	    //cout << "2 " << endl;
 	    
 	    int cloneNumberOfStrip = ( (channelNumber-1) / (96/aroll->getClones()) ) +1;
 	    double stripArea = aroll->getStripsAreaFromClone( cloneNumberOfStrip);    
@@ -6729,7 +6803,7 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	    //vector<double> r_l, r_il, nr_il; 
 	    
 	    //TH1F * rateLumiRatio = new TH1F((rollname+"_ch"+channelString+"_run"+run+"_RLR").c_str(),histoCurrentName.c_str(),200,0,0.4 );
-	    TH1F * normRateInstLumiRatio = new TH1F((rollname+"_ch"+channelString+"_run"+run+"_NRLIR").c_str(),histoCurrentName.c_str(),200, 0,0.2); // study on the distribution have shown main distribution to not exceed 0.15
+	    TH1F * normRateInstLumiRatio = new TH1F((rollname+"_ch"+channelString+"_run"+run+"_NRLIR").c_str(),histoCurrentName.c_str(),2000, 0,0.2); // study on the distribution have shown main distribution to not exceed 0.15
 	    
 	    TH1F * areaScaledRate = dynamic_cast<TH1F*>(h1->Clone("scaledratehisto"));
 	    
@@ -6737,6 +6811,69 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	    //exit(0);
 	    areaScaledRate->Scale(1/stripArea);    
 	    //areaScaledRate->Divide(instLumi_histo);
+	    
+	    
+	    /**
+	     * 
+	     * Strips with high RMS ratio seems to be due to technical issues, some of them are even clustered. (RE-4_R2_CH19_B) run 273158.
+	     * This hypothesis with the hardware and the higher ratio RMS to be tested, as it may help to discard noise, problems etc.
+	     * 
+	     * The problem with the linearity may also be in the fact , that even when the lumies from different runs
+	     * had same luminosities, the neutron fluxes are ever changing densities and directions, so there are at least
+	     * two factors - the ratio distribution width of the collective unit and the neutron fluxes variations
+	     *  - this is best checked by parts with constant and variable fluxes ()
+	     *  - or even better - select only narrow distributed ratio partitions and only wide
+	     *  - show that how combining big parts is then a random endevour lol 
+	     */
+	    
+	    /**
+	     * 
+	     * H1 : Lumi / Rate ratio is constant (stable) for stable beam condition
+	     * - assume beam condition is constant within a run, test Lumi / Rate value distribution per channel per run 
+	     * - if the majority of channels have peaked mean with low RMS (StDev) accept the H1 is true
+	     * - define the deviation as % away from the mean to model the fit
+	     * - use standard deviation and the confidence level for each channel distribution
+	     * 
+	     * H2 : Lumi / Rate value is constant for all runs
+	     * 
+	     * - define fraction of the LumiRate ratio below which a deviation from channels LumiRate ratio is acceptable (when compared the value of the same channel for different runs ())
+	     * - draw distribution of the deviation and 
+	     * - if the deviation distribution is acceptable accept the Lumi/Rate ratio is stable regardless the beam conditions therefore - the ratio does not depend on beam setup changes
+	     * - use combinatorics to compare each channel's run LumiRate ratio with the rest of the runs 
+	     * 
+	     * H3 : Lumi / Rate ratio is constant for subset of runs 
+	     * 
+	     * - 
+	     * 
+	     * H4 : roll channels ratio profile have the same shape from run to run regardless different channel values (compare histo shape) 
+	     * 
+	     * - divide each roll profile histo for a given run to the rest of the profiles per run. draw distribution or fit the resulting distribution with linear fit
+	     * 
+	     * 
+	     * 
+	     * -- select control rolls, check for good ones
+	     * -- check in line runs lumi and rate distributions per channel for stable channels 
+	     * -- roll channels ratio profile have the same shape from run to run regardless different channel values (compare histo shape) 
+	     * 	  -- divide each roll profile histo for a given run to the rest of the profiles per run. draw distribution or fit the resulting distribution with linear fit
+	     * 
+	     * -- Using together the ratios and the rates, one may also get estimation of fluxes densities
+	     *
+	     */
+	    
+	    /**
+	     * One text file per run for the lumi - LBname and the rest to be the lumi values per delta t where the index of the lumi values would be the time interval number
+	     * this should use - 1. each chamber's 
+	     * 
+	     * 1. extract chmabers time intervals (use adapted noise tool exe). Write the output as json {LBName:{deltaT_list:[],startTime:towerFileCreationTime}}
+	     * 2. Get the lumi by BX using the run number only as precise start stop is not needed in this case 
+	     * 3. Rewrite the python program to 
+	     *   3.1 First get the lumis from ns to second basis, keep only the lumi values in a list where index is the second number
+	     *   3.2 Using the json with the run delta t list and start time, get each interval lumi as list of only lumies, using the times as second to get each lumi inteval as sub list 
+	     * 4. To get start times, use the old python program for that and write each tower's create time in a file in the run folder
+	     * 5. Use only the final LB:[list of lumies per delta t] where the list size should be N deltaT size
+	     * 
+	     */
+	    
 	    
 	    
 	    for (int bini = 0 ; bini < time_intervals ; bini++){
@@ -6747,16 +6884,32 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	      //nr_il.push_back(normRateInstlumiratiovalue);
 	      //rateLumiRatio->Fill(ratelumiratiovalue);
 	      //double ratioValue = areaScaledRate->GetBinContent(bini) / instLumi_histo->GetBinContent(bini);
-	      normRateInstLumiRatio->Fill(areaScaledRate->GetBinContent(bini)/instLumi_histo->GetBinContent(bini));
-	      nril_h->Fill(areaScaledRate->GetBinContent(bini)/instLumi_histo->GetBinContent(bini));
+	      //normRateInstLumiRatio->Fill(areaScaledRate->GetBinContent(bini)/instLumi_histo->GetBinContent(bini));
+	      //nril_h->Fill(areaScaledRate->GetBinContent(bini)/instLumi_histo->GetBinContent(bini));//
+	      //double normlzdLumi = detailedLuminosity->getElementByKeyAsDouble();
+	      normRateInstLumiRatio->Fill(areaScaledRate->GetBinContent(bini) / rollToLumiesMap.at(rollname).at(bini) );
+	      
+	      //nril_h->Fill(areaScaledRate->GetBinContent(bini) / rollToLumiesMap.at(rollname).at(bini));//
+	      
 	      //->Fill(r_l.at(ith_fill));
 	    }
+	    //cout << " 3" << endl;
 	    
-	    //cout << normRateInstLumiRatio->GetMean() << " " << normRateInstLumiRatio->GetRandom() << endl;
+	    
 	    
 	    meansAndRMSsOfRollsPerRun.at(run).at(offlineRollName).push_back(normRateInstLumiRatio->GetMean());
+	    //TFitResult * frp =  normRateInstLumiRatio->Fit("gaus","","",normRateInstLumiRatio->GetMean()-(3*normRateInstLumiRatio->GetStdDev()));
+	    //frp->get
 	    RMSsOfChannelRatiosPerRun.at(run).at(offlineRollName).push_back(normRateInstLumiRatio->GetRMS()); 
+	    double histMean = normRateInstLumiRatio->GetMean();
+	    double stdevvThree = 3 * normRateInstLumiRatio->GetStdDev();
 	    
+	    double threeSigmasDeviation =  stdevvThree / histMean;
+	    threeSigmasDeviation = threeSigmasDeviation*100; // in percents
+	    
+	    LumiRateRatioDeviation->Fill(threeSigmasDeviation);
+	    LumiRateRatioDeviationWithAddingStdDev->Fill( 100 * ( histMean / (histMean+stdevvThree)) );
+	    CoefficientOfVariation->Fill(100 * (normRateInstLumiRatio->GetStdDev()/histMean));
 	    //areaScaledRate->Delete();
 	    
 	    /*
@@ -6775,7 +6928,8 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	    //rollStripsRatiosPlot->SetBinContent(channelNumber,normRateInstLumiRatio->GetMean());
 	    //rollStripsRatiosPlot->SetBinError(channelNumber,normRateInstLumiRatio->GetRMS());    
 	    
-	    //stripsResults->cd();	    
+	    //stripsResults->cd();
+	    
 	    
 	    //if (meansAndRMSsOfRollsPerRun.at(run).find(offlineRollName) == meansAndRMSsOfRollsPerRun.at(run).end()) cout << offlineRollName << endl;
 	    
@@ -6783,16 +6937,17 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	    TDirectory *dir = stripsResults->GetDirectory(rollname.c_str());
 	    if (!dir) { stripsResults->mkdir(rollname.c_str()); }
 	    stripsResults->cd(rollname.c_str());
-	    */
+	    
 	    //if (! stripsResults->GetListOfKeys()->Contains(rateLumiRatio->GetName())){
 	    //  rateLumiRatio->Write();
 	    //}
 	    //if (! stripsResults->GetListOfKeys()->Contains(normRateInstLumiRatio->GetName())){
-	    //  normRateInstLumiRatio->Write();
+	      normRateInstLumiRatio->Write();
 	    // }
+	    */
 	    
 	    //rateLumiRatio->Delete();
-	    //normRateInstLumiRatio->Delete();
+	    normRateInstLumiRatio->Delete();
 	    
 	    //stripsResults->cd();
 	    
@@ -6815,18 +6970,27 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 
     }    
     
+    rollToLumiesMap.clear();
+    
+    LumiRateRatioDeviation->SaveAs(("DeviationDistributionForRun_"+run+".root").c_str());
+    LumiRateRatioDeviationWithAddingStdDev->SaveAs(("DeviationDistributionWithAddingStddev_"+run+".root").c_str());
+    CoefficientOfVariation->SaveAs(("CoeffOfVariation_"+run+".root").c_str());
+    delete LumiRateRatioDeviation;
+    delete LumiRateRatioDeviationWithAddingStdDev;
+    delete CoefficientOfVariation;
+    
     //stripsResults->Save();
     //cout << run << " results saved" << endl;
     //stripsResults->Close();
     
     /* from the mean values and RMS (stdev) derive Correlation strenght */
     
-    rollsResults->cd();
-    
+    //rollsResults->cd();
+    //cout << "4 " << endl;
     //cout << meansAndRMSsOfRollsPerRun.size() << " " << RMSsOfChannelRatiosPerRun.size() << endl;
-    
-    for (auto & rn : meansAndRMSsOfRollsPerRun){
-      for (auto & rv : rn.second){
+    /*
+    for (auto & rv : meansAndRMSsOfRollsPerRun.at(run)){
+      
 	TH1F * stripsRatiosForRollInRun = new TH1F((rv.first+"_"+run+"_stripsRatios_NRILR").c_str(),rv.first.c_str(),rv.second.size(),0,rv.second.size());
 	vector<double> RMSvector = RMSsOfChannelRatiosPerRun.at(run).at(rv.first);
 	for (unsigned vect_it = 0 ; vect_it < rv.second.size() ; vect_it++){  
@@ -6835,17 +6999,19 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	  rms_distribution->Fill(RMSvector.at(vect_it));
 	}
 	stripsRatiosForRollInRun->Write();
-	//stripsRatiosForRollInRun->Delete();
-      }
+	stripsRatiosForRollInRun->GetXaxis()->LabelsOption("v");
+	stripsRatiosForRollInRun->Delete();
+      
     }
-    
+    */
+    //cout << "5 " << endl;
     /* ratio stability channel vs run */
     
     //meansAndRMSsOfRollsPerRun.    
     
     
-    rollsResults->Save();
-    rollsResults->Close();
+    //rollsResults->Save();
+    //rollsResults->Close();
     
     //rollsResults->Save();
     //rollsResults->Close();
@@ -6864,10 +7030,17 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
       roll_names_v.push_back(roll_itr.first);
     }
     
-    TFile * allRunsF = new TFile("allRuns_stats.root","NEW");
+    TFile * allRunsF = new TFile("allRuns_stats.root","RECREATE");
+    cout << "netering all"<< endl;
+    //allRunsF->cd();
     for (auto & r_name_ : roll_names_v){
-      int nChannelsInroll = meansAndRMSsOfRollsPerRun.at(first_run).at(r_name_).size();
-      allRunsF->cd();
+      //bool rollmissing =false;
+      //if (meansAndRMSsOfRollsPerRun.at(first_run).find(r_name_) != meansAndRMSsOfRollsPerRun.at(first_run).end()) rollmissing = true;
+      int nChannelsInroll =  meansAndRMSsOfRollsPerRun.at(first_run).at(r_name_).size() ;
+      
+      
+      
+      //allRunsF->cd();
       TDirectory *dirr = allRunsF->GetDirectory(r_name_.c_str());
       if (!dirr) { allRunsF->mkdir(r_name_.c_str()); }
       allRunsF->cd(r_name_.c_str());
@@ -6878,6 +7051,8 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	TH1F * channelsRateLumiRatioDistr = new TH1F((r_name_+"_"+ch_as_string+"_RatiosDistr").c_str(), (r_name_+"_"+ch_as_string).c_str(),200,0,0.2);
 	int bin_incr = 0 ;
 	for (auto & nRun : meansAndRMSsOfRollsPerRun){
+	  if(meansAndRMSsOfRollsPerRun.at(nRun.first).find(r_name_) == meansAndRMSsOfRollsPerRun.at(nRun.first).end()) continue;
+	  meansAndRMSsOfRollsPerRun.at(nRun.first).at(r_name_).at(ch_n);
 	  double val = meansAndRMSsOfRollsPerRun.at(nRun.first).at(r_name_).at(ch_n);
 	  channelRatioForAllRuns->SetBinContent(bin_incr+1,val);
 	  channelRatioForAllRuns->SetBinError(bin_incr+1,RMSsOfChannelRatiosPerRun.at(nRun.first).at(r_name_).at(ch_n));
@@ -6885,18 +7060,22 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	  channelsRateLumiRatioDistr->Fill(val);
 	  bin_incr++;
 	}
+	//channelsRateLumiRatioDistr->LabelsOption("v");
+	//channelRatioForAllRuns->LabelsOption("v");
 	channelsRateLumiRatioDistr->Write();
 	channelRatioForAllRuns->Write();
       }
     }
   
-  allRunsF->Save();
+  //allRunsF->Save();
   allRunsF->Close();
+  
+  //LumiRateRatioDeviation->SaveAs("DeviationDistribution.root");
   
   
   //->SaveAs("BasicRatioDistr.root");
-  nril_h->SaveAs("RateAndLumiNormalizedDistr.root");
-  rms_distribution->SaveAs("RMSratio.root");
+  //nril_h->SaveAs("RateAndLumiNormalizedDistr.root");
+  //rms_distribution->SaveAs("RMSratio.root");
   
   
   
