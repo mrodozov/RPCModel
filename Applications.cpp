@@ -1235,18 +1235,21 @@ map< string, map<string, map< string,double> > >prepareDataSourceWithRatesAndLum
 	      string nameOfRoll = obj1->GetName();
 	      //if (subparts.find(nameOfRoll) == subparts.end()) continue;
 	      if (nameOfRoll.substr(0,1) == "W" || nameOfRoll.substr(0,2) == "RE") {
+		
+		if (nameOfRoll.find("RE+1_1") != string::npos) continue;
 
 		h1 = dynamic_cast<TH1F*>(obj1);
 		ExRoll * aroll = new ExRoll(nameOfRoll);
 		aroll->setStripsAreaFromSource_cmsswResource(areaDO);
+		//aroll->setStripsRateFromTH1Source(h1);
 		aroll->setStripsRatesFromTH1FObject(h1);
 		aroll->removeNoisyStripsForAllClonesWithPercentValue(100);
+		for (int r_id = 1 ; r_id <= aroll->getClones() ; r_id++){
+		  if (aroll->getAvgRatePSCWithoutCorrectionsForClone(r_id) == 0) continue;
+		  currentRates[aroll->getRollIDofCloneWithNewIdentifiers(r_id)] = aroll->getAvgRatePSCWithoutCorrectionsForClone(r_id);
+		}
 		
-		  for (int r_id = 1 ; r_id <= aroll->getClones() ; r_id++){
-		    currentRates[aroll->getRollIDofCloneWithNewIdentifiers(r_id)] = aroll->getAvgRatePSCWithoutCorrectionsForClone(r_id);
-		  }
-		
-		  currentRates_online[nameOfRoll] = aroll->getAvgRatePSCWithoutCorrections();
+		currentRates_online[nameOfRoll] = aroll->getAvgRatePSCWithoutCorrections();
 		
 		delete aroll;
 	      }
@@ -1424,13 +1427,14 @@ void plotRateVsLumi_using_root_and_JSON( const map<string, map<string,map<string
             current_rate = 0;
             for (auto & run_iterator : run_rollRate_map_iter.second) {
               //if (run_iterator->first.find(query->getOnlineRollMapForRecord(i+1).regex) != string::npos && run_iterator->first.find("RE+1_1") == string::npos && run_iterator->first.find("RE-4_3_13") == string::npos && run_iterator->second < cutThreshold) {
-	      if (run_iterator.second > cutThreshold) continue;
+	      if (run_iterator.second > cutThreshold || run_iterator.second == 0) continue;
 	      if ( run_iterator.first.find(query->getOnlineRollMapForRecord(i+1).regex) == string::npos ) continue;
-	      if ( run_iterator.first.find("RE+1_1") != string::npos && ( ( query->getOnlineRollMapForRecord(i+1).regex.find("RE+1_1") == string::npos )) ) continue;
-	      
-	      
-	      current_rate +=run_iterator.second;
-	      counter ++;
+	      if (  ( ( query->getOnlineRollMapForRecord(i+1).regex.find("RE+1_1") == string::npos )) ) continue;
+	            
+	      if (run_iterator.second > 0.05) {
+		current_rate +=run_iterator.second;
+		counter ++;
+	      }
 	      //cout << run_iterator.first << " " << run_iterator.second << endl;
             }            
             current_luminosity_ = run_lumi_map.find(run_rollRate_map_iter.first)->second;            
@@ -1443,7 +1447,7 @@ void plotRateVsLumi_using_root_and_JSON( const map<string, map<string,map<string
 	  
 	  double res_r = current_rate/counter;
 	  //cout << run_rollRate_map_iter.first << " "  << res_r << " " << lumiFile.getElementByKeyAsDouble(run_rollRate_map_iter.first,1) << " " << current_luminosity_ << endl;
-	  hist->Fill(current_luminosity_,res_r,3);
+	   hist->Fill(current_luminosity_,res_r,3);
 	  int cl_int = 0;
 	  if (current_luminosity_ > 0 ) {cl_int = current_luminosity_ ; current_luminosity_ = cl_int;}
 	  else { cl_int = current_luminosity_ * 1000 ; current_luminosity_ = double(cl_int) / 1000 ;}
@@ -6524,6 +6528,46 @@ void DrawVvsPhiUsingJSONdataAndJSONconfig(const string& JSON_data_fname, const s
 }
 
 
+void drawLumiPerChamberUsingJSONfile ( const string& lumiInputJSON, const string& outputROOT ) {
+  
+  ptree * lumiSource = new ptree;
+  ifstream IFS;
+  IFS.open(lumiInputJSON);
+  boost::property_tree::json_parser::read_json(IFS,*lumiSource);
+  IFS.clear(); IFS.close();
+  TFile * rootFile = new TFile(outputROOT.c_str(),"RECREATE");
+  
+  for (ptree::iterator piter = lumiSource->begin() ; piter != lumiSource->end() ; piter++){
+    
+    string roll_name = piter->first;
+    int counter = 0;
+//     rootFile->cd();    
+    
+    vector<double> entries;
+    
+    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, piter->second.get_child("")){ entries.push_back( v.second.get_value<double>() ); }
+    
+    TH1F * lumiHisto = new TH1F (roll_name.c_str(),roll_name.c_str(),entries.size(),0,entries.size());
+    
+    for (auto & lumi : entries){
+      counter++;
+      lumiHisto->SetBinContent(counter,lumi);
+    }
+    
+//     TDirectory *dir = rootFile->GetDirectory(roll_name.c_str());
+//     if (!dir) { rootFile->mkdir(roll_name.c_str()); }
+//     rootFile->cd(roll_name.c_str());
+    lumiHisto->Write();
+    //
+    
+  }
+  
+  delete lumiSource;  
+  rootFile->Save();  
+
+}
+
+
 void get2DplotsOnRateFromROOTfile ( const string& rootfile, const string & jsonMap="localResources/2DjsonMap.json",const string& areaFile="localResources/area_noise_cmssw_withRE4" ,const int & bmax=15,const int & emax=25 ) {
   
   size_t toRoot = rootfile.find(".root");
@@ -6613,7 +6657,7 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
   
   DataObject rateFoldersList(runRateFoldersList);
   DataObject lumiFilesList(lumiPerRunFilesList);
-  DataObject runDurations(runDurationsList);
+  //DataObject runDurations(runDurationsList);
   DataObject area(areafile);
   //TH1F * nril_h = new TH1F("nril_h","nril_h",2000,0,0.2);;
   //TH1F *  = new TH1F("","",2000,0,2);; ;
@@ -6625,9 +6669,9 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
   
   
 
-  TSystemDirectory lumis_dir(lumiPerRunFilesList.c_str(), lumiPerRunFilesList.c_str());
-  TList * lumiFiles = lumis_dir.GetListOfFiles();
-  TIter nextLumiFile(lumiFiles);
+  //TSystemDirectory lumis_dir(lumiPerRunFilesList.c_str(), lumiPerRunFilesList.c_str());
+  //TList * lumiFiles = lumis_dir.GetListOfFiles();
+  //TIter nextLumiFile(lumiFiles);
   TSystemFile * lfile;
   
   /*
@@ -6672,6 +6716,9 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
   
   map<string,ExRoll*> rollsMap;
   
+  ofstream OFS;
+  
+  
   for (int i = 0 ; i < rateFoldersList.getLenght() ; i++){
     
     string folder = rateFoldersList.getElement(i+1,1);    
@@ -6700,7 +6747,7 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
     //DataObject * detailedLuminosity = new DataObject("chambers_lumis_DO_"+run+".txt"); // no way to be used, this file is not symetrical
     
     ptree * detailedLuminosity = new ptree;
-    ifstream ifss(("chambers_lumis_"+run+".json").c_str());
+    ifstream ifss((lumiPerRunFilesList+"chambers_lumis_"+run+".json").c_str());
     boost::property_tree::json_parser::read_json(ifss,*detailedLuminosity);
     ifss.clear();ifss.close();
     
@@ -6715,6 +6762,15 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
     
     delete detailedLuminosity;
     
+    ptree * firstRange = new ptree;
+    ptree *secondRange = new ptree;
+    ptree *thirdRange = new ptree;
+    ptree *overflows = new ptree;
+    
+    map<string, string> chambersPresentedInCOVDistrRecord;
+    
+    
+    
     while ((file=(TSystemFile*)next())) {
     
       //cout << "1" << endl;
@@ -6722,8 +6778,7 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
       if (fname.find(".root") == string::npos) continue;
       string fullName = folder +"/"+ fname;
       TFile * rfile = new TFile(fullName.c_str(),"read");
-      
-      
+            
     // cout << "2" << endl;
 
       TH1F * h1;
@@ -6731,30 +6786,10 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
       TKey *key;
       TObject *obj;
       string histoCurrentName;
-      /*
-      TList * objectsList = rfile->GetListOfKeys();
-      objectsList->Sort();
-      //objectsList->
-      list<string> rollNamesList;
-      
-      for (auto & object : objectsList){
-	rollNamesList.push_back(object->GetName());
-      }
-      
-      rollNamesList.sort();
-      rollNamesList.unique();
-      
-      for (auto & e : rollNamesList){
-	
-      }
-      */
       
       //cout << "3" << endl;      
-      // create two files to write for that run - one for channel and one for roll/LB results . or single file with directories after the roll/LB names            
-      
+            
       cout << fname << endl;
-      
-      
       
       
       while (key = (TKey*)nextkey()) {
@@ -6764,6 +6799,8 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	if (histoCurrentName.substr(0,1) == "W" || histoCurrentName.substr(0,2) == "RE") {  
 	  if(histoCurrentName.find("Strip") != string ::npos){        
 	    if (h1->GetFillColor() == 9) continue;
+	    
+	    if (h1->GetNbinsX() == 0) continue;
 	    
 	    //cout << " 1" << endl;
 	    int time_intervals = h1->GetNbinsX();
@@ -6784,6 +6821,7 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	      rollsMap[rollname] = aroll;      
 	    }
 	    //cout << " 1" << endl;
+	    /*
 	    if (meansAndRMSsOfRollsPerRun.at(run).find(aroll->getRollIDofCloneWithNewIdentifiers(1)) == meansAndRMSsOfRollsPerRun.at(run).end()){      
 	      
 	      for (int cl = 0 ; cl < aroll->getClones();cl++){
@@ -6793,7 +6831,7 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 		RMSsOfChannelRatiosPerRun.at(run)[aroll->getRollIDofCloneWithNewIdentifiers(cl+1)] = rms_vector_map;
 	      }
 	    }
-	    
+	    */
 	    //cout << "2 " << endl;
 	    
 	    int cloneNumberOfStrip = ( (channelNumber-1) / (96/aroll->getClones()) ) +1;
@@ -6833,6 +6871,9 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	     * - if the majority of channels have peaked mean with low RMS (StDev) accept the H1 is true
 	     * - define the deviation as % away from the mean to model the fit
 	     * - use standard deviation and the confidence level for each channel distribution
+	     *   -- result is there are distorted channel histos for which the rate is lower than expected
+	     *   -- when channel's rate distribution is non-distorted, the channel lumi/rate ratio is stable value (based on the coefficient of variation metric)
+	     *   -- 
 	     * 
 	     * H2 : Lumi / Rate value is constant for all runs
 	     * 
@@ -6860,17 +6901,14 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	     *
 	     */
 	    
+	 
+	    
+	    
 	    /**
-	     * One text file per run for the lumi - LBname and the rest to be the lumi values per delta t where the index of the lumi values would be the time interval number
-	     * this should use - 1. each chamber's 
-	     * 
-	     * 1. extract chmabers time intervals (use adapted noise tool exe). Write the output as json {LBName:{deltaT_list:[],startTime:towerFileCreationTime}}
-	     * 2. Get the lumi by BX using the run number only as precise start stop is not needed in this case 
-	     * 3. Rewrite the python program to 
-	     *   3.1 First get the lumis from ns to second basis, keep only the lumi values in a list where index is the second number
-	     *   3.2 Using the json with the run delta t list and start time, get each interval lumi as list of only lumies, using the times as second to get each lumi inteval as sub list 
-	     * 4. To get start times, use the old python program for that and write each tower's create time in a file in the run folder
-	     * 5. Use only the final LB:[list of lumies per delta t] where the list size should be N deltaT size
+	     * Separate smooth from 
+	     * 1. Need method to make the difference, use the lumi as reference. The n-th and the nth+1 lumi entries ratio should be compatible with the rate ratio for the same entries
+	     * 2. Do separated distributions for the smooth and the separated chamber strips. See if the non-smooth distribution is what causes the distortion
+	     * 3. Plot the rate vs lumi for only non distorted partitions
 	     * 
 	     */
 	    
@@ -6902,14 +6940,19 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	    //frp->get
 	    RMSsOfChannelRatiosPerRun.at(run).at(offlineRollName).push_back(normRateInstLumiRatio->GetRMS()); 
 	    double histMean = normRateInstLumiRatio->GetMean();
-	    double stdevvThree = 3 * normRateInstLumiRatio->GetStdDev();
+	    if (histMean == 0 || normRateInstLumiRatio->GetNbinsX() == 0) { normRateInstLumiRatio->Delete(); continue; }
+	    //double stdevvThree = 3 * normRateInstLumiRatio->GetStdDev();
 	    
-	    double threeSigmasDeviation =  stdevvThree / histMean;
-	    threeSigmasDeviation = threeSigmasDeviation*100; // in percents
+	    //double threeSigmasDeviation =  stdevvThree / histMean;
+	    //threeSigmasDeviation = threeSigmasDeviation*100; // in percents
 	    
-	    LumiRateRatioDeviation->Fill(threeSigmasDeviation);
-	    LumiRateRatioDeviationWithAddingStdDev->Fill( 100 * ( histMean / (histMean+stdevvThree)) );
-	    CoefficientOfVariation->Fill(100 * (normRateInstLumiRatio->GetStdDev()/histMean));
+	    //LumiRateRatioDeviation->Fill(threeSigmasDeviation);
+	    //LumiRateRatioDeviationWithAddingStdDev->Fill( 100 * ( histMean / (histMean+stdevvThree)) );
+	    double COV = 100 * (normRateInstLumiRatio->GetStdDev()/histMean);
+	    
+	    //CoefficientOfVariation->Fill(COV);
+	    
+	    
 	    //areaScaledRate->Delete();
 	    
 	    /*
@@ -6949,6 +6992,18 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	    //rateLumiRatio->Delete();
 	    normRateInstLumiRatio->Delete();
 	    
+	    if (chambersPresentedInCOVDistrRecord.find(offlineRollName) != chambersPresentedInCOVDistrRecord.end()) continue;    
+	    ptree val;
+	    val.put_value(offlineRollName);    
+	    //cout << " " << endl;
+	    if (COV < 15)  { firstRange->push_back(std::make_pair("",val)); }
+	    else if (COV >= 15 && COV < 35) {secondRange->push_back(std::make_pair("",val)); }
+	    else if (COV > 100) {thirdRange->push_back(std::make_pair("",val));}
+	    else {overflows->push_back(std::make_pair("",val));}    
+	    chambersPresentedInCOVDistrRecord[offlineRollName] = offlineRollName;
+	    
+	    
+	    
 	    //stripsResults->cd();
 	    
 	    //rollsResults->cd();
@@ -6956,21 +7011,33 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	    //rollStripsRatiosPlot->Write(rollStripsRatiosPlot->GetName(),TObject::kOverwrite);
 	  }
 	}
-      }
-      
-      
+      }      
       
       rfile->Close();
       
       //rfile->Delete();
-      //stripsResults->Save();
-      
+      //stripsResults->Save();      
       //rollsResults->Save();      
-      
 
     }    
     
+    ptree * COV_distributionRecord = new ptree;
+    COV_distributionRecord->add_child("firstRange",*firstRange);
+    COV_distributionRecord->add_child("secondRange",*secondRange);
+    COV_distributionRecord->add_child("thirdRange",*thirdRange);
+    COV_distributionRecord->add_child("overflows",*overflows);
+    
+    string covFile = "COV_distribution_"+run+".json";
+    OFS.open(covFile.c_str());
+    boost::property_tree::json_parser::write_json(OFS,*COV_distributionRecord);
+    OFS.clear(); OFS.close();
+    delete COV_distributionRecord;
+    delete firstRange; delete secondRange; delete thirdRange; delete overflows;
+    chambersPresentedInCOVDistrRecord.clear();
+    
     rollToLumiesMap.clear();
+    
+    /*
     
     LumiRateRatioDeviation->SaveAs(("DeviationDistributionForRun_"+run+".root").c_str());
     LumiRateRatioDeviationWithAddingStdDev->SaveAs(("DeviationDistributionWithAddingStddev_"+run+".root").c_str());
@@ -6978,6 +7045,8 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
     delete LumiRateRatioDeviation;
     delete LumiRateRatioDeviationWithAddingStdDev;
     delete CoefficientOfVariation;
+    
+    */
     
     //stripsResults->Save();
     //cout << run << " results saved" << endl;
@@ -7021,6 +7090,9 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
   
   //TFile * allRunsF = new TFile("allRuns_stats.root","NEW");
   //allRunsF->cd();
+  
+  /*
+  
   string first_run;
     for (auto & rn : meansAndRMSsOfRollsPerRun){ first_run = rn.first ; break ; }
     
@@ -7068,16 +7140,14 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
     }
   
   //allRunsF->Save();
-  allRunsF->Close();
+  allRunsF->Close();  
   
+  
+  */
   //LumiRateRatioDeviation->SaveAs("DeviationDistribution.root");
-  
-  
   //->SaveAs("BasicRatioDistr.root");
   //nril_h->SaveAs("RateAndLumiNormalizedDistr.root");
-  //rms_distribution->SaveAs("RMSratio.root");
-  
-  
+  //rms_distribution->SaveAs("RMSratio.root");  
   
 }
     

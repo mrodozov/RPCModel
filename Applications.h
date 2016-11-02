@@ -197,6 +197,8 @@ void GetLumiHistogramPerLS(string & lumiFile);
 
 void getRateInJSONformatFromRootFile(const string & rootfilename,const string & JSONoutFileName,const string & areaFileName);
 
+void drawLumiPerChamberUsingJSONfile(const string & lumiInputJSON, const string & outputROOT);
+
 // analysis 
 
 void compareHistos(TH1F * reference, TH1F * testing);

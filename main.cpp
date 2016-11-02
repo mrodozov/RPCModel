@@ -177,8 +177,8 @@ int main( int argc ,char *argv[] ){
 //    GetLumiHistogramPerLS(fname);
 
     
-   //string rateFolders = argv[1];string lumiFiles = argv[2];string runDurations = argv[3];string area = argv[4];
-   //testLumiRateCorrelation(rateFolders,lumiFiles,runDurations,area);
+   string rateFolders = argv[1];string lumiFiles = argv[2];string runDurations = argv[3];string area = argv[4];
+   testLumiRateCorrelation(rateFolders,lumiFiles,runDurations,area);
    
    //   string jsonDatafile = argv[1] , jsonMapFile = argv[2], rootOutput=argv[3];
    //  yaxisttitle = argv[5],fileSuffix = argv[6];
@@ -188,12 +188,14 @@ int main( int argc ,char *argv[] ){
 //   DrawVvsPhiUsingJSONdataAndJSONconfig(jsonDatafile,jsonMapFile); 
 //    plot_X_vs_Y_values_using_JSON_data_and_JSON_config(jsonDatafile,jsonMapFile,rootOutput);
    
-    string rootFile=argv[1],jsonFile=argv[2],areaFile=argv[3];
-    int bmax = atoi(argv[4]),emax = atoi(argv[5]);
-  
+    //string rootFile=argv[1],jsonFile=argv[2],areaFile=argv[3];
+    //int bmax = atoi(argv[4]),emax = atoi(argv[5]);
+    
    
-   get2DplotsOnRateFromROOTfile(rootFile,jsonFile,areaFile,bmax,emax);
+   //get2DplotsOnRateFromROOTfile(rootFile,jsonFile,areaFile,bmax,emax);
   
+  // drawLumiPerChamberUsingJSONfile(jsonFile,rootFile);
+   
    //compareHistos();
    
   /*  

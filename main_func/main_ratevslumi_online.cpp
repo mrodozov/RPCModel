@@ -63,7 +63,7 @@ int main( int argc ,char *argv[] ){
   auto dataMap =  prepareDataSourceWithRatesAndLumi(DataFolder,Lumi);
   auto conditionsMap = getConditionsMapFromFolderForRunlist(argv[2],conditionsFolder);
   
-  
+  /*
   sector = "";
   outputJSON = "RED1R1.json";
   aQuery->clearAllOnlineRollRecords();
@@ -112,35 +112,47 @@ int main( int argc ,char *argv[] ){
   aQuery->insertNewOnlineRecord("W-2","W-2",kViolet-7,kOpenCircle);
   aQuery->insertNewOnlineRecord("W-1","W-1",kSpring-7,kFullCircle);
   aQuery->insertNewOnlineRecord("W+1","W+1",kRed,kFullSquare);
-  aQuery->insertNewOnlineRecord("W0","W0",kBlack,kFullTriangleUp);
+  aQuery->insertNewOnlineRecord("W+0","W0",kBlack,kFullTriangleUp);
   plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON);
-  
+  */
   
   aQuery->setCanvasTitle("allEcapDisks");
   outputJSON = "allEcapDisks.json";
   aQuery->clearAllOnlineRollRecords();
   
-  aQuery->insertNewOnlineRecord("RE-4","RE-4",kRed,kOpenCircle);
-  aQuery->insertNewOnlineRecord("RE+4","RE+4",43,kFullTriangleUp);      
-  aQuery->insertNewOnlineRecord("RE-3","RE-3",kBlack,kFullSquare);
-  aQuery->insertNewOnlineRecord("RE+3","RE+3",kCyan,kOpenSquare);
-  aQuery->insertNewOnlineRecord("RE-2","RE-2",kGreen,kFullCircle);      
-  aQuery->insertNewOnlineRecord("RE+2","RE+2",kPink,kOpenStar);
-  aQuery->insertNewOnlineRecord("RE-1","RE-1",kBlue,kOpenTriangleUp);
-  aQuery->insertNewOnlineRecord("RE+1","RE+1",46,kOpenDiamond);
+  
+  aQuery->insertNewOnlineRecord("RE-4_R","RE-4",kRed,kOpenCircle);
+  aQuery->insertNewOnlineRecord("RE+4_R","RE+4",43,kFullTriangleUp);      
+  aQuery->insertNewOnlineRecord("RE-3_R","RE-3",kBlack,kFullSquare);
+  aQuery->insertNewOnlineRecord("RE+3_R","RE+3",kCyan,kOpenSquare);
+  aQuery->insertNewOnlineRecord("RE-2_R","RE-2",kGreen,kFullCircle);      
+  aQuery->insertNewOnlineRecord("RE+2_R","RE+2",kPink,kOpenStar);    
+  aQuery->insertNewOnlineRecord("RE+1_R","RE+1",kBlue,kOpenTriangleUp);
+  aQuery->insertNewOnlineRecord("RE-1_R","RE-1",46,kOpenDiamond);
   plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON);
   
-  
+  /*
   //auto rollLevelData = prepareDataSourceWithRatesAndLumi(DataFolder,Lumi,isOffline);
   sector = "10_C";
-  outputJSON = "HotRE43sectors_Eta_C.json";
+  outputJSON = "HotRE43sectors_10_Eta_C.json";
   aQuery->clearAllOnlineRollRecords();
   orientation = "";
-  aQuery->setCanvasTitle("RE_43_HotZones_Offline_C");
+  aQuery->setCanvasTitle("RE_43_HotZones_Offline_10_C");
   aQuery->insertNewOnlineRecord(("RE-"+orientation+"4_R2_CH"+sector).c_str(),("RE -4"+orientation+" 2 S 10 C").c_str(),kBlue,23);  
   aQuery->insertNewOnlineRecord(("RE+"+orientation+"4_R2_CH"+sector).c_str(),("RE +4"+orientation+" 2 S 10 C").c_str(),kRed,22);  
   aQuery->insertNewOnlineRecord(("RE+"+orientation+"3_R2_CH"+sector).c_str(),("RE +3"+orientation+" 2 S 10 C").c_str(),kBlack,21);
   aQuery->insertNewOnlineRecord(("RE-"+orientation+"3_R2_CH"+sector).c_str(),("RE -3"+orientation+" 2 S 10 C").c_str(),kSpring-7,25);
   plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON);    
+  sector = "27_C";
+  outputJSON = "HotRE43sectors_27_Eta_C.json";
+  aQuery->clearAllOnlineRollRecords();
+  orientation = "";
+  aQuery->setCanvasTitle("RE_43_HotZones_Offline_27_C");
+  aQuery->insertNewOnlineRecord(("RE-"+orientation+"4_R2_CH"+sector).c_str(),("RE -4"+orientation+" 2 S 27 C").c_str(),kBlue,23);  
+  aQuery->insertNewOnlineRecord(("RE+"+orientation+"4_R2_CH"+sector).c_str(),("RE +4"+orientation+" 2 S 27 C").c_str(),kRed,22);  
+  aQuery->insertNewOnlineRecord(("RE+"+orientation+"3_R2_CH"+sector).c_str(),("RE +3"+orientation+" 2 S 27 C").c_str(),kBlack,21);
+  aQuery->insertNewOnlineRecord(("RE-"+orientation+"3_R2_CH"+sector).c_str(),("RE -3"+orientation+" 2 S 27 C").c_str(),kSpring-7,25);
+  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON);    
+  */
   
 }
