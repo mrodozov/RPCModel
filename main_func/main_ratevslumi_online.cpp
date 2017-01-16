@@ -42,7 +42,7 @@ int main( int argc ,char *argv[] ){
   
   
   QueryObject * aQuery = new QueryObject;
-  string DataFolder = argv[1]; // folder with text files
+  string DataFolder = argv[1]; // folder with root files
   DataObject Lumi(argv[2],3); // 3 rows, run lumi and ls  
   DataObject area(argv[3],2); //
   aQuery->setCanvasTitle(argv[4]);
@@ -63,8 +63,9 @@ int main( int argc ,char *argv[] ){
   auto dataMap =  prepareDataSourceWithRatesAndLumi(DataFolder,Lumi);
   auto conditionsMap = getConditionsMapFromFolderForRunlist(argv[2],conditionsFolder);
   
-  /*
+  
   sector = "";
+  /*
   outputJSON = "RED1R1.json";
   aQuery->clearAllOnlineRollRecords();
   aQuery->setCanvasTitle("RE_1_1_Online");
@@ -80,6 +81,7 @@ int main( int argc ,char *argv[] ){
   disks.push_back("3");
   disks.push_back("2");
   disks.push_back("1");
+  
   
   for ( auto & i : disks){
     
@@ -105,54 +107,155 @@ int main( int argc ,char *argv[] ){
   aQuery->insertNewOnlineRecord("W","Barrel",kRed,kFullCircle);
   plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON);
   
-  aQuery->setCanvasTitle("BarrelWheels");
-  outputJSON = "BarrelWheels.json";    
-  aQuery->clearAllOnlineRollRecords();
-  aQuery->insertNewOnlineRecord("W+2","W+2",kGreen-7,kOpenDiamond);
-  aQuery->insertNewOnlineRecord("W-2","W-2",kViolet-7,kOpenCircle);
-  aQuery->insertNewOnlineRecord("W-1","W-1",kSpring-7,kFullCircle);
-  aQuery->insertNewOnlineRecord("W+1","W+1",kRed,kFullSquare);
-  aQuery->insertNewOnlineRecord("W+0","W0",kBlack,kFullTriangleUp);
-  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON);
   */
   
-  aQuery->setCanvasTitle("allEcapDisks");
-  outputJSON = "allEcapDisks.json";
+  aQuery->setCanvasTitle("Barrel Wheels");
+  outputJSON = "BarrelWheels.json";    
+  aQuery->clearAllOnlineRollRecords();
+  aQuery->insertNewOnlineRecord("W+2","W+2",kRed-3,kFullTriangleUp);
+  aQuery->insertNewOnlineRecord("W-2","W-2",kRed+1,kOpenTriangleUp);
+  aQuery->insertNewOnlineRecord("W-1","W-1",kBlue-3,kOpenSquare);
+  aQuery->insertNewOnlineRecord("W+1","W+1",kBlue+2,kFullSquare);
+  aQuery->insertNewOnlineRecord("W+0","W0",kBlack,kFullCircle);
+  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON,0);  
+  
+  aQuery->setCanvasTitle("Endcap Stations");
+  outputJSON = "allEcapDisks.json";	
   aQuery->clearAllOnlineRollRecords();
   
+  //isOffline = 0;
   
   aQuery->insertNewOnlineRecord("RE-4_R","RE-4",kRed,kOpenCircle);
-  aQuery->insertNewOnlineRecord("RE+4_R","RE+4",43,kFullTriangleUp);      
-  aQuery->insertNewOnlineRecord("RE-3_R","RE-3",kBlack,kFullSquare);
-  aQuery->insertNewOnlineRecord("RE+3_R","RE+3",kCyan,kOpenSquare);
-  aQuery->insertNewOnlineRecord("RE-2_R","RE-2",kGreen,kFullCircle);      
-  aQuery->insertNewOnlineRecord("RE+2_R","RE+2",kPink,kOpenStar);    
-  aQuery->insertNewOnlineRecord("RE+1_R","RE+1",kBlue,kOpenTriangleUp);
-  aQuery->insertNewOnlineRecord("RE-1_R","RE-1",46,kOpenDiamond);
-  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON);
+  aQuery->insertNewOnlineRecord("RE+4_R","RE+4",kRed,kFullCircle);      
+  aQuery->insertNewOnlineRecord("RE-3_R","RE-3",kBlack,kOpenTriangleDown);
+  aQuery->insertNewOnlineRecord("RE+3_R","RE+3",kBlack,kFullTriangleDown);
+  aQuery->insertNewOnlineRecord("RE-2_R","RE-2",kGreen,kOpenTriangleUp);      
+  aQuery->insertNewOnlineRecord("RE+2_R","RE+2",kGreen,kFullTriangleUp);    
+  aQuery->insertNewOnlineRecord("RE+1_R","RE+1",kBlue,kOpenSquare);
+  aQuery->insertNewOnlineRecord("RE-1_R","RE-1",kBlue,kFullSquare);
+  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON,0);
   
+  //isOffline = 1;
   /*
+  aQuery->setCanvasTitle("Barrel W+2");
+  outputJSON = "W+2.json";
+  aQuery->clearAllOnlineRollRecords();
+  aQuery->insertNewOnlineRecord("W+2","W+2 ",kRed-3,kFullTriangleUp);
+  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON,1);
+  
+  aQuery->setCanvasTitle("Barrel W+1");
+  outputJSON = "W+1.json";
+  aQuery->clearAllOnlineRollRecords();
+  aQuery->insertNewOnlineRecord("W+1","W+1 ",kBlue+2,kFullSquare);
+  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON,1);
+  
+  aQuery->setCanvasTitle("Barrel W-1");
+  outputJSON = "W-1.json";
+  aQuery->clearAllOnlineRollRecords();
+  aQuery->insertNewOnlineRecord("W-1","W-1 ",kBlue-3,kOpenSquare);
+  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON,1);
+  
+  aQuery->setCanvasTitle("Barrel W-2");
+  outputJSON = "W-2.json";
+  aQuery->clearAllOnlineRollRecords();
+  aQuery->insertNewOnlineRecord("W-2","W-2 ",kRed+1,kOpenTriangleUp);
+  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON,1);
+  
+  aQuery->setCanvasTitle("Barrel W0");
+  outputJSON = "W0.json";
+  aQuery->clearAllOnlineRollRecords();
+  aQuery->insertNewOnlineRecord("W+0","W0 ",kBlack,kFullCircle);
+  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON,1);
+  
+  
+  aQuery->setCanvasTitle("Endcap RE-4");
+  outputJSON = "RE-4.json";
+  aQuery->clearAllOnlineRollRecords();
+  aQuery->insertNewOnlineRecord("RE-4_R","RE-4 ",kRed,kOpenCircle);
+  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON,1);
+  
+  aQuery->setCanvasTitle("Endcap RE+4");
+  outputJSON = "RE+4.json";
+  aQuery->clearAllOnlineRollRecords();
+  aQuery->insertNewOnlineRecord("RE+4_R","RE+4 ",kRed,kFullCircle);
+  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON,1);
+  
+  aQuery->setCanvasTitle("Endcap RE-3");
+  outputJSON = "RE-3.json";
+  aQuery->clearAllOnlineRollRecords();
+  aQuery->insertNewOnlineRecord("RE-3_R","RE-3 ",kBlack,kOpenTriangleDown);
+  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON,1);
+  
+  aQuery->setCanvasTitle("Endcap RE+3");
+  outputJSON = "RE+3.json";
+  aQuery->clearAllOnlineRollRecords();
+  aQuery->insertNewOnlineRecord("RE+3_R","RE+3 ",kBlack,kFullTriangleDown);
+  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON,1);
+  
+  aQuery->setCanvasTitle("Endcap RE-2");
+  outputJSON = "RE-2.json";
+  aQuery->clearAllOnlineRollRecords();
+  aQuery->insertNewOnlineRecord("RE-2_R","RE-2 ",kGreen,kOpenTriangleUp);
+  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON,1);
+  
+  aQuery->setCanvasTitle("Endcap RE+2");
+  outputJSON = "RE+2.json";
+  aQuery->clearAllOnlineRollRecords();
+  aQuery->insertNewOnlineRecord("RE+2_R","RE+2 ",kGreen,kFullTriangleUp);
+  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON,1);
+  
+  aQuery->setCanvasTitle("Endcap RE-1");
+  outputJSON = "RE-1.json";
+  aQuery->clearAllOnlineRollRecords();
+  aQuery->insertNewOnlineRecord("RE-1_R","RE-1 ",kBlue,kFullSquare);
+  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON,1);
+  
+  aQuery->setCanvasTitle("Endcap RE+1");
+  outputJSON = "RE+1.json";
+  aQuery->clearAllOnlineRollRecords();
+  aQuery->insertNewOnlineRecord("RE+1_R","RE+1 ",kBlue,kOpenSquare);
+  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON,1);
+  
+  */
+  
+  
   //auto rollLevelData = prepareDataSourceWithRatesAndLumi(DataFolder,Lumi,isOffline);
+  
   sector = "10_C";
-  outputJSON = "HotRE43sectors_10_Eta_C.json";
+  outputJSON = "RE_43_HotZones_Offline_10_C.json";
   aQuery->clearAllOnlineRollRecords();
   orientation = "";
-  aQuery->setCanvasTitle("RE_43_HotZones_Offline_10_C");
+  aQuery->setCanvasTitle("RE4 R2 Sector 10");
   aQuery->insertNewOnlineRecord(("RE-"+orientation+"4_R2_CH"+sector).c_str(),("RE -4"+orientation+" 2 S 10 C").c_str(),kBlue,23);  
   aQuery->insertNewOnlineRecord(("RE+"+orientation+"4_R2_CH"+sector).c_str(),("RE +4"+orientation+" 2 S 10 C").c_str(),kRed,22);  
   aQuery->insertNewOnlineRecord(("RE+"+orientation+"3_R2_CH"+sector).c_str(),("RE +3"+orientation+" 2 S 10 C").c_str(),kBlack,21);
   aQuery->insertNewOnlineRecord(("RE-"+orientation+"3_R2_CH"+sector).c_str(),("RE -3"+orientation+" 2 S 10 C").c_str(),kSpring-7,25);
   plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON);    
+  
   sector = "27_C";
-  outputJSON = "HotRE43sectors_27_Eta_C.json";
+  outputJSON = "RE_43_HotZones_Offline_27_C.json";
   aQuery->clearAllOnlineRollRecords();
   orientation = "";
-  aQuery->setCanvasTitle("RE_43_HotZones_Offline_27_C");
+  aQuery->setCanvasTitle("RE4 R2 Sector 27");
   aQuery->insertNewOnlineRecord(("RE-"+orientation+"4_R2_CH"+sector).c_str(),("RE -4"+orientation+" 2 S 27 C").c_str(),kBlue,23);  
   aQuery->insertNewOnlineRecord(("RE+"+orientation+"4_R2_CH"+sector).c_str(),("RE +4"+orientation+" 2 S 27 C").c_str(),kRed,22);  
   aQuery->insertNewOnlineRecord(("RE+"+orientation+"3_R2_CH"+sector).c_str(),("RE +3"+orientation+" 2 S 27 C").c_str(),kBlack,21);
   aQuery->insertNewOnlineRecord(("RE-"+orientation+"3_R2_CH"+sector).c_str(),("RE -3"+orientation+" 2 S 27 C").c_str(),kSpring-7,25);
   plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON);    
-  */
   
+  /*
+  sector = "";
+  outputJSON = "Wp2_RB4ppS4F.json";
+  aQuery->clearAllOnlineRollRecords();
+  orientation = "Wp2_RB4ppS4F";
+  aQuery->setCanvasTitle("Wp2_RB4ppS4F");
+  aQuery->insertNewOnlineRecord("W+2_RB4++_S04_Forward","W+2 RB4++ S4 Forward",kGreen-7,kOpenDiamond);
+  
+  aQuery->insertNewOnlineRecord(("RE-"+orientation+"4_R2_CH"+sector).c_str(),("RE -4"+orientation+" 2 S 27 C").c_str(),kBlue,23);  
+  aQuery->insertNewOnlineRecord(("RE+"+orientation+"4_R2_CH"+sector).c_str(),("RE +4"+orientation+" 2 S 27 C").c_str(),kRed,22);  
+  aQuery->insertNewOnlineRecord(("RE+"+orientation+"3_R2_CH"+sector).c_str(),("RE +3"+orientation+" 2 S 27 C").c_str(),kBlack,21);
+  aQuery->insertNewOnlineRecord(("RE-"+orientation+"3_R2_CH"+sector).c_str(),("RE -3"+orientation+" 2 S 27 C").c_str(),kSpring-7,25);
+  
+  plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON);  
+  */
 }

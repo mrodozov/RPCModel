@@ -163,10 +163,13 @@ int main( int argc ,char *argv[] ){
   */
   
   
-//   string LumiFile = argv[1],
-//   rootFilesFolder = argv[2], area = argv[3], outputFile = argv[4], suffix = argv[5];  
-//   WriteRateVsLumiPerRollFile(LumiFile,rootFilesFolder,area,outputFile,suffix);
-  
+//    string LumiFile = argv[1],
+//    rootFilesFolder = argv[2], area = argv[3], outputFile = argv[4], suffix = argv[5];  
+//    WriteRateVsLumiPerRollFile(LumiFile,rootFilesFolder,area,outputFile,suffix);
+   
+   string fiftheen = argv[1],
+   sixteen = argv[2];
+   Ratios(fiftheen, sixteen);
   
 //    string ids_file = argv[1],
 //    input = argv[2], output = argv[3], twoDmapFile = argv[4] , ShortB =argv[5] ,ShortE=argv[6];
@@ -177,8 +180,8 @@ int main( int argc ,char *argv[] ){
 //    GetLumiHistogramPerLS(fname);
 
     
-   string rateFolders = argv[1];string lumiFiles = argv[2];string runDurations = argv[3];string area = argv[4];
-   testLumiRateCorrelation(rateFolders,lumiFiles,runDurations,area);
+//    string rateFolders = argv[1];string lumiFiles = argv[2];string lbToChMap = argv[3];string area = argv[4];
+//    testLumiRateCorrelation(rateFolders,lumiFiles,lbToChMap,area);
    
    //   string jsonDatafile = argv[1] , jsonMapFile = argv[2], rootOutput=argv[3];
    //  yaxisttitle = argv[5],fileSuffix = argv[6];

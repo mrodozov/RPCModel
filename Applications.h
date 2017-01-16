@@ -100,7 +100,7 @@ map< string, map<string,map<string,double> > >prepareDataSourceWithRatesAndLumi 
 
 map<string, map <string,vector<string> > > getConditionsMapFromFolderForRunlist (const string & runlist,const string & condFolder);
 
-void plotRateVsLumi_using_root_and_JSON(const map<string, map<string,map<string,double> > > & run_rollRate_map ,DataObject & lumiFile,int cutThreshold,QueryObject * query,bool isOffline,bool debugOUTPUT,const map<string, map<string,vector<string> > > & condMap,const string & outputJSON);
+void plotRateVsLumi_using_root_and_JSON(const map<string, map<string,map<string,double> > > & run_rollRate_map ,DataObject & lumiFile,int cutThreshold,QueryObject * query,bool isOffline,bool debugOUTPUT,const map<string, map<string,vector<string> > > & condMap,const string & outputJSON,const bool & plotFit = false);
 
 void print_online_dbfiles(string rootContainer,string outputContainer ,DataObject & lumiFile,DataObject& area,string RollList,bool correction,double correctionInPercents);
 
@@ -203,7 +203,7 @@ void drawLumiPerChamberUsingJSONfile(const string & lumiInputJSON, const string 
 
 void compareHistos(TH1F * reference, TH1F * testing);
 
-void testLumiRateCorrelation(const string & runRateFoldersList, const string & runPerLumiFilesList, const string & runDurationsList, const string & area); // test the rate lumi ratio per channel and per roll using detailed rate granularity and scaled lumi files. 
+void testLumiRateCorrelation(const string & runRateFolders, const string & lumiesFolder, const string & lbToChamberMap, const string & area); // test the rate lumi ratio per channel and per roll using detailed rate granularity and scaled lumi files. 
 
 void recalcAverageRateForAdjustedSimilarLuminosity(const string & adjustLumiToRun, const string & dataFolder, const string & lumiFile,const string & resultsFolder); // 
 
@@ -216,6 +216,8 @@ void PositiveNegativePartsRatio(string & IDs_file, string & runlist, const strin
 void getJSONinputForRateVsPhiForRun(const string & run_rootfile, const string & JSON_config, const string & JSONout);
 
 void DrawVvsPhiUsingJSONdataAndJSONconfig(const string & JSON_data_fname, const string & JSON_config_fname); // the data file format is {RollPartName:{title:"",marker:"",color:"",data:[v1,v2,v3...],errors[e1,e2,e3,...]},RollPartName2:...} where the points given are put equdistant along 2pi in radiants on X 
+
+void Ratios (const string & fifteen, const string & sixteen);
 
 // combined - data prep + drawing 
 

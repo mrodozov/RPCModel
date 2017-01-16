@@ -1244,6 +1244,8 @@ map< string, map<string, map< string,double> > >prepareDataSourceWithRatesAndLum
 		//aroll->setStripsRateFromTH1Source(h1);
 		aroll->setStripsRatesFromTH1FObject(h1);
 		aroll->removeNoisyStripsForAllClonesWithPercentValue(100);
+		
+		
 		for (int r_id = 1 ; r_id <= aroll->getClones() ; r_id++){
 		  if (aroll->getAvgRatePSCWithoutCorrectionsForClone(r_id) == 0) continue;
 		  currentRates[aroll->getRollIDofCloneWithNewIdentifiers(r_id)] = aroll->getAvgRatePSCWithoutCorrectionsForClone(r_id);
@@ -1308,7 +1310,8 @@ std::map< string, std::map< string, std::vector<string > > > getConditionsMapFro
 
 
 
-void plotRateVsLumi_using_root_and_JSON( const map<string, map<string,map<string,double> > > & dataSource ,DataObject & lumiFile,int cutThreshold,QueryObject * query,bool isOffline,bool debugOUTPUT,const map<string, map<string,vector<string> > > & condMap,const string & outputJSON) {
+void plotRateVsLumi_using_root_and_JSON( const map<string, map<string,map<string,double> > > & dataSource ,DataObject & lumiFile,int cutThreshold,QueryObject * query,bool isOffline,bool debugOUTPUT,const map<string, map<string,vector<string> > > & condMap,const string & outputJSON, const bool& plotFit) {
+
   
   // TODO - if it contains .json substring as last 5 symbols, open file with the string, else - try to parse the string as json.
   
@@ -1327,19 +1330,38 @@ void plotRateVsLumi_using_root_and_JSON( const map<string, map<string,map<string
   double biggestOn_Y=0;
   double currentLumi =0;
   ptree run_rateVlumi_JSON;
-  
-  TPaveText * pt,* secondText;
-  pt = new TPaveText(0.092511,0.930556,0.234949,0.997222,"NDC"); // NDC sets coords
-  secondText = new TPaveText(0.616027,0.912354,0.933234,0.98368,"NDC");
+  string currentYear = "2016";
+  TPaveText * pt,* secondText, * thirdText, * fourthText ;
+  pt = new TPaveText(0.125209,0.911721,0.267947,0.978487,"NDC"); // NDC sets coords
+  secondText = new TPaveText(0.702838, 0.911721, 0.95409, 0.984421,"NDC");
   secondText->SetFillColor(0);
   secondText->SetBorderSize(0);
-  secondText->SetTextSize(0.05);
+  secondText->SetTextSize(0.0504451);
+  secondText->SetTextFont(52);
   
-  secondText->AddText("CMS Preliminary 2016");
+  secondText->AddText("#sqrt{s} = 13 TeV");
   pt->SetFillColor(0); // text is black on white
   pt->SetBorderSize(0); //no shade
   pt->SetTextSize(0.05);
-  pt->AddText("#sqrt{s} = 13 TeV");      
+  pt->SetTextFont(42);
+  pt->AddText(query->getCanvasTitle().c_str());      
+  
+  thirdText = new TPaveText(0.131886, 0.79822, 0.205342, 0.863501,"NDC");
+  fourthText = new TPaveText(0.124791, 0.660237, 0.267529, 0.772997,"NDC");
+  thirdText->SetFillColor(0);
+  thirdText->SetBorderSize(0);
+  thirdText->SetTextSize(0.0637982);
+  fourthText->SetFillColor(0);
+  fourthText->SetBorderSize(0);
+  fourthText->SetTextSize(0.05);	
+  
+  thirdText->SetTextFont(62);
+  //thirdText->SetTextSize();
+  thirdText->AddText("CMS");
+  fourthText->SetTextAlign(11);
+  fourthText->SetTextFont(52);
+  fourthText->AddText("Preliminary");
+  fourthText->AddText(("Data "+currentYear).c_str());
   
   for (int i = 0 ; i < lumiFile.getLenght() ; i++) {
     currentLumi = (lumiFile.getElementAsDouble(i+1,3)/lumiFile.getElementAsDouble(i+1,2))/23.31;
@@ -1351,11 +1373,11 @@ void plotRateVsLumi_using_root_and_JSON( const map<string, map<string,map<string
   biggestOn_X += 500;
   
   TLegend * leg;
-  leg = new TLegend(0.135095,0.58678,0.352423,0.886329);
+  leg = new TLegend(0.30217,0.611276,0.489983,0.860534);
   leg->SetFillColor(0);
   leg->SetBorderSize(0);
-  leg->SetTextFont(6);
-  leg->SetTextSize(30);
+  leg->SetTextFont(4);
+  leg->SetTextSize(26);
   
   TCanvas * can = new TCanvas(query->getCanvasTitle().c_str(),query->getCanvasTitle().c_str(),1200,700);
   can->SetFillColor(0);
@@ -1408,10 +1430,13 @@ void plotRateVsLumi_using_root_and_JSON( const map<string, map<string,map<string
     
     cout << "entering the looney " << endl;
     
+    string lineName = "alin";
+    
     for (int i=0;i < query->getOnlineRollCounter() ; i++) {
         double counter;
         double current_rate,current_luminosity_;
-         TF1 * func = new TF1("aLine","[0]+x*[1]",0,50000);
+	lineName = "lineName";
+         TF1 * func = new TF1("lineName","[0]+x*[1]",0,75000);
 	// first find the biggest value on Y axis to assign the Y 
 	TH2F * hist = new TH2F(query->getOnlineRollMapForRecord(i+1).histoName.c_str(),"",1000,0,biggestOn_X,1000,0,biggestOn_Y);
 	//cout << query->getOnlineRollMapForRecord(i+1).histoName << endl;
@@ -1429,7 +1454,7 @@ void plotRateVsLumi_using_root_and_JSON( const map<string, map<string,map<string
               //if (run_iterator->first.find(query->getOnlineRollMapForRecord(i+1).regex) != string::npos && run_iterator->first.find("RE+1_1") == string::npos && run_iterator->first.find("RE-4_3_13") == string::npos && run_iterator->second < cutThreshold) {
 	      if (run_iterator.second > cutThreshold || run_iterator.second == 0) continue;
 	      if ( run_iterator.first.find(query->getOnlineRollMapForRecord(i+1).regex) == string::npos ) continue;
-	      if (  ( ( query->getOnlineRollMapForRecord(i+1).regex.find("RE+1_1") == string::npos )) ) continue;
+	      if ( run_iterator.first.find("RE+1_1") != string::npos && ( ( query->getOnlineRollMapForRecord(i+1).regex.find("RE+1_1") == string::npos )) ) continue;
 	            
 	      if (run_iterator.second > 0.05) {
 		current_rate +=run_iterator.second;
@@ -1447,7 +1472,7 @@ void plotRateVsLumi_using_root_and_JSON( const map<string, map<string,map<string
 	  
 	  double res_r = current_rate/counter;
 	  //cout << run_rollRate_map_iter.first << " "  << res_r << " " << lumiFile.getElementByKeyAsDouble(run_rollRate_map_iter.first,1) << " " << current_luminosity_ << endl;
-	   hist->Fill(current_luminosity_,res_r,3);
+	  hist->Fill(current_luminosity_,res_r,3);
 	  int cl_int = 0;
 	  if (current_luminosity_ > 0 ) {cl_int = current_luminosity_ ; current_luminosity_ = cl_int;}
 	  else { cl_int = current_luminosity_ * 1000 ; current_luminosity_ = double(cl_int) / 1000 ;}
@@ -1486,9 +1511,10 @@ void plotRateVsLumi_using_root_and_JSON( const map<string, map<string,map<string
 	if(query->getOnlineRollMapForRecord(i+1).histoName != ""){
 	  leg->AddEntry(hist,query->getOnlineRollMapForRecord(i+1).histoName.c_str(),"p");
 	}
-	hist->Fit(func,"R0q");
+	hist->Fit(func,"ROq");
 	cout << query->getOnlineRollMapForRecord(i+1).histoName << " "<< "Correlation factor " << hist->GetCorrelationFactor() << " ";
-	cout << "Rate extrapolated to 50000: " << func->Eval(50000) << " " << endl;
+	cout << " Fit params: a= " << func->GetParameter(0) << " b= " << func->GetParameter(1) ;
+	cout << " Rate extrapolated to 75000: " << func->Eval(75000) << " " << endl;
 	//delete func;
 	//delete hist;
 	
@@ -1499,6 +1525,8 @@ void plotRateVsLumi_using_root_and_JSON( const map<string, map<string,map<string
     pt->Draw();
     secondText->Draw();
     leg->Draw();
+    thirdText->Draw();
+    fourthText->Draw();
     can->SaveAs((query->getCanvasTitle()+".png").c_str());
     can->SaveAs((query->getCanvasTitle()+".root").c_str());
     can->SaveAs((query->getCanvasTitle()+".C").c_str());
@@ -6644,183 +6672,337 @@ void printTimeBins ( string folder_list ) {
   
 }
 
-void testLumiRateCorrelation ( const string& runRateFoldersList, const string& lumiPerRunFilesList , const string & runDurationsList, const string & areafile) {
+void Ratios ( const string& fifteen, const string& sixteen ) {
   
-  // save per run
-  // distribution per channel rate/lumi, destribution per channel rate/timeNormalizedLumi, distribution per channel areaNormalizedRate/timeNormalizedLumi
-  // profile plot per roll (or per linkboard) with bin number the channel (or strip) number, bin content the ratio and bin error the RMS of the ratio distribution
-  // given the time interval duration, the luminosity can be normalized with scale, same for the rate per cm^2 with the strip area
-  // when all runs ratios computation is finished, start cross run comparisons for same channels - plots of one channel ratios for all runs on single profile, put runnumber as bin label
-  // more average values of the same sort - cross run roll/LB average profiles
+  DataObject fifth(fifteen);
+  DataObject sixt(sixteen);
   
-  // try to get the 'stable value ratios' (if the stat show ratios are stable) and then compare with 'bad results' runs (out of the linear fit). See both the stable and the unstable cases
+  vector<string> pointNames;
+  vector<TF1*> v_fifth, v_sixt;
+  vector<double> extrapolationPoints;
+  vector<string> histoTitles;
   
-  DataObject rateFoldersList(runRateFoldersList);
-  DataObject lumiFilesList(lumiPerRunFilesList);
-  //DataObject runDurations(runDurationsList);
-  DataObject area(areafile);
-  //TH1F * nril_h = new TH1F("nril_h","nril_h",2000,0,0.2);;
-  //TH1F *  = new TH1F("","",2000,0,2);; ;
-  //TH1F * rms_distribution = new TH1F("RMSdistr","Ratios RMS distribution",2000,0,0.2);
-  //TH1F * r_il_h = new TH1F("r_il_h","r_il_h",2000,0,20);;; 
-  
-  
-  // 
-  
-  
-
-  //TSystemDirectory lumis_dir(lumiPerRunFilesList.c_str(), lumiPerRunFilesList.c_str());
-  //TList * lumiFiles = lumis_dir.GetListOfFiles();
-  //TIter nextLumiFile(lumiFiles);
-  TSystemFile * lfile;
-  
-  /*
-  
-  map<string,map<int, TH1F*> > lumiHistos;
-  map<string,map<int, TH1F*> > InstlumiHistos;
-  
-  
-  while ((lfile=(TSystemFile*)nextLumiFile())) {
-    //cout << " " << endl;
-    string lumi_fname = lfile->GetName();
-    //cout << lfile << endl;
-    if (lumi_fname.find(".root") == string::npos) continue;
-    string runnum = lumi_fname.substr(0,6);
-    //cout << runnum << endl;
-    int interval = atoi ( lumi_fname.substr(7,lumi_fname.find(".")).c_str() );
-    //cout << runnum << " " << interval << endl;
-    TFile * lumif = new TFile((lumiPerRunFilesList+"/"+lumi_fname).c_str(),"READ");
-    if (lumiHistos.find(runnum) == lumiHistos.end()) { map<int,TH1F*> amap ;  lumiHistos[runnum] = amap; }
-    lumiHistos[runnum][interval] = new TH1F(* dynamic_cast<TH1F*> (lumif->Get("lumihisto")));    
-    lumiHistos[runnum][interval]->SetName(lumi_fname.c_str());
-    if (InstlumiHistos.find(runnum) == lumiHistos.end()) { map<int,TH1F*> bmap ;  InstlumiHistos[runnum] = bmap; }
+  for (unsigned i = 0 ; i < fifth.getLenght() ; i++ ){
+    pointNames.push_back(fifth.getElement(i+1,1));
+    TF1 * f1 = new TF1((pointNames.at(i)+"_15").c_str(),"pol1");
+    TF1 * f2 = new TF1((pointNames.at(i)+"_16").c_str(),"pol1");
     
-    InstlumiHistos[runnum][interval] = new TH1F(* dynamic_cast<TH1F*> (lumif->Get("lumihisto")));
-    InstlumiHistos[runnum][interval]->SetName((lumi_fname+"_instLumi").c_str());
-    double single_interval = runDurations.getElementByKeyAsDouble(runnum,1) / interval ;
-    //cout << single_interval << endl;
-    InstlumiHistos[runnum][interval]->Scale(1/single_interval);
+    f1->SetParameter(0,fifth.getElementAsDouble(i+1,2));
+    f1->SetParameter(1,fifth.getElementAsDouble(i+1,3));
+    f2->SetParameter(0,sixt.getElementAsDouble(i+1,2));
+    f2->SetParameter(1,sixt.getElementAsDouble(i+1,3));
+    
+    cout << f1->GetName() << " " << f1->GetParameter(0) << " " << f1->GetParameter(1) << " " << f1->Eval(75000) << endl;
+    cout << f2->GetName() << " " << f2->GetParameter(0) << " " << f2->GetParameter(1) << " " << f2->Eval(75000) << endl;
+    
+    v_fifth.push_back(f1);
+    v_sixt.push_back(f2);
   }
   
-  */
-  
-  map < string, map<string,vector <double> > > meansAndRMSsOfRollsPerRun;
-  map < string, map<string,vector <double> > > RMSsOfChannelRatiosPerRun;
+  //cout <<  v_fifth.at(0)->GetName() << " " << v_fifth.at(0)->GetParameter(0) << " " << v_fifth.at(1)->GetName() << endl;
   
   
-//   lumiHistos["275001"][629]->SaveAs("c.root");
-//   InstlumiHistos["275001"][629]->SaveAs("ci.root");
+  string extraspace = "_";
+  
+  
+  extrapolationPoints.push_back(4.7);
+  histoTitles.push_back("Extrapolation at 4.7 X 10^{33} cm^{-2} s^{-1}");
+  extrapolationPoints.push_back(10);
+  histoTitles.push_back("Extrapolation at 1.0 X 10^{34} cm^{-2} s^{-1}");
+  extrapolationPoints.push_back(50);
+  histoTitles.push_back("Extrapolation at 5 X 10^{34} cm^{-2} s^{-1}");
+  
+  unsigned counter = 0 ;
+  
+  for (auto & point : extrapolationPoints){
+    extraspace += "_";
+    TPaveText * pt,* secondText, * thirdText, * fourthText ;
+    pt = new TPaveText(0.125209,0.911721,0.267947,0.978487,"NDC"); // NDC sets coords
+    secondText = new TPaveText(0.702838, 0.911721, 0.95409, 0.984421,"NDC");
+    secondText->SetFillColor(0);
+    secondText->SetBorderSize(0);
+    secondText->SetTextSize(0.0504451);
+    secondText->SetTextFont(52);
+    
+    secondText->AddText("#sqrt{s} = 13 TeV");
+    pt->SetFillColor(0); // text is black on white
+    pt->SetBorderSize(0); //no shade
+    pt->SetTextSize(0.05);
+    pt->SetTextFont(42);
+    pt->AddText(histoTitles.at(counter).c_str());      
+    
+    thirdText = new TPaveText(0.131886, 0.79822, 0.205342, 0.863501,"NDC");
+    fourthText = new TPaveText(0.124791, 0.660237, 0.267529, 0.772997,"NDC");
+    thirdText->SetFillColor(0);
+    thirdText->SetBorderSize(0);
+    thirdText->SetTextSize(0.0637982);
+    fourthText->SetFillColor(0);
+    fourthText->SetBorderSize(0);
+    fourthText->SetTextSize(0.05);	
+    
+    thirdText->SetTextFont(62);
+    //thirdText->SetTextSize();
+    thirdText->AddText("CMS");
+    fourthText->SetTextAlign(11);
+    fourthText->SetTextFont(52);
+    fourthText->AddText("Preliminary");
+    //fourthText->AddText(("Data "+currentYear).c_str());
+  
+    TLegend * leg;
+    leg = new TLegend(0.30217,0.611276,0.489983,0.860534);
+    leg->SetFillColor(0);
+    leg->SetBorderSize(0);
+    leg->SetTextFont(4);
+    leg->SetTextSize(26);
+    
+    
+    TH1F * hist_fif = new TH1F (extraspace.c_str(),"",13,0,13);
+    hist_fif->SetLineColor(kBlue); extraspace += "_";
+    hist_fif->SetStats(kFALSE);
+    hist_fif->GetYaxis()->SetTitle("Rate (Hz/cm^{2})");
+    
+    double ex_point = point  * 1000;
+    
+    TH1F * hist_sixt = new TH1F (extraspace.c_str(),"",13,0,13);
+    hist_sixt->SetLineColor(kRed);
+    
+    for (unsigned f = 0 ; f < v_fifth.size() ; f++){
+      
+      hist_fif->SetBinContent(f+1,v_fifth.at(f)->Eval(ex_point));
+      cout << v_fifth.at(f)->Eval(ex_point) << " ";
+      hist_fif->GetXaxis()->SetBinLabel(f+1,pointNames.at(f).c_str());
+      hist_sixt->GetXaxis()->SetBinLabel(f+1,pointNames.at(f).c_str());
+      hist_sixt->SetBinContent(f+1,v_sixt.at(f)->Eval(ex_point));
+      cout << v_sixt.at(f)->Eval(ex_point) << endl;
+      
+    }
+    
+    
+    TCanvas * can = new TCanvas(("can"+extraspace).c_str(),"",1200,1200);
+    TPad *pad1 = new TPad("pad1", "pad1", 0, 0.3, 1, 1.0);
+    pad1->SetBottomMargin(0); // Upper and lower plot are joined
+    //pad1->SetGridx();         // Vertical grid
+    pad1->Draw();             // Draw the upper pad: pad1
+    pad1->cd();               // pad1 becomes the current pad
+    
+    
+    hist_fif->Draw();
+    
+    pt->Draw();
+    secondText->Draw();
+    thirdText->Draw();
+    fourthText->Draw();
+    leg->AddEntry(hist_fif,"2015");
+    leg->AddEntry(hist_sixt,"2016");
+    leg->Draw();
+    
+    hist_sixt->Draw("same");
+    
+    //hist_fif->GetYaxis()->SetLabelSize(0.);
+    TGaxis *axis = new TGaxis( -5, 20, -5, 220, 20,220,510,"");
+    axis->SetLabelFont(43); // Absolute font size in pixel (precision 3)
+    axis->SetLabelSize(15);
+    axis->Draw();
+    
+    can->cd();
+    
+    TPad *pad2 = new TPad(("pad2"+extraspace).c_str(), "pad2", 0, 0.05, 1, 0.3);
+    pad2->SetTopMargin(0);
+    pad2->SetBottomMargin(0.2);
+    //pad2->SetGridx(); // vertical grid
+    pad2->Draw();
+    pad2->cd();       // pad2 becomes the current pad
+    
+    TH1F * h1 = hist_fif, * h2 = hist_sixt;
+    
+    // Define the ratio plot
+    TH1F *h3 = (TH1F*)hist_sixt->Clone(("h3"+extraspace).c_str());
+    h3->SetLineColor(kBlack);
+    h3->SetMinimum(0);  // Define Y ..
+    h3->SetMaximum(2); // .. range
+    //h3->Sumw2();
+    h3->SetStats(0);      // No statistics on lower plot
+    h3->Divide(hist_fif);
+    h3->SetMarkerStyle(21);
+    //h3->Draw();       // Draw the ratio plot
+    
+    h1->SetLineColor(kBlue+1);
+    h1->SetLineWidth(2);
 
-  //sleep(10);
-  //exit(0);
-  
-  map<string,ExRoll*> rollsMap;
-  
-  ofstream OFS;
-  
-  
-  for (int i = 0 ; i < rateFoldersList.getLenght() ; i++){
+    // Y axis h1 plot settings
+    h1->GetYaxis()->SetTitleSize(30);
+    h1->GetYaxis()->SetTitleFont(43);
+    h1->GetYaxis()->SetTitleOffset(1.55);
+
+    // h2 settings
+    h2->SetLineColor(kRed);
+    h2->SetLineWidth(2);
     
-    string folder = rateFoldersList.getElement(i+1,1);    
-    TSystemDirectory dir(folder.c_str(), folder.c_str());
+    // Ratio plot (h3) settings
+    h3->SetTitle(""); // Remove the ratio title
+    h3->SetLineWidth(2);
+    
+    // Y axis ratio plot settings
+    h3->GetYaxis()->SetTitle("Ratio (2016/2015)");
+    h3->GetYaxis()->SetNdivisions(505);
+    h3->GetYaxis()->SetTitleSize(17);
+    h3->GetYaxis()->SetTitleFont(43);
+    h3->GetYaxis()->SetTitleOffset(1.55);
+    h3->GetYaxis()->SetLabelFont(43); // Absolute font size in pixel (precision 3)
+    h3->GetYaxis()->SetLabelSize(12);
+    h3->GetYaxis()->CenterTitle();
+    
+    // X axis ratio plot settings
+    h3->GetXaxis()->SetTitleSize(17);
+    h3->GetXaxis()->SetTitleFont(43);
+    h3->GetXaxis()->SetTitleOffset(6.);
+    h3->GetXaxis()->SetLabelFont(43); // Absolute font size in pixel (precision 3)
+    h3->GetXaxis()->SetLabelSize(20);
+    h3->GetXaxis()->SetLabelOffset(h3->GetXaxis()->GetLabelOffset()*2);
+    h3->GetXaxis()->SetTitle("Section along z-axis");
+    h3->Draw(); 
+    
+    can->SaveAs(("Ratios"+extraspace+".root").c_str());
+    
+    counter++;
+    
+  }
+  
+
+}
+
+
+void testLumiRateCorrelation ( const string& rateFilesDir, const string& lumiesFolder , const string & lbToChamberMap, const string & areafile) {
+  
+    // save per run
+    // distribution per channel rate/lumi, destribution per channel rate/timeNormalizedLumi, distribution per channel areaNormalizedRate/timeNormalizedLumi
+    // profile plot per roll (or per linkboard) with bin number the channel (or strip) number, bin content the ratio and bin error the RMS of the ratio distribution
+    // given the time interval duration, the luminosity can be normalized with scale, same for the rate per cm^2 with the strip area
+    // when all runs ratios computation is finished, start cross run comparisons for same channels - plots of one channel ratios for all runs on single profile, put runnumber as bin label
+    // more average values of the same sort - cross run roll/LB average profiles  
+    // try to get the 'stable value ratios' (if the stat show ratios are stable) and then compare with 'bad results' runs (out of the linear fit). See both the stable and the unstable cases
+    
+    //DataObject rateFiles(rate);
+    //DataObject lumiFilesList(lumiPerRunFilesList);
+    //TH1F * nril_h = new TH1F("nril_h","nril_h",2000,0,0.2);;
+    //TH1F *  = new TH1F("","",2000,0,2);; ;
+    //TH1F * rms_distribution = new TH1F("RMSdistr","Ratios RMS distribution",2000,0,0.2);
+    //TH1F * r_il_h = new TH1F("r_il_h","r_il_h",2000,0,20);;; 
+  
+    DataObject lbChambersMap(lbToChamberMap);
+    DataObject area(areafile);
+    
+    // 
+    
+    map<string,string> checkedTrees;
+    
+    map < string, map<string,vector <double> > > meansAndRMSsOfRollsPerRun;
+    map < string, map<string,vector <double> > > RMSsOfChannelRatiosPerRun;
+    
+    map<string,ExRoll*> rollsMap;
+    
+    for (int i = 1 ; i <= lbChambersMap.getLenght() ; i++){ 
+      ExRoll * aRoll = new ExRoll(lbChambersMap.getElement(i,2));
+      aRoll->setStripsAreaFromSource_cmsswResource(area);
+      rollsMap[lbChambersMap.getElement(i,2)] = aRoll;
+    }
+    
+    TSystemDirectory dir(rateFilesDir.c_str(), rateFilesDir.c_str());
     TList *files = dir.GetListOfFiles();
-    
-    if (!files) continue;
-    TSystemFile *file;
     string fname;
     TIter next(files);
     
-    string run = folder.substr(folder.find("/run")+4, 6);
-    if (meansAndRMSsOfRollsPerRun.find(run) == meansAndRMSsOfRollsPerRun.end()) {map<string,vector <double> > run_rolls_map ; meansAndRMSsOfRollsPerRun[run] = run_rolls_map;}
-    if (RMSsOfChannelRatiosPerRun.find(run) == RMSsOfChannelRatiosPerRun.end()) {map<string,vector <double> > run_rms_rolls_map ; RMSsOfChannelRatiosPerRun[run] = run_rms_rolls_map;}
+    
+    
+    while (TSystemFile * file =(TSystemFile*)next()) {
+
+      map<string, string> chambersPresentedInCOVDistrRecord;    
+      
+      /*
+      ptree * firstRange = new ptree;
+      ptree *secondRange = new ptree;
+      ptree *thirdRange = new ptree;
+      ptree *overflows = new ptree;
+      */
+      
+    string run = file->GetName();
+    run = run.substr(0,6);
     
     cout << run << endl;
     
-    //TFile * rollsResults = new TFile(("rollsResults_"+run+".root").c_str(),"RECREATE");
-    //TFile * stripsResults = new TFile(("stripsResults_"+run+".root").c_str(),"RECREATE");
-    //stripsResults->cd();
     
+    TFile * stripsResults = new TFile(("stripsResults_"+run+".root").c_str(),"RECREATE");
+    //TFile * rollsResults = new TFile(("rollsResults_"+run+".root").c_str(),"RECREATE");
     
     TH1F * LumiRateRatioDeviation = new TH1F (("stdperc"+run).c_str(),"stdperc",10000,0,100);
     TH1F * LumiRateRatioDeviationWithAddingStdDev = new TH1F(("meanPlus3STDs"+run).c_str(),"mean / (mean + 3*stddev)",10000,0,100);
-    TH1F * CoefficientOfVariation = new TH1F(("CV"+run).c_str(),"stddev/mean",10000,0,100);
-    //DataObject * detailedLuminosity = new DataObject("chambers_lumis_DO_"+run+".txt"); // no way to be used, this file is not symetrical
+    TH1F * CoefficientOfVariation = new TH1F(("CV"+run).c_str(),"stddev/mean",10000,0,100); 
+    
+    
+    if (meansAndRMSsOfRollsPerRun.find(run) == meansAndRMSsOfRollsPerRun.end()) {map<string,vector <double> > run_rolls_map ; meansAndRMSsOfRollsPerRun[run] = run_rolls_map;}
+    if (RMSsOfChannelRatiosPerRun.find(run) == RMSsOfChannelRatiosPerRun.end()) {map<string,vector <double> > run_rms_rolls_map ; RMSsOfChannelRatiosPerRun[run] = run_rms_rolls_map;}
+
     
     ptree * detailedLuminosity = new ptree;
-    ifstream ifss((lumiPerRunFilesList+"chambers_lumis_"+run+".json").c_str());
+    ifstream ifss((lumiesFolder+"chambers_lumis_"+run+".json").c_str());
     boost::property_tree::json_parser::read_json(ifss,*detailedLuminosity);
     ifss.clear();ifss.close();
     
     map<string, vector<double> > rollToLumiesMap;
-  
+    
     for (ptree::iterator iter = detailedLuminosity->begin() ; iter != detailedLuminosity->end() ; iter++){
     //double values[37],errors[37];
-    vector<double> values;
+      vector<double> values;
       BOOST_FOREACH(boost::property_tree::ptree::value_type &v, iter->second.get_child("")){ values.push_back( v.second.get_value<double>()); }       
       rollToLumiesMap[iter->first] = values;
+      //if ( iter->first  == "W+1_RB4_4-F") { cout << " size of W+1_RB4_4-F " <<  rollToLumiesMap.at("W+1_RB4_4-F").size() << endl;}
     }
     
     delete detailedLuminosity;
+    //cout << "1" << endl;
+    fname = file->GetName();      
     
-    ptree * firstRange = new ptree;
-    ptree *secondRange = new ptree;
-    ptree *thirdRange = new ptree;
-    ptree *overflows = new ptree;
+    if (fname.find(".root") == string::npos) continue;
+    string fullName = rateFilesDir +"/"+ fname;
+    TFile * rfile = new TFile(fullName.c_str(),"read");
+  // cout << "2" << endl;
     
-    map<string, string> chambersPresentedInCOVDistrRecord;
+    TIter nextkey( rfile->GetListOfKeys() );
     
-    
-    
-    while ((file=(TSystemFile*)next())) {
-    
-      //cout << "1" << endl;
-      fname = file->GetName();
-      if (fname.find(".root") == string::npos) continue;
-      string fullName = folder +"/"+ fname;
-      TFile * rfile = new TFile(fullName.c_str(),"read");
-            
-    // cout << "2" << endl;
-
-      TH1F * h1;
-      TIter nextkey( rfile->GetListOfKeys() );
-      TKey *key;
-      TObject *obj;
-      string histoCurrentName;
+    //cout << "3" << endl;            
       
-      //cout << "3" << endl;      
-            
-      cout << fname << endl;
-      
-      
-      while (key = (TKey*)nextkey()) {
-	obj = key->ReadObj();
-	h1 = dynamic_cast<TH1F*>(obj);
-	histoCurrentName = h1->GetName();
-	if (histoCurrentName.substr(0,1) == "W" || histoCurrentName.substr(0,2) == "RE") {  
-	  if(histoCurrentName.find("Strip") != string ::npos){        
-	    if (h1->GetFillColor() == 9) continue;
+      while (TKey * key = (TKey*)nextkey()) {
+	
+	if ( checkedTrees.find(key->GetName()) != checkedTrees.end() ){ continue ; }
+	else {checkedTrees[key->GetName()] = key->GetName(); }
+	
+	cout << key->GetName() << endl;
+	TTree * tree = dynamic_cast<TTree*>(key->ReadObj());
+	
+	int numberOfChambers = tree->GetListOfBranches()->GetEntries();
+	
+	for (int chms = 0 ; chms < numberOfChambers; chms++){
+	    TBranch * aBranch =  tree->GetBranch(tree->GetListOfBranches()->At(chms)->GetName());
+	    Double_t chnnls[96];
+	    tree->SetBranchAddress(aBranch->GetName(),&chnnls,&aBranch);
+	    //histoCurrentName = lbChambersMap.getElementByKey(aBranch->GetName(),1);
 	    
-	    if (h1->GetNbinsX() == 0) continue;
+	    string rollname = lbChambersMap.getElementByKey(aBranch->GetName(),1);;
 	    
-	    //cout << " 1" << endl;
-	    int time_intervals = h1->GetNbinsX();
+	    //cout << rollname << " " << aBranch->GetName() << endl;
+	    
+	    int time_intervals = aBranch->GetEntries();
 	    //TH1F * lumi_histo = lumiHistos.at(run).at(time_intervals);
-	    //TH1F * instLumi_histo = InstlumiHistos.at(run).at(time_intervals);
-	    
-	    string rollname = histoCurrentName.substr(0,histoCurrentName.find(" "));
-	    size_t dotposition = histoCurrentName.find(". ");
-	    string channelString = histoCurrentName.substr(dotposition+2,histoCurrentName.rfind(" ")-dotposition-3);
-	    int channelNumber = atoi(channelString.c_str());
+	    //TH1F * instLumi_histo = InstlumiHistos.at(run).at(time_intervals);    
 	    //cout << rollname << " " << channelNumber << endl;
 	    
-	    ExRoll * aroll;
-	    if (rollsMap.find(rollname) != rollsMap.end()) { aroll = rollsMap.at(rollname); }
-	    else {
-	      aroll = new ExRoll(rollname);
-	      aroll->setStripsAreaFromSource_cmsswResource(area);
-	      rollsMap[rollname] = aroll;      
-	    }
+	    //cout << "before roll name"
+	    
+	    if (rollsMap.find(rollname) == rollsMap.end()) { cout << "excpecting to fail here  " << rollname << endl;}
+	    ExRoll * aroll = rollsMap.at(rollname);
+	    
 	    //cout << " 1" << endl;
+	    
 	    /*
 	    if (meansAndRMSsOfRollsPerRun.at(run).find(aroll->getRollIDofCloneWithNewIdentifiers(1)) == meansAndRMSsOfRollsPerRun.at(run).end()){      
 	      
@@ -6832,22 +7014,38 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	      }
 	    }
 	    */
+	    
 	    //cout << "2 " << endl;
 	    
-	    int cloneNumberOfStrip = ( (channelNumber-1) / (96/aroll->getClones()) ) +1;
-	    double stripArea = aroll->getStripsAreaFromClone( cloneNumberOfStrip);    
-	    string offlineRollName = aroll->getRollIDofCloneWithNewIdentifiers(cloneNumberOfStrip);
+	    
+	    
+	    for (unsigned nClones = 0 ; nClones < aroll->getClones() ; nClones++){
+	            
+	      string offlineRollName = aroll->getRollIDofCloneWithNewIdentifiers(nClones+1);
+	      double stripArea = aroll->getStripsAreaFromClone( nClones+1); 
+	      
+	      for (unsigned chanNum = aroll->getFirstStripNumberOfClone(nClones+1) ; chanNum <= aroll->getLastStripNumberOfClone(nClones+1) ; chanNum++){
+	      
+	      
+	      int stripNumber = aroll->getStrip(chanNum)->getOfflineNumber();
+	      int channelNumber = chanNum;
+	      string channelString = boost::lexical_cast<string>(channelNumber);
+	      string StripString = boost::lexical_cast<string>(stripNumber);
+	    
+	      
+	      //cout << rollname << " " << aBranch->GetName() << " " << channelNumber << endl;
+	    
 	    
 	    //vector<double> r_l, r_il, nr_il; 
 	    
 	    //TH1F * rateLumiRatio = new TH1F((rollname+"_ch"+channelString+"_run"+run+"_RLR").c_str(),histoCurrentName.c_str(),200,0,0.4 );
-	    TH1F * normRateInstLumiRatio = new TH1F((rollname+"_ch"+channelString+"_run"+run+"_NRLIR").c_str(),histoCurrentName.c_str(),2000, 0,0.2); // study on the distribution have shown main distribution to not exceed 0.15
+	    TH1F * normRateInstLumiRatio = new TH1F((offlineRollName+"_stripNum_"+StripString+"_run"+run+"_NRLIR").c_str(),(offlineRollName+" strip "+StripString+", channel"+channelString).c_str(),2000, 0,0.2); // study on the distribution have shown main distribution to not exceed 0.15
 	    
-	    TH1F * areaScaledRate = dynamic_cast<TH1F*>(h1->Clone("scaledratehisto"));
+	    //TH1F * areaScaledRate = dynamic_cast<TH1F*>(h1->Clone("scaledratehisto"));
 	    
 	    //cout << areaScaledRate->GetNbinsX() << " " << instLumi_histo->GetNbinsX() << endl;
 	    //exit(0);
-	    areaScaledRate->Scale(1/stripArea);    
+	    //areaScaledRate->Scale(1/stripArea);    
 	    //areaScaledRate->Divide(instLumi_histo);
 	    
 	    
@@ -6906,9 +7104,9 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	    
 	    /**
 	     * Separate smooth from 
-	     * 1. Need method to make the difference, use the lumi as reference. The n-th and the nth+1 lumi entries ratio should be compatible with the rate ratio for the same entries
-	     * 2. Do separated distributions for the smooth and the separated chamber strips. See if the non-smooth distribution is what causes the distortion
-	     * 3. Plot the rate vs lumi for only non distorted partitions
+	     * 1. Need method to make the difference, use the lumi as reference. The n-th and the nth+1 lumi entries ratio should be compatible with the rate ratio for the same entries (done, it was a bug)
+	     * 2. Do separated distributions for the smooth and the separated chamber strips. See if the non-smooth distribution is what causes the distortion (done, noise tool error)
+	     * 3. Plot the rate vs lumi for only non distorted partitions (done, after fixing the bug)
 	     * 
 	     */
 	    
@@ -6925,7 +7123,15 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	      //normRateInstLumiRatio->Fill(areaScaledRate->GetBinContent(bini)/instLumi_histo->GetBinContent(bini));
 	      //nril_h->Fill(areaScaledRate->GetBinContent(bini)/instLumi_histo->GetBinContent(bini));//
 	      //double normlzdLumi = detailedLuminosity->getElementByKeyAsDouble();
-	      normRateInstLumiRatio->Fill(areaScaledRate->GetBinContent(bini) / rollToLumiesMap.at(rollname).at(bini) );
+	      
+	      aBranch->GetEntry(bini);
+	      double normalizedRate = chnnls[chanNum] / stripArea;
+	      //if (bini == 0) cout << "its before lumi " << endl;
+	      
+	      //cout << rollname << endl;
+	      
+	      double instLumiForInterval = rollToLumiesMap.at(rollname).at(bini);      
+	      normRateInstLumiRatio->Fill(normalizedRate / instLumiForInterval );
 	      
 	      //nril_h->Fill(areaScaledRate->GetBinContent(bini) / rollToLumiesMap.at(rollname).at(bini));//
 	      
@@ -6935,12 +7141,12 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	    
 	    
 	    
-	    meansAndRMSsOfRollsPerRun.at(run).at(offlineRollName).push_back(normRateInstLumiRatio->GetMean());
+// 	    meansAndRMSsOfRollsPerRun.at(run).at(offlineRollName).push_back(normRateInstLumiRatio->GetMean());
 	    //TFitResult * frp =  normRateInstLumiRatio->Fit("gaus","","",normRateInstLumiRatio->GetMean()-(3*normRateInstLumiRatio->GetStdDev()));
 	    //frp->get
-	    RMSsOfChannelRatiosPerRun.at(run).at(offlineRollName).push_back(normRateInstLumiRatio->GetRMS()); 
+// 	    RMSsOfChannelRatiosPerRun.at(run).at(offlineRollName).push_back(normRateInstLumiRatio->GetRMS()); 
 	    double histMean = normRateInstLumiRatio->GetMean();
-	    if (histMean == 0 || normRateInstLumiRatio->GetNbinsX() == 0) { normRateInstLumiRatio->Delete(); continue; }
+	    if (histMean == 0 ) { normRateInstLumiRatio->Delete(); continue; }
 	    //double stdevvThree = 3 * normRateInstLumiRatio->GetStdDev();
 	    
 	    //double threeSigmasDeviation =  stdevvThree / histMean;
@@ -6950,7 +7156,7 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	    //LumiRateRatioDeviationWithAddingStdDev->Fill( 100 * ( histMean / (histMean+stdevvThree)) );
 	    double COV = 100 * (normRateInstLumiRatio->GetStdDev()/histMean);
 	    
-	    //CoefficientOfVariation->Fill(COV);
+	    CoefficientOfVariation->Fill(COV);
 	    
 	    
 	    //areaScaledRate->Delete();
@@ -6976,7 +7182,8 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	    
 	    //if (meansAndRMSsOfRollsPerRun.at(run).find(offlineRollName) == meansAndRMSsOfRollsPerRun.at(run).end()) cout << offlineRollName << endl;
 	    
-	    /*
+	    
+	    
 	    TDirectory *dir = stripsResults->GetDirectory(rollname.c_str());
 	    if (!dir) { stripsResults->mkdir(rollname.c_str()); }
 	    stripsResults->cd(rollname.c_str());
@@ -6984,14 +7191,15 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	    //if (! stripsResults->GetListOfKeys()->Contains(rateLumiRatio->GetName())){
 	    //  rateLumiRatio->Write();
 	    //}
-	    //if (! stripsResults->GetListOfKeys()->Contains(normRateInstLumiRatio->GetName())){
+	    if (! stripsResults->GetListOfKeys()->Contains(normRateInstLumiRatio->GetName())){
 	      normRateInstLumiRatio->Write();
-	    // }
-	    */
+	    }
+	    
 	    
 	    //rateLumiRatio->Delete();
 	    normRateInstLumiRatio->Delete();
 	    
+	    /*
 	    if (chambersPresentedInCOVDistrRecord.find(offlineRollName) != chambersPresentedInCOVDistrRecord.end()) continue;    
 	    ptree val;
 	    val.put_value(offlineRollName);    
@@ -7001,7 +7209,7 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	    else if (COV > 100) {thirdRange->push_back(std::make_pair("",val));}
 	    else {overflows->push_back(std::make_pair("",val));}    
 	    chambersPresentedInCOVDistrRecord[offlineRollName] = offlineRollName;
-	    
+	    */
 	    
 	    
 	    //stripsResults->cd();
@@ -7009,48 +7217,55 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	    //rollsResults->cd();
 	    
 	    //rollStripsRatiosPlot->Write(rollStripsRatiosPlot->GetName(),TObject::kOverwrite);
-	  }
+	  
+	    
+	    
+	    
+	      }
+	    }    
 	}
       }      
+
+      LumiRateRatioDeviation->SaveAs(("DeviationDistributionForRun_"+run+".root").c_str());
+      LumiRateRatioDeviationWithAddingStdDev->SaveAs(("DeviationDistributionWithAddingStddev_"+run+".root").c_str());
+      CoefficientOfVariation->SaveAs(("CoeffOfVariation_"+run+".root").c_str());
+      delete LumiRateRatioDeviation;
+      delete LumiRateRatioDeviationWithAddingStdDev;
+      delete CoefficientOfVariation;
       
+      
+      
+      rollToLumiesMap.clear();
+      //delete detailedLuminosity;
       rfile->Close();
       
       //rfile->Delete();
-      //stripsResults->Save();      
+      stripsResults->Save();      
       //rollsResults->Save();      
-
-    }    
+      
+      checkedTrees.clear();
+      
+      /*
+      ofstream OFS;
+      
+      ptree * COV_distributionRecord = new ptree;
+      COV_distributionRecord->add_child("firstRange",*firstRange);
+      COV_distributionRecord->add_child("secondRange",*secondRange);
+      COV_distributionRecord->add_child("thirdRange",*thirdRange);
+      COV_distributionRecord->add_child("overflows",*overflows);
+      
+      string covFile = "COV_distribution_"+run+".json";
+      OFS.open(covFile.c_str());
+      boost::property_tree::json_parser::write_json(OFS,*COV_distributionRecord);
+      OFS.clear(); OFS.close();
+      delete COV_distributionRecord;
+      delete firstRange; delete secondRange; delete thirdRange; delete overflows;
+      chambersPresentedInCOVDistrRecord.clear();
+      
+      */
+      
+    }
     
-    ptree * COV_distributionRecord = new ptree;
-    COV_distributionRecord->add_child("firstRange",*firstRange);
-    COV_distributionRecord->add_child("secondRange",*secondRange);
-    COV_distributionRecord->add_child("thirdRange",*thirdRange);
-    COV_distributionRecord->add_child("overflows",*overflows);
-    
-    string covFile = "COV_distribution_"+run+".json";
-    OFS.open(covFile.c_str());
-    boost::property_tree::json_parser::write_json(OFS,*COV_distributionRecord);
-    OFS.clear(); OFS.close();
-    delete COV_distributionRecord;
-    delete firstRange; delete secondRange; delete thirdRange; delete overflows;
-    chambersPresentedInCOVDistrRecord.clear();
-    
-    rollToLumiesMap.clear();
-    
-    /*
-    
-    LumiRateRatioDeviation->SaveAs(("DeviationDistributionForRun_"+run+".root").c_str());
-    LumiRateRatioDeviationWithAddingStdDev->SaveAs(("DeviationDistributionWithAddingStddev_"+run+".root").c_str());
-    CoefficientOfVariation->SaveAs(("CoeffOfVariation_"+run+".root").c_str());
-    delete LumiRateRatioDeviation;
-    delete LumiRateRatioDeviationWithAddingStdDev;
-    delete CoefficientOfVariation;
-    
-    */
-    
-    //stripsResults->Save();
-    //cout << run << " results saved" << endl;
-    //stripsResults->Close();
     
     /* from the mean values and RMS (stdev) derive Correlation strenght */
     
@@ -7072,6 +7287,10 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
 	stripsRatiosForRollInRun->Delete();
       
     }
+    
+    
+    
+    
     */
     //cout << "5 " << endl;
     /* ratio stability channel vs run */
@@ -7086,7 +7305,7 @@ void testLumiRateCorrelation ( const string& runRateFoldersList, const string& l
     //rollsResults->Close();
     
     //rollsResults->Save();
-  }
+  //}
   
   //TFile * allRunsF = new TFile("allRuns_stats.root","NEW");
   //allRunsF->cd();
