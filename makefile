@@ -4,7 +4,7 @@ ROOTINC = $(shell root-config --cflags)
 ROOTLIBS = $(shell root-config --glibs)
 ROOFITLIBS = -l RooFitCore -l RooFit -l RooStats
 LIBJSON = -ljson_linux_jsoncpp
-CC = g++ -std=c++14
+CC = g++ -std=c++1z
 boost_libs = -lboost_thread-mt
 #MYSQLLIBS = $(shell mysql_config --libs)
 #MYSQLINC = $(shell mysql_config --include)

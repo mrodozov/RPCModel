@@ -205,6 +205,14 @@ void compareHistos(TH1F * reference, TH1F * testing);
 
 void testLumiRateCorrelation(const string & runRateFolders, const string & lumiesFolder, const string & lbToChamberMap, const string & area); // test the rate lumi ratio per channel and per roll using detailed rate granularity and scaled lumi files. 
 
+void testLumiRateCorrelation_SummariesByRuns_StripsRolls(const string & listOfSummaryFiles); // sorts strips by rolls per run (roll histo with strips for each run) and strips per run only (strip histo for each run)
+
+void testLumiRateCorrelation_MergeStripsHistos(const string & listOfSummaryFiles); // merges per strip files into single file
+
+void testLumiRateCorrelation_SummariesByDetectorUnits_vsRuns_(const string & listOfSummaryFiles);
+
+void sortHistogramsByMeanAndRMS(const string & fileName);
+
 void recalcAverageRateForAdjustedSimilarLuminosity(const string & adjustLumiToRun, const string & dataFolder, const string & lumiFile,const string & resultsFolder); // 
 
 // drawing functions only
