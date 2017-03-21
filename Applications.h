@@ -92,7 +92,6 @@ bool universalRollFilter(string barrel_or_ecap
 
 void plotRateVsLumi_using_the_database_files_stripLevel(DataObject & LumiFile,string filesCont,string outCont,string IntrinsicFile,bool WriteNewIntrinsic);
 
-void plot_X_vs_Y_values_using_JSON_data_and_JSON_config(const string & JSON_data, const string & JSON_config,const string & rootOutputName);
 
 void plotEcap_RateVsPhi(string rateFile,bool subtractIntrinsic,string fileWithIntrinsic,DataObject & area,double cutValueSingleStrip,string SGmapFile,DataObject & LumiFile,QueryObject * query);
 
@@ -215,7 +214,12 @@ void sortHistogramsByMeanAndRMS(const string & fileName);
 
 void recalcAverageRateForAdjustedSimilarLuminosity(const string & adjustLumiToRun, const string & dataFolder, const string & lumiFile,const string & resultsFolder); // 
 
-// drawing functions only
+/**
+ *  Drawing Only Functions
+ * 
+ */
+
+void plot_X_vs_Y_values_using_JSON_data_and_JSON_config(const string & JSON_data, const string & JSON_config,const string & rootOutputName);
 
 void get2DplotsForJSONFileUsingAndJSONmap(const string & JSONdataFile,const string & JSONmapFile, const int & BarrelMax, const int & EndcapMax, const string & ZaxisTitle,const string & fileSuffixes);
 
@@ -233,11 +237,6 @@ void get2DplotsOnRateFromROOTfile(const string& rootfile, const string & jsonMap
 
 void printTimeBins(string folderlist);
 
-
-/**
- *  Drawing Only Functions
- * 
- */
 
 
 

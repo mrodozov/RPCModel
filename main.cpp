@@ -179,14 +179,14 @@ int main( int argc ,char *argv[] ){
 //    string fname = argv[1];
 //    GetLumiHistogramPerLS(fname);
     
-//     string rateFolders = argv[1];string lumiFiles = argv[2];string lbToChMap = argv[3];string area = argv[4];
-//     testLumiRateCorrelation(rateFolders,lumiFiles,lbToChMap,area);
+    // string rateFolders = argv[1];string lumiFiles = argv[2];string lbToChMap = argv[3];string area = argv[4];
+    // testLumiRateCorrelation(rateFolders,lumiFiles,lbToChMap,area);
     
-    //sortHistogramsByMeanAndRMS(argv[1]);
+    sortHistogramsByMeanAndRMS(argv[1]);
         
     //testLumiRateCorrelation_SummariesByRuns_StripsRolls(argv[1]);
     
-    testLumiRateCorrelation_MergeStripsHistos(argv[1]);
+    //testLumiRateCorrelation_MergeStripsHistos(argv[1]);
     
    //   string jsonDatafile = argv[1] , jsonMapFile = argv[2], rootOutput=argv[3];
    //  yaxisttitle = argv[5],fileSuffix = argv[6];
