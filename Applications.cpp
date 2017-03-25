@@ -1515,7 +1515,7 @@ void plotRateVsLumi_using_root_and_JSON( const map<string, map<string,map<string
 	cout << query->getOnlineRollMapForRecord(i+1).histoName << " "<< "Correlation factor " << hist->GetCorrelationFactor() << " ";
 	cout << " Fit params: a= " << func.GetParameter(0) << " b= " << func.GetParameter(1) ;
 	cout << " Rate extrapolated to 50000: " << func.Eval(50000) << " " << endl;
-	func.Clear();
+	
 	
         if (i == 0) {
             hist->GetXaxis()->SetTitle(query->getHistoXtitle().c_str());

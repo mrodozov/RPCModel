@@ -40,7 +40,7 @@ int main( int argc ,char *argv[] ){
   aQuery->insertNewOnlineRecord(("W"+orientation+"_RB3").c_str(),("W "+orientation+" RB3").c_str(),kSpring-7,25);
   */
   
-  
+  /*
   QueryObject * aQuery = new QueryObject;
   string DataFolder = argv[1]; // folder with root files
   DataObject Lumi(argv[2],3); // 3 rows, run lumi and ls  
@@ -65,6 +65,9 @@ int main( int argc ,char *argv[] ){
   
   
   sector = "";
+  
+  */
+  
   /*
   outputJSON = "RED1R1.json";
   aQuery->clearAllOnlineRollRecords();
@@ -165,7 +168,8 @@ int main( int argc ,char *argv[] ){
   plotRateVsLumi_using_root_and_JSON(dataMap,Lumi,cutThreshold,aQuery,isOffline,debugOUTPUT,conditionsMap,outputJSON,0);
   */
   
-  vector<string> diskNums; diskNums.push_back("1"); diskNums.push_back("2");diskNums.push_back("3");diskNums.push_back("4");
+  
+  vector<string> diskNums; diskNums.push_back("1");diskNums.push_back("2"); diskNums.push_back("3");diskNums.push_back("4");
   
   vector<string> chamberNums ; 
   DataObject chamberNumStrings("chamberNums.txt");
@@ -174,6 +178,7 @@ int main( int argc ,char *argv[] ){
   
     
   
+  /*
   for (auto & diskString : diskNums){    
     for (auto & chamberString : chamberNums){
       
@@ -194,6 +199,87 @@ int main( int argc ,char *argv[] ){
     }    
   }
   
+  */
+  
+  string fileName = argv[1];
+  DataObject extrapolations(fileName);
+  
+  TH1F * allrolls = new TH1F("allchambers","Distribution of rate extrapolations to 5*10^{37}",24,0,240);
+  
+  
+  for (auto & diskString : diskNums){    
+    
+    TH1F * profile_plus = new TH1F(("RE+"+diskString).c_str(),("RE+"+diskString).c_str(),36,0,36);
+    TH1F * distribution_plus = new TH1F(("RE+"+diskString+" distribution").c_str(),("RE+"+diskString+" distribution").c_str(),24,0,240);
+    TH1F * profile_minus = new TH1F(("RE-"+diskString).c_str(),("RE-"+diskString).c_str(),36,0,36);
+    TH1F * distribution_minus = new TH1F(("RE-"+diskString+" distribution").c_str(),("RE-"+diskString+" distribution").c_str(),24,0,240);
+
+    unsigned chamberNumber = 0;
+    for (auto & chamberString : chamberNums){
+      chamberNumber ++;
+      string fullRollID = "RE+"+diskString+"_R2_CH"+chamberString;
+      double rate = extrapolations.getElementByKeyAsDouble(fullRollID, 1);
+      profile_plus->SetBinContent(chamberNumber, rate);
+      distribution_plus->Fill(rate);
+      
+      fullRollID = "RE-"+diskString+"_R2_CH"+chamberString;
+      rate = extrapolations.getElementByKeyAsDouble(fullRollID, 1);
+      profile_minus->SetBinContent(chamberNumber, rate);
+      distribution_minus->Fill(rate);      
+      
+    }    
+    
+    profile_minus->GetXaxis()->SetTitle("Sector");
+    profile_minus->GetYaxis()->SetTitle("Rate (Hz/cm^{2})");
+    profile_minus->SetFillColor(kBlue);
+    profile_minus->SetStats(kFALSE);
+    
+    profile_plus->GetXaxis()->SetTitle("Sector");
+    profile_plus->GetYaxis()->SetTitle("Rate (Hz/cm^{2})");
+    profile_plus->SetFillColor(kBlue);
+    profile_plus->SetStats(kFALSE);
+    
+    distribution_plus->GetXaxis()->SetTitle("Rate (Hz/cm^{2})");
+    distribution_plus->GetYaxis()->SetTitle("Rolls");
+    
+    distribution_minus->GetXaxis()->SetTitle("Rate (Hz/cm^{2})");
+    distribution_minus->GetYaxis()->SetTitle("Rolls");
+    
+    string canName = "";
+    string rootFileName = "";
+    string pngName = "";
+    
+    canName = (string)profile_plus->GetName()+"_can";
+    rootFileName = (string)profile_plus->GetName()+".root"; pngName = (string)profile_plus->GetName()+".png";
+    
+    TCanvas * profile_plus_can = new TCanvas (canName.c_str(),canName.c_str(),1200,700);
+    profile_plus->Draw(); profile_plus_can->SaveAs(rootFileName.c_str()); profile_plus_can->SaveAs(pngName.c_str());
+    
+    
+    canName = (string)profile_minus->GetName()+"_can";
+    rootFileName = (string)profile_minus->GetName()+".root"; pngName = (string)profile_minus->GetName()+".png";
+    TCanvas * profile_minus_can = new TCanvas (canName.c_str(),canName.c_str(),1200,700);
+    profile_minus->Draw(); profile_minus_can->SaveAs(rootFileName.c_str());profile_minus_can->SaveAs(pngName.c_str());
+    
+    canName = (string)distribution_plus->GetName()+"_can";
+    rootFileName = (string)distribution_plus->GetName()+".root"; pngName = (string)distribution_plus->GetName()+".png";
+    TCanvas * distribution_plus_can = new TCanvas (canName.c_str(),canName.c_str(),1200,700);
+    distribution_plus->Draw(); distribution_plus_can->SaveAs(rootFileName.c_str()); distribution_plus_can->SaveAs(pngName.c_str()); 
+    
+    canName = (string)distribution_minus->GetName()+"_can";
+    rootFileName = (string)distribution_minus->GetName()+".root";pngName = (string)distribution_minus->GetName()+".png";
+    TCanvas * distribution_minus_can = new TCanvas (canName.c_str(),canName.c_str(),1200,700);
+    distribution_minus->Draw(); distribution_minus_can->SaveAs(rootFileName.c_str()); distribution_minus_can->SaveAs(pngName.c_str());
+    
+    
+    
+  }
+  
+  allrolls->GetXaxis()->SetTitle("Rate (Hz/cm^{2})");
+  allrolls->GetYaxis()->SetTitle("Rolls");
+  
+  TCanvas * allCan = new TCanvas ("allcan","",1200,700);
+  allCan->SaveAs("AllRolls.root"); allCan->SaveAs("AllRolls.png");
   
   
   //isOffline = 1;
